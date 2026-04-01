@@ -32,34 +32,6 @@ app.get('/health', async (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString(), services: { mongodb: mongoOk, redis: redisOk } });
 });
 
-// Ruta temporal de limpieza
-app.post('/api/clear-atlas', async (req, res) => {
-  try {
-    const { getDB } = require('./config/db');
-    const db = getDB();
-    await db.collection('cartas').deleteMany({});
-    res.json({ success: true, message: 'Colección cartas vaciada' });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// Ruta temporal de migración (append)
-app.post('/api/migrate-atlas', async (req, res) => {
-  try {
-    const { getDB } = require('./config/db');
-    const db = getDB();
-    const cartas = req.body;
-    
-    if (!Array.isArray(cartas)) return res.status(400).json({ error: 'Body must be an array of cards' });
-    
-    const result = await db.collection('cartas').insertMany(cartas);
-    res.json({ success: true, count: result.insertedCount });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
 // Rutas
 app.use('/api/cartas', require('./routes/cartas'));
 app.use('/api/usuarios', require('./routes/usuarios'));

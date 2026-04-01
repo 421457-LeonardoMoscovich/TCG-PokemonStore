@@ -11,8 +11,9 @@ const PORT = process.env.PORT || 3000;
 
 // Middlewares
 app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// Aumentar el límite para la migración de datos
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 // Health check
 app.get('/health', async (req, res) => {
@@ -29,6 +30,25 @@ app.get('/health', async (req, res) => {
     redisOk = true;
   } catch {}
   res.json({ status: 'ok', timestamp: new Date().toISOString(), services: { mongodb: mongoOk, redis: redisOk } });
+});
+
+// Ruta temporal de migración
+app.post('/api/migrate-atlas', async (req, res) => {
+  try {
+    const { getDB } = require('./config/db');
+    const db = getDB();
+    const cartas = req.body;
+    
+    if (!Array.isArray(cartas)) return res.status(400).json({ error: 'Body must be an array of cards' });
+    
+    console.log(`📡 Recibidas ${cartas.length} cartas para migración...`);
+    await db.collection('cartas').deleteMany({});
+    const result = await db.collection('cartas').insertMany(cartas);
+    
+    res.json({ success: true, count: result.insertedCount });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // Rutas

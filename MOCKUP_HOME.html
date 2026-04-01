@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pokémon Trading - Home</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { background: #000000; }
+
+    /* Pikachu Theme */
+    .pikachu-yellow { color: #FFEB3B; }
+    .pikachu-red { color: #E53935; }
+    .pikachu-black { color: #000000; }
+
+    .bg-pikachu-dark { background-color: #000000; }
+    .bg-pikachu-card { background-color: #1a1a1a; }
+
+    /* Sidebar Collapsible */
+    .sidebar {
+      transition: all 0.3s ease;
+      overflow: hidden;
+    }
+
+    .sidebar.hidden {
+      transform: translateX(-100%);
+      width: 0;
+    }
+
+    .sidebar.visible {
+      transform: translateX(0);
+      width: 12rem;
+    }
+    .border-pikachu { border: 2px solid #FFEB3B; }
+    .border-pikachu-hover { border: 3px solid #FFEB3B; }
+
+    /* Card Hover */
+    .card-pokemon {
+      transition: all 0.3s ease;
+      border: 2px solid rgba(255, 235, 59, 0.3);
+    }
+
+    .card-pokemon:hover {
+      transform: scale(1.08);
+      box-shadow: 0 0 20px rgba(255, 235, 59, 0.6), 0 0 40px rgba(229, 57, 53, 0.3);
+      border: 2px solid #FFEB3B;
+    }
+
+    /* Type Colors */
+    .type-grass { background-color: #4CAF50; }
+    .type-water { background-color: #2196F3; }
+    .type-fire { background-color: #E53935; }
+    .type-electric { background-color: #FFEB3B; color: #000; }
+    .type-psychic { background-color: #9C27B0; }
+    .type-fighting { background-color: #795548; }
+    .type-dark { background-color: #424242; }
+
+    /* Navbar */
+    .navbar-sticky {
+      background: linear-gradient(135deg, #000000 0%, #1a1a1a 100%);
+      border-bottom: 2px solid #FFEB3B;
+      box-shadow: 0 4px 20px rgba(255, 235, 59, 0.2);
+    }
+
+    /* Toggle Button */
+    .toggle-btn {
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-size: 24px;
+    }
+
+    .toggle-btn:hover {
+      color: #FFEB3B;
+    }
+
+    /* Button Hover */
+    .btn-pikachu {
+      background: linear-gradient(135deg, #FFEB3B, #FFC700);
+      color: #000;
+      font-weight: bold;
+      transition: all 0.3s ease;
+    }
+
+    .btn-pikachu:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(255, 235, 59, 0.5);
+    }
+
+    /* Search Bar */
+    .search-input {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid #FFEB3B;
+      color: #fff;
+    }
+
+    .search-input::placeholder { color: rgba(255, 255, 255, 0.5); }
+    .search-input:focus { outline: none; box-shadow: 0 0 10px rgba(255, 235, 59, 0.5); }
+
+    /* Filter Sidebar */
+    .filter-item {
+      padding: 8px 12px;
+      margin: 4px 0;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+      color: #fff;
+    }
+
+    .filter-item:hover {
+      background: rgba(255, 235, 59, 0.2);
+      padding-left: 16px;
+    }
+
+    .filter-item.active {
+      background: #FFEB3B;
+      color: #000;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body class="bg-pikachu-dark text-white">
+
+  <!-- NAVBAR -->
+  <nav class="navbar-sticky sticky top-0 z-50 px-6 py-4 flex items-center justify-between">
+    <!-- Logo + Toggle -->
+    <div class="flex items-center gap-4">
+      <button id="toggleSidebar" class="toggle-btn">☰</button>
+      <span class="text-3xl">⚡</span>
+      <h1 class="text-2xl font-bold pikachu-yellow">Pokémon TCG</h1>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="flex-1 mx-8 max-w-md">
+      <input
+        type="text"
+        placeholder="Search cards..."
+        class="search-input w-full px-4 py-2 rounded-lg"
+      >
+    </div>
+
+    <!-- Right Icons -->
+    <div class="flex items-center gap-6">
+      <div class="relative cursor-pointer">
+        <span class="text-2xl">🛒</span>
+        <span class="absolute -top-2 -right-2 bg-pikachu-red text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">3</span>
+      </div>
+      <span class="text-2xl cursor-pointer">👤</span>
+    </div>
+  </nav>
+
+  <!-- MAIN CONTAINER -->
+  <div class="flex">
+
+    <!-- LEFT SIDEBAR - FILTERS (COLLAPSIBLE) -->
+    <aside id="filterSidebar" class="sidebar visible fixed left-0 top-16 h-[calc(100vh-4rem)] bg-pikachu-card p-6 border-r border-pikachu-yellow/20 z-40">
+      <h2 class="text-lg font-bold pikachu-yellow mb-4">Filtros</h2>
+
+      <!-- Type Filter -->
+      <div class="mb-6">
+        <h3 class="text-sm font-semibold text-gray-400 mb-2">Tipo</h3>
+        <div>
+          <div class="filter-item active">Todos los tipos</div>
+          <div class="filter-item">🔥 Fire</div>
+          <div class="filter-item">💧 Water</div>
+          <div class="filter-item">🌿 Grass</div>
+          <div class="filter-item">⚡ Electric</div>
+          <div class="filter-item">👁️ Psychic</div>
+          <div class="filter-item">👊 Fighting</div>
+          <div class="filter-item">🌙 Dark</div>
+        </div>
+      </div>
+
+      <!-- HP Filter -->
+      <div class="mb-6">
+        <h3 class="text-sm font-semibold text-gray-400 mb-2">HP Mínimo</h3>
+        <div>
+          <div class="filter-item">≥ 60</div>
+          <div class="filter-item">≥ 100</div>
+          <div class="filter-item">≥ 150</div>
+          <div class="filter-item">≥ 200</div>
+        </div>
+      </div>
+
+      <!-- Rarity Filter -->
+      <div>
+        <h3 class="text-sm font-semibold text-gray-400 mb-2">Rareza</h3>
+        <div>
+          <div class="filter-item">⚪ Common</div>
+          <div class="filter-item">🟢 Uncommon</div>
+          <div class="filter-item">◆ Rare</div>
+          <div class="filter-item">✨ Ultra Rare</div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="flex-1 p-8">
+
+      <!-- HEADER -->
+      <div class="mb-8 flex justify-between items-center">
+        <div>
+          <h2 class="text-3xl font-bold pikachu-yellow">Catálogo de Cartas</h2>
+          <p class="text-gray-400 mt-2">2,916 cartas disponibles</p>
+        </div>
+        <div class="flex gap-2">
+          <button class="px-4 py-2 border border-pikachu-yellow text-pikachu-yellow rounded-lg hover:bg-pikachu-yellow hover:text-black transition">Filtrar</button>
+          <button class="px-4 py-2 border border-pikachu-yellow text-pikachu-yellow rounded-lg hover:bg-pikachu-yellow hover:text-black transition">Ordenar</button>
+        </div>
+      </div>
+
+      <!-- CARD GRID -->
+      <div class="grid grid-cols-4 gap-6 mb-12">
+
+        <!-- CARD TEMPLATE -->
+        <div class="card-pokemon bg-pikachu-card rounded-lg overflow-hidden cursor-pointer group">
+          <!-- Image -->
+          <div class="relative h-48 bg-gradient-to-br from-blue-900 to-blue-800 flex items-center justify-center overflow-hidden">
+            <img src="https://via.placeholder.com/200x200?text=Pikachu" alt="Pikachu" class="w-full h-full object-cover">
+            <!-- Type Badge -->
+            <div class="absolute top-2 right-2 type-electric px-3 py-1 rounded-full text-xs font-bold">⚡ Electric</div>
+          </div>
+
+          <!-- Card Info -->
+          <div class="p-4 bg-pikachu-card">
+            <h3 class="font-bold text-white text-lg">Pikachu</h3>
+            <p class="text-gray-400 text-sm">HP: 45</p>
+            <p class="text-gray-500 text-xs mt-2">Paldean Wonders</p>
+
+            <!-- Add to Cart Button (Hidden by default, visible on hover) -->
+            <button class="btn-pikachu w-full mt-4 py-2 rounded-lg text-sm font-bold opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              Agregar al Carrito
+            </button>
+          </div>
+        </div>
+
+        <!-- CARD 2 -->
+        <div class="card-pokemon bg-pikachu-card rounded-lg overflow-hidden cursor-pointer group">
+          <div class="relative h-48 bg-gradient-to-br from-red-900 to-orange-800 flex items-center justify-center overflow-hidden">
+            <img src="https://via.placeholder.com/200x200?text=Charmander" alt="Charmander" class="w-full h-full object-cover">
+            <div class="absolute top-2 right-2 type-fire px-3 py-1 rounded-full text-xs font-bold text-white">🔥 Fire</div>
+          </div>
+          <div class="p-4 bg-pikachu-card">
+            <h3 class="font-bold text-white text-lg">Charmander</h3>
+            <p class="text-gray-400 text-sm">HP: 39</p>
+            <p class="text-gray-500 text-xs mt-2">Base Set</p>
+            <button class="btn-pikachu w-full mt-4 py-2 rounded-lg text-sm font-bold opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              Agregar al Carrito
+            </button>
+          </div>
+        </div>
+
+        <!-- CARD 3 -->
+        <div class="card-pokemon bg-pikachu-card rounded-lg overflow-hidden cursor-pointer group">
+          <div class="relative h-48 bg-gradient-to-br from-blue-900 to-cyan-800 flex items-center justify-center overflow-hidden">
+            <img src="https://via.placeholder.com/200x200?text=Squirtle" alt="Squirtle" class="w-full h-full object-cover">
+            <div class="absolute top-2 right-2 type-water px-3 py-1 rounded-full text-xs font-bold text-white">💧 Water</div>
+          </div>
+          <div class="p-4 bg-pikachu-card">
+            <h3 class="font-bold text-white text-lg">Squirtle</h3>
+            <p class="text-gray-400 text-sm">HP: 41</p>
+            <p class="text-gray-500 text-xs mt-2">Base Set</p>
+            <button class="btn-pikachu w-full mt-4 py-2 rounded-lg text-sm font-bold opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              Agregar al Carrito
+            </button>
+          </div>
+        </div>
+
+        <!-- CARD 4 -->
+        <div class="card-pokemon bg-pikachu-card rounded-lg overflow-hidden cursor-pointer group">
+          <div class="relative h-48 bg-gradient-to-br from-green-900 to-green-700 flex items-center justify-center overflow-hidden">
+            <img src="https://via.placeholder.com/200x200?text=Bulbasaur" alt="Bulbasaur" class="w-full h-full object-cover">
+            <div class="absolute top-2 right-2 type-grass px-3 py-1 rounded-full text-xs font-bold text-white">🌿 Grass</div>
+          </div>
+          <div class="p-4 bg-pikachu-card">
+            <h3 class="font-bold text-white text-lg">Bulbasaur</h3>
+            <p class="text-gray-400 text-sm">HP: 45</p>
+            <p class="text-gray-500 text-xs mt-2">Base Set</p>
+            <button class="btn-pikachu w-full mt-4 py-2 rounded-lg text-sm font-bold opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              Agregar al Carrito
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Repeat grid for demo (4 more cards) -->
+      <div class="grid grid-cols-4 gap-6 mb-12">
+        <div class="card-pokemon bg-pikachu-card rounded-lg overflow-hidden cursor-pointer group">
+          <div class="relative h-48 bg-gradient-to-br from-purple-900 to-pink-800 flex items-center justify-center overflow-hidden">
+            <img src="https://via.placeholder.com/200x200?text=Mewtwo" alt="Mewtwo" class="w-full h-full object-cover">
+            <div class="absolute top-2 right-2 type-psychic px-3 py-1 rounded-full text-xs font-bold text-white">👁️ Psychic</div>
+          </div>
+          <div class="p-4 bg-pikachu-card">
+            <h3 class="font-bold text-white text-lg">Mewtwo</h3>
+            <p class="text-gray-400 text-sm">HP: 60</p>
+            <p class="text-gray-500 text-xs mt-2">Base Set</p>
+            <button class="btn-pikachu w-full mt-4 py-2 rounded-lg text-sm font-bold opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              Agregar al Carrito
+            </button>
+          </div>
+        </div>
+        <div class="card-pokemon bg-pikachu-card rounded-lg overflow-hidden cursor-pointer group">
+          <div class="relative h-48 bg-gradient-to-br from-yellow-900 to-yellow-700 flex items-center justify-center overflow-hidden">
+            <img src="https://via.placeholder.com/200x200?text=Dragonite" alt="Dragonite" class="w-full h-full object-cover">
+            <div class="absolute top-2 right-2 type-fighting px-3 py-1 rounded-full text-xs font-bold text-white">👊 Dragon</div>
+          </div>
+          <div class="p-4 bg-pikachu-card">
+            <h3 class="font-bold text-white text-lg">Dragonite</h3>
+            <p class="text-gray-400 text-sm">HP: 70</p>
+            <p class="text-gray-500 text-xs mt-2">Base Set</p>
+            <button class="btn-pikachu w-full mt-4 py-2 rounded-lg text-sm font-bold opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              Agregar al Carrito
+            </button>
+          </div>
+        </div>
+        <div class="card-pokemon bg-pikachu-card rounded-lg overflow-hidden cursor-pointer group">
+          <div class="relative h-48 bg-gradient-to-br from-red-900 to-red-700 flex items-center justify-center overflow-hidden">
+            <img src="https://via.placeholder.com/200x200?text=Charizard" alt="Charizard" class="w-full h-full object-cover">
+            <div class="absolute top-2 right-2 type-fire px-3 py-1 rounded-full text-xs font-bold text-white">🔥 Fire</div>
+          </div>
+          <div class="p-4 bg-pikachu-card">
+            <h3 class="font-bold text-white text-lg">Charizard</h3>
+            <p class="text-gray-400 text-sm">HP: 120</p>
+            <p class="text-gray-500 text-xs mt-2">Base Set</p>
+            <button class="btn-pikachu w-full mt-4 py-2 rounded-lg text-sm font-bold opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              Agregar al Carrito
+            </button>
+          </div>
+        </div>
+        <div class="card-pokemon bg-pikachu-card rounded-lg overflow-hidden cursor-pointer group">
+          <div class="relative h-48 bg-gradient-to-br from-blue-900 to-blue-700 flex items-center justify-center overflow-hidden">
+            <img src="https://via.placeholder.com/200x200?text=Blastoise" alt="Blastoise" class="w-full h-full object-cover">
+            <div class="absolute top-2 right-2 type-water px-3 py-1 rounded-full text-xs font-bold text-white">💧 Water</div>
+          </div>
+          <div class="p-4 bg-pikachu-card">
+            <h3 class="font-bold text-white text-lg">Blastoise</h3>
+            <p class="text-gray-400 text-sm">HP: 100</p>
+            <p class="text-gray-500 text-xs mt-2">Base Set</p>
+            <button class="btn-pikachu w-full mt-4 py-2 rounded-lg text-sm font-bold opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              Agregar al Carrito
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- PAGINATION -->
+      <div class="flex justify-center items-center gap-4 py-8">
+        <button class="px-4 py-2 border border-pikachu-yellow text-pikachu-yellow rounded-lg hover:btn-pikachu transition">← Anterior</button>
+        <div class="flex gap-2">
+          <button class="px-3 py-2 bg-pikachu-yellow text-black rounded font-bold">1</button>
+          <button class="px-3 py-2 border border-pikachu-yellow text-pikachu-yellow rounded hover:btn-pikachu transition">2</button>
+          <button class="px-3 py-2 border border-pikachu-yellow text-pikachu-yellow rounded hover:btn-pikachu transition">3</button>
+          <span class="px-3 py-2 text-gray-400">...</span>
+          <button class="px-3 py-2 border border-pikachu-yellow text-pikachu-yellow rounded hover:btn-pikachu transition">146</button>
+        </div>
+        <button class="px-4 py-2 border border-pikachu-yellow text-pikachu-yellow rounded-lg hover:btn-pikachu transition">Siguiente →</button>
+      </div>
+
+    </main>
+  </div>
+
+  <script>
+    const toggleBtn = document.getElementById('toggleSidebar');
+    const sidebar = document.getElementById('filterSidebar');
+    const mainContent = document.querySelector('main');
+
+    toggleBtn.addEventListener('click', () => {
+      sidebar.classList.toggle('visible');
+      sidebar.classList.toggle('hidden');
+
+      // Adjust main content margin
+      if (sidebar.classList.contains('visible')) {
+        mainContent.style.marginLeft = '12rem';
+      } else {
+        mainContent.style.marginLeft = '0';
+      }
+    });
+
+    // Initialize
+    mainContent.style.marginLeft = '12rem';
+  </script>
+
+</body>
+</html>

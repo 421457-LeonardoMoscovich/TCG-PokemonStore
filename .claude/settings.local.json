@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cd:*)",
+      "Bash(npm install:*)",
+      "Bash(node -e \"require\\(''express''\\); require\\(''mongodb''\\); require\\(''redis''\\); require\\(''dotenv''\\); require\\(''jsonwebtoken''\\); require\\(''bcryptjs''\\); console.log\\(''All deps OK''\\)\")",
+      "Bash(node -e \":*)",
+      "Bash(npm create:*)",
+      "Bash(npm run:*)",
+      "Bash(fuser -k 3000/tcp)",
+      "mcp__stitch__create_project",
+      "mcp__stitch__create_design_system",
+      "mcp__stitch__update_design_system",
+      "mcp__stitch__generate_screen_from_text",
+      "mcp__stitch__list_screens",
+      "mcp__stitch__get_screen",
+      "mcp__stitch__apply_design_system",
+      "Bash(curl -s \"https://contribution.usercontent.google.com/download?c=CgthaWRhX2NvZGVmeBJ8Eh1hcHBfY29tcGFuaW9uX2dlbmVyYXRlZF9maWxlcxpbCiVodG1sXzFjZDI2MGJkMzE3YzQyYTBhYjE1ZWViNWIxYTdiZWQ3EgsSBxDa5KitmxcYAZIBJAoKcHJvamVjdF9pZBIWQhQxMDQ5NDMwMzYwNjU0NTk5Njg4Ng&filename=&opi=96797242\")",
+      "Bash(curl -s \"https://contribution.usercontent.google.com/download?c=CgthaWRhX2NvZGVmeBJ8Eh1hcHBfY29tcGFuaW9uX2dlbmVyYXRlZF9maWxlcxpbCiVodG1sX2UxOTU2YTQ1MjdhODRjMzhhMjgxYmI1Yjg2ZjJkZjU2EgsSBxDa5KitmxcYAZIBJAoKcHJvamVjdF9pZBIWQhQxMDQ5NDMwMzYwNjU0NTk5Njg4Ng&filename=&opi=96797242\")",
+      "Bash(python3 .claude/skills/ui-ux-pro-max/scripts/search.py \"pokemon trading card ecommerce dark premium gaming\" --design-system -p \"PokémonTCG\")",
+      "Bash(node:*)"
+    ]
+  }
+}

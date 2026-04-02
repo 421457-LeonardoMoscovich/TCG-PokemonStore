@@ -24,12 +24,21 @@ export default function CartaDetalle() {
   const [adding, setAdding] = useState(false);
   const [msg, setMsg] = useState('');
 
+  const [mousePos, setMousePos] = useState({ x: 0.5, y: 0.5 });
+
   useEffect(() => {
     api.get(`/cartas/${id}`)
       .then(({ data }) => setCarta(data))
       .catch(() => navigate('/cartas'))
       .finally(() => setLoading(false));
   }, [id, navigate]);
+
+  const handleMouseMove = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width;
+    const y = (e.clientY - rect.top) / rect.height;
+    setMousePos({ x, y });
+  };
 
   async function agregarAlCarrito() {
     const token = localStorage.getItem('token');
@@ -77,12 +86,16 @@ export default function CartaDetalle() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="w-full px-4 md:px-6 lg:px-8 py-6 md:py-8 max-w-[1400px] mx-auto"
+      className="min-h-screen w-full relative transition-colors duration-1000"
+      style={{
+        background: `radial-gradient(circle at 50% -20%, ${t.glow.replace('0.4', '0.15')}, #0a0a1a 80%)`,
+      }}
     >
-      <motion.button 
-        onClick={() => navigate(-1)} 
-        initial={{ x: -20, opacity: 0 }}
-        animate={{ x: 0, opacity: 1 }}
+      <div className="max-w-[1400px] mx-auto px-4 md:px-6 lg:px-8 py-6 md:py-8">
+        <motion.button 
+          onClick={() => navigate(-1)} 
+          initial={{ x: -20, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
         transition={{ delay: 0.1 }}
         className="text-gray-400 hover:text-white text-sm mb-6 flex items-center gap-2 transition-colors group"
       >
@@ -107,12 +120,15 @@ export default function CartaDetalle() {
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-            className="w-full lg:w-72 shrink-0"
+            className="w-full lg:w-80 shrink-0 perspective-1000"
+            onMouseMove={handleMouseMove}
           >
-            <div 
-              className="relative rounded-2xl overflow-hidden"
+            <motion.div 
+              className="relative rounded-2xl overflow-hidden preserve-3d"
               style={{
-                boxShadow: `0 20px 50px ${t.glow}, 0 0 0 1px ${t.border}22`,
+                boxShadow: `0 25px 60px ${t.glow}, 0 0 0 1px ${t.border}33`,
+                rotateY: (mousePos.x - 0.5) * 15,
+                rotateX: (mousePos.y - 0.5) * -15,
               }}
             >
               {carta.image ? (
@@ -128,15 +144,25 @@ export default function CartaDetalle() {
                   {t.emoji}
                 </div>
               )}
+              
+              {/* Shine Effect */}
               <motion.div 
-                initial={{ opacity: 0 }}
-                whileHover={{ opacity: 1 }}
-                className="absolute inset-0 pointer-events-none"
+                className="absolute inset-0 pointer-events-none mix-blend-overlay z-10"
                 style={{
-                  background: `linear-gradient(135deg, ${t.border}11 0%, transparent 50%, ${t.border}08 100%)`,
+                  background: `radial-gradient(circle at ${mousePos.x * 100}% ${mousePos.y * 100}%, rgba(255,255,255,0.4) 0%, transparent 60%)`,
                 }}
               />
-            </div>
+              
+              {/* Rainbow Tint (Holographic) */}
+              <motion.div 
+                className="absolute inset-0 pointer-events-none opacity-20 mix-blend-color-dodge z-20"
+                style={{
+                  background: `linear-gradient(${135 + mousePos.x * 45}deg, #ff0000, #00ff00, #0000ff, #ff00ff)`,
+                  backgroundSize: '200% 200%',
+                  backgroundPosition: `${mousePos.x * 100}% ${mousePos.y * 100}%`
+                }}
+              />
+            </motion.div>
           </motion.div>
 
           <motion.div 
@@ -185,15 +211,23 @@ export default function CartaDetalle() {
                 {t.emoji} {carta.type}
               </span>
               {carta.hp && (
-                <span 
-                  className="text-sm px-3 py-1.5 rounded-full font-bold font-mono bg-bg-surface"
-                  style={{ 
-                    color: isDarkType ? '#fff' : '#000',
-                    border: `1px solid ${isDarkType ? '#333' : '#FFEB3B'}44`
-                  }}
-                >
-                  ♥ {carta.hp} HP
-                </span>
+                <div className="flex flex-col gap-1 min-w-[120px]">
+                  <div className="flex justify-between items-end">
+                    <span className="text-[10px] uppercase font-black tracking-tighter text-gray-400">Puntos de Vida</span>
+                    <span className="text-sm font-black font-mono text-white" style={{ textShadow: `0 0 10px ${t.border}` }}>
+                      {carta.hp} HP
+                    </span>
+                  </div>
+                  <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden border border-white/10">
+                    <motion.div 
+                      initial={{ width: 0 }}
+                      animate={{ width: `${Math.min((carta.hp / 250) * 100, 100)}%` }}
+                      transition={{ delay: 0.5, duration: 1, ease: "easeOut" }}
+                      className="h-full rounded-full"
+                      style={{ background: `linear-gradient(to right, ${t.border}, ${t.badgeBorder})` }}
+                    />
+                  </div>
+                </div>
               )}
             </motion.div>
 
@@ -288,6 +322,7 @@ export default function CartaDetalle() {
           </motion.div>
         </div>
       </motion.div>
+      </div>
     </motion.div>
   );
 }

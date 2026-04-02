@@ -12,12 +12,7 @@ import {
 import api from '../services/api';
 
 /* ── Color Palette (matches TYPE_STYLES) ── */
-const TYPE_COLORS = {
-  Fire: '#E53935', Water: '#1E88E5', Grass: '#43A047', Lightning: '#FFEB3B',
-  Psychic: '#E91E63', Fighting: '#F57C00', Darkness: '#607D8B',
-  Metal: '#90A4AE', Dragon: '#7C4DFF', Colorless: '#9E9E9E',
-};
-const CHART_COLORS = ['#E53935', '#1E88E5', '#43A047', '#FFEB3B', '#E91E63', '#F57C00', '#607D8B', '#7C4DFF', '#90A4AE', '#9E9E9E', '#FF6F00', '#00ACC1'];
+const CHART_COLORS = ['#7C4DFF', '#E91E63', '#1E88E5', '#43A047', '#FFEB3B', '#F57C00', '#607D8B', '#90A4AE', '#9E9E9E', '#00ACC1', '#C0CA33', '#8D6E63'];
 
 /* ── Animated Counter ── */
 function AnimCounter({ to, prefix = '', suffix = '' }) {
@@ -56,10 +51,10 @@ function KPICard({ icon: Icon, label, value, color, prefix = '', suffix = '', de
       initial={{ opacity: 0, y: 30, scale: 0.95 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ delay, type: 'spring', stiffness: 300, damping: 25 }}
-      className="relative rounded-2xl p-6 overflow-hidden border border-white/[0.06] backdrop-blur-xl"
+      className="group relative rounded-3xl p-7 overflow-hidden border border-white/[0.08] backdrop-blur-2xl transition-all hover:scale-[1.02] hover:border-white/20"
       style={{
-        background: `linear-gradient(135deg, ${color}12, rgba(255,255,255,0.02))`,
-        boxShadow: `0 20px 40px rgba(0,0,0,0.3), 0 0 30px ${color}10`,
+        background: `linear-gradient(135deg, ${color}15, rgba(20,20,40,0.4))`,
+        boxShadow: `0 30px 60px rgba(0,0,0,0.4), 0 0 40px ${color}10`,
       }}
     >
       <div className="absolute inset-0 bg-gradient-to-br from-white/[0.03] to-transparent" />
@@ -85,8 +80,11 @@ function Section({ title, icon: Icon, children, className = '' }) {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.3, duration: 0.5 }}
-      className={`rounded-2xl border border-white/[0.06] p-6 backdrop-blur-xl ${className}`}
-      style={{ background: 'linear-gradient(135deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01))' }}
+      className={`rounded-3xl border border-white/[0.06] p-8 backdrop-blur-3xl shadow-2xl ${className}`}
+      style={{ 
+        background: 'linear-gradient(165deg, rgba(255,255,255,0.04), rgba(255,255,255,0.01))',
+        boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.02)'
+      }}
     >
       <div className="flex items-center gap-3 mb-6">
         {Icon && <Icon className="w-5 h-5 text-gray-400" />}
@@ -204,12 +202,18 @@ export default function AdminDashboard() {
                 </PieChart>
               </ResponsiveContainer>
             </div>
-            <div className="flex flex-wrap gap-2 mt-2 justify-center">
+            <div className="flex flex-wrap gap-2 mt-4 justify-center">
               {cartasPorTipo.map((t, i) => (
-                <span key={i} className="flex items-center gap-1.5 text-[10px] font-bold text-gray-400 px-2 py-1 rounded-full border border-white/5 bg-white/[0.02]">
-                  <span className="w-2.5 h-2.5 rounded-full" style={{ background: TYPE_COLORS[t.name] || CHART_COLORS[i] }} />
+                <motion.span 
+                  key={i} 
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.5 + i * 0.05 }}
+                  className="flex items-center gap-1.5 text-[10px] font-bold text-gray-300 px-3 py-1.5 rounded-full border border-white/10 bg-white/[0.04] shadow-lg"
+                >
+                  <span className="w-2.5 h-2.5 rounded-full" style={{ background: CHART_COLORS[i % CHART_COLORS.length], boxShadow: `0 0 10px ${CHART_COLORS[i % CHART_COLORS.length]}` }} />
                   {t.name} ({t.value})
-                </span>
+                </motion.span>
               ))}
             </div>
           </Section>
@@ -251,8 +255,7 @@ export default function AdminDashboard() {
                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
                     <XAxis dataKey="label" tick={{ fill: '#6b7280', fontSize: 11 }} axisLine={false} />
                     <YAxis tick={{ fill: '#6b7280', fontSize: 11 }} axisLine={false} />
-                    <Tooltip content={<CustomTooltip />} />
-                    <Area type="monotone" dataKey="total" name="Ingresos" stroke="#7C4DFF" strokeWidth={2.5} fill="url(#incomeGrad)" />
+                    <Area type="monotone" dataKey="total" name="Ingresos" stroke="#7C4DFF" strokeWidth={4} fill="url(#incomeGrad)" dot={{ r: 4, fill: '#7C4DFF', strokeWidth: 2, stroke: '#fff' }} activeDot={{ r: 6, strokeWidth: 0 }} />
                   </AreaChart>
                 </ResponsiveContainer>
               </div>
@@ -277,7 +280,10 @@ export default function AdminDashboard() {
                   >
                     <span className="text-xs font-black text-gray-500 w-6 text-center">#{i + 1}</span>
                     {card.image && (
-                      <img src={card.image} alt={card.name} className="w-10 h-14 object-cover rounded-lg border border-white/10" />
+                      <div className="relative group/card overflow-hidden rounded-lg border border-white/10 w-10 h-14 shrink-0">
+                        <img src={card.image} alt={card.name} className="w-full h-full object-cover" />
+                        <div className="absolute inset-0 bg-gradient-to-tr from-white/20 to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity" />
+                      </div>
                     )}
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-bold text-white truncate">{card.name || 'Desconocida'}</p>
@@ -325,7 +331,7 @@ export default function AdminDashboard() {
                   transition={{ delay: 0.04 * i }}
                   className="flex items-center gap-3 px-3 py-2.5 rounded-xl border border-white/[0.04] bg-white/[0.02]"
                 >
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#7C4DFF] to-[#E91E63] flex items-center justify-center text-[10px] font-black text-white shrink-0">
+                  <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#7C4DFF] to-[#E91E63] flex items-center justify-center text-[11px] font-black text-white shrink-0 shadow-lg shadow-[#7C4DFF]/20 border border-white/20">
                     {(u.username || u.email || '?')[0].toUpperCase()}
                   </div>
                   <div className="flex-1 min-w-0">

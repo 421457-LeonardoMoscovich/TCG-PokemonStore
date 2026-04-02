@@ -27,19 +27,22 @@ async function comprarTicketScratch(req, res) {
       return res.status(400).json({ error: '¡Felicitaciones! Completaste la Pokédex 🎉' });
     }
 
-    // 4. Selección ponderada por rareza
+    // 4. Selección ponderada por rareza (TCG Pocket Icons)
     const PESO_RAREZA = {
-      'Common': 50,
-      'Uncommon': 30,
-      'Rare': 15,
-      'Rare Holo': 4,
-      'Rare Ultra': 1,
+      '◊': 60,           // Common (~60%)
+      '◊◊': 25,          // Uncommon (~25%)
+      '◊◊◊': 10,         // Rare (~10%)
+      '◊◊◊◊': 3,          // Rare ex (~3%)
+      '☆': 1.5,          // Promo / Illustration Rare (~1.5%)
+      '☆☆': 0.4,         // Special Illustration Rare (~0.4%)
+      '☆☆☆': 0.1,        // Immersive Rare (~0.1%)
+      'Crown Rare': 0.05 // Gold Card (~0.05%)
     };
 
     // Calculate total weight
     let totalWeight = 0;
     const cartasConPeso = cartasDisponibles.map(carta => {
-      const peso = PESO_RAREZA[carta.rarity] || 10; // Default weight = 10
+      const peso = PESO_RAREZA[carta.rarity] || 10; // Default fallback for unknown rarity
       totalWeight += peso;
       return { carta, peso };
     });
@@ -56,7 +59,7 @@ async function comprarTicketScratch(req, res) {
       randomNum -= item.peso;
     }
 
-    // 5. Actualizar usuario atómicamente
+    // 5. Actualizar usuario y registrar compra atómicamente
     await db.collection('usuarios').updateOne(
       { _id: new ObjectId(req.userId) },
       {
@@ -64,6 +67,17 @@ async function comprarTicketScratch(req, res) {
         $push: { collection: cartaGanada._id }
       }
     );
+
+    // 5b. Registrar en historial de compras para que se vea en Admin Panel
+    const compraScratch = {
+      userId: new ObjectId(req.userId),
+      type: 'scratch',
+      items: { [cartaGanada._id.toString()]: 1 },
+      totalPrice: 50,
+      purchasedAt: new Date(),
+      status: 'completed'
+    };
+    await db.collection('compras').insertOne(compraScratch);
 
     // 6. Retornar respuesta
     res.json({

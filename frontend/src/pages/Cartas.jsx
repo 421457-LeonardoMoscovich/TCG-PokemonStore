@@ -18,7 +18,7 @@ const TYPES = [
   { value: 'Fire',      label: 'Fire',      Icon: Flame,     color: '#E53935' },
   { value: 'Water',     label: 'Water',     Icon: Droplets,  color: '#1E88E5' },
   { value: 'Grass',     label: 'Grass',     Icon: Leaf,      color: '#43A047' },
-  { value: 'Electric',  label: 'Electric',  Icon: Zap,       color: '#FFEB3B' },
+  { value: 'Lightning', label: 'Lightning', Icon: Zap,       color: '#FFEB3B' },
   { value: 'Psychic',   label: 'Psychic',   Icon: Brain,     color: '#E91E63' },
   { value: 'Fighting',  label: 'Fighting',  Icon: HandMetal, color: '#F57C00' },
   { value: 'Darkness',  label: 'Darkness',  Icon: Moon,      color: '#607D8B' },
@@ -29,13 +29,14 @@ const TYPES = [
 
 const RARITIES = [
   { value: '',              label: 'Cualquiera' },
-  { value: 'Common',        label: 'Common' },
-  { value: 'Uncommon',      label: 'Uncommon' },
-  { value: 'Rare',          label: 'Rare' },
-  { value: 'Rare Holo',     label: 'Rare Holo' },
-  { value: 'Rare Ultra',    label: 'Rare Ultra' },
-  { value: 'Rare Rainbow',  label: 'Rainbow' },
-  { value: 'Rare Secret',   label: 'Secret' },
+  { value: '◊',             label: 'Común (◊)' },
+  { value: '◊◊',            label: 'Poco Común (◊◊)' },
+  { value: '◊◊◊',           label: 'Rara (◊◊◊)' },
+  { value: '◊◊◊◊',          label: 'Súper Rara (◊◊◊◊)' },
+  { value: '☆',             label: 'Rare Holo (☆)' },
+  { value: '☆☆',            label: 'Double Rare (☆☆)' },
+  { value: '☆☆☆',           label: 'Triple Rare (☆☆☆)' },
+  { value: 'Crown Rare',    label: 'Crown Rare' },
 ];
 
 const HP_OPTIONS = [
@@ -65,6 +66,7 @@ export default function Cartas() {
     type: '', rarity: '', hp_min: '', page: 1,
     q: searchParams.get('q') || '',
     favoritos: searchParams.get('favoritos') === 'true',
+    collected: '', // '' | 'true' | 'false'
   });
 
   useEffect(() => {
@@ -74,7 +76,9 @@ export default function Cartas() {
     setFilters((f) => ({ ...f, q, type, favoritos, page: 1 }));
   }, [searchParams]);
 
-  const favIds = filters.favoritos ? wishlist.join(',') : null;
+  const favIds = useMemo(() => {
+    return filters.favoritos ? (wishlist || []).join(',') : null;
+  }, [filters.favoritos, wishlist]);
 
   const fetchCartas = useCallback(async () => {
     setLoading(true);
@@ -84,6 +88,7 @@ export default function Cartas() {
       if (filters.rarity) params.rarity = filters.rarity;
       if (filters.hp_min) params.hp_min = filters.hp_min;
       if (filters.q) params.name = filters.q;
+      if (filters.collected) params.collected = filters.collected;
       
       if (filters.favoritos) {
         if (!favIds) {
@@ -96,14 +101,14 @@ export default function Cartas() {
       }
 
       const { data } = await api.get('/cartas', { params });
-      setCartas(data.cartas);
-      setPagination(data.pagination);
+      setCartas(data?.cartas || []);
+      setPagination(data?.pagination || {});
     } catch (err) {
       console.error(err);
     } finally {
       setLoading(false);
     }
-  }, [filters, favIds]);
+  }, [filters.page, filters.q, filters.type, filters.rarity, filters.hp_min, filters.collected, filters.favoritos, favIds]);
 
   useEffect(() => { fetchCartas(); }, [fetchCartas]);
 
@@ -112,10 +117,10 @@ export default function Cartas() {
   }
 
   function clearFilters() {
-    setFilters({ type: '', rarity: '', hp_min: '', page: 1, q: '', favoritos: false });
+    setFilters({ type: '', rarity: '', hp_min: '', page: 1, q: '', favoritos: false, collected: '' });
   }
 
-  const hasFilters = filters.type || filters.hp_min || filters.rarity || filters.q || filters.favoritos;
+  const hasFilters = filters.type || filters.hp_min || filters.rarity || filters.q || filters.favoritos || filters.collected;
   const activeType = TYPES.find((t) => t.value === filters.type) || TYPES[0];
   const ActiveIcon = activeType.Icon;
 
@@ -129,11 +134,12 @@ export default function Cartas() {
     if (filters.hp_min) c++;
     if (filters.q) c++;
     if (filters.favoritos) c++;
+    if (filters.collected) c++;
     return c;
   }, [filters]);
 
   const displayedCartas = filters.favoritos
-    ? cartas.filter((c) => wishlist.includes(c._id))
+    ? cartas.filter((c) => (wishlist || []).includes(c._id))
     : cartas;
 
   return (
@@ -185,11 +191,11 @@ export default function Cartas() {
           </div>
           
           <div className="flex items-center gap-4 shrink-0">
-            {pagination.total != null && (
+            {pagination?.total != null && (
               <div className="glass-panel px-6 py-3 rounded-2xl flex flex-col items-end border border-white/10" style={{ boxShadow: `0 10px 30px ${accentColor}15` }}>
                 <span className="text-[10px] uppercase tracking-[0.3em] font-black text-gray-500 mb-1">Total Encontrado</span>
                 <span className="text-2xl font-black text-white tabular-nums tracking-tighter" style={{ textShadow: `0 0 20px ${accentColor}80` }}>
-                  {pagination.total.toLocaleString()}
+                  {(pagination?.total || 0).toLocaleString()}
                 </span>
               </div>
             )}
@@ -306,6 +312,33 @@ export default function Cartas() {
                 </div>
               </SidebarSection>
 
+              <div className="sidebar-divider my-6" />
+
+               <SidebarSection label="Colección" icon={<LibraryBig className="w-4 h-4" />}>
+                <div className="flex flex-col gap-2 mt-4">
+                  {[
+                    { label: 'Todas', value: '' },
+                    { label: 'Mis Cartas', value: 'true' },
+                    { label: 'Faltantes', value: 'false' },
+                  ].map((opt) => {
+                    const active = filters.collected === opt.value;
+                    return (
+                      <motion.button
+                        key={opt.value}
+                        onClick={() => setFilter('collected', opt.value)}
+                        className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all text-left border ${
+                          active ? 'bg-indigo-500/20 border-indigo-500/50 text-white' : 'bg-white/5 border-transparent text-gray-400 hover:bg-white/10'
+                        }`}
+                        whileHover={{ x: 4 }}
+                        whileTap={{ scale: 0.98 }}
+                      >
+                        {opt.label}
+                      </motion.button>
+                    );
+                  })}
+                </div>
+              </SidebarSection>
+              
               <AnimatePresence>
                 {hasFilters && (
                   <motion.div
@@ -384,6 +417,9 @@ export default function Cartas() {
                 )}
                 {filters.favoritos && (
                   <NeonChip key="fav-chip" color="#E53935" icon={<Heart className="w-3.5 h-3.5" />} label="Favoritos" onRemove={() => setFilter('favoritos', false)} />
+                )}
+                {filters.collected && (
+                  <NeonChip key="collected-chip" color="#4F46E5" icon={<LibraryBig className="w-3.5 h-3.5" />} label={filters.collected === 'true' ? 'Mis Cartas' : 'Faltantes'} onRemove={() => setFilter('collected', '')} />
                 )}
               </AnimatePresence>
             </div>

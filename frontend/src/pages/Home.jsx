@@ -13,7 +13,7 @@ const TYPES = [
   { value: 'Fire', label: 'Fire', Icon: Flame, color: '#E53935', gradient: 'from-red-600/20' },
   { value: 'Water', label: 'Water', Icon: Droplets, color: '#1E88E5', gradient: 'from-blue-600/20' },
   { value: 'Grass', label: 'Grass', Icon: Leaf, color: '#43A047', gradient: 'from-green-600/20' },
-  { value: 'Electric', label: 'Electric', Icon: Zap, color: '#FFEB3B', gradient: 'from-yellow-500/20' },
+  { value: 'Lightning', label: 'Lightning', Icon: Zap, color: '#FFEB3B', gradient: 'from-yellow-500/20' },
   { value: 'Psychic', label: 'Psychic', Icon: Brain, color: '#E91E63', gradient: 'from-pink-600/20' },
   { value: 'Fighting', label: 'Fighting', Icon: HandMetal, color: '#F57C00', gradient: 'from-orange-600/20' },
   { value: 'Darkness', label: 'Darkness', Icon: Moon, color: '#607D8B', gradient: 'from-slate-600/20' },
@@ -293,7 +293,8 @@ export default function Home() {
                             <span className="text-[10px] px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(255,235,59,0.15)', color: '#FFEB3B' }}>
                               {card.type}
                             </span>
-                            <span className="text-gray-400 text-[10px]">HP {card.hp}</span>
+                            {card.price && <span className="text-green-400 text-[10px] font-bold ml-1">${card.price}</span>}
+                            <span className="text-gray-400 text-[10px] ml-auto">HP {card.hp}</span>
                           </div>
                         </div>
                       </motion.div>
@@ -450,6 +451,7 @@ export default function Home() {
                           >
                             {carta.type}
                           </span>
+                          {carta.price && <span className="text-green-400 text-[10px] font-bold">${carta.price}</span>}
                           <span className="text-gray-400 text-[10px]">HP {carta.hp}</span>
                         </div>
                       </div>

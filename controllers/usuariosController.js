@@ -22,6 +22,7 @@ async function registro(req, res) {
       email,
       username,
       password: passwordHash,
+      role: 'user',
       balance: 1000,
       collection: [],
       createdAt: new Date(),
@@ -29,7 +30,7 @@ async function registro(req, res) {
 
     const result = await db.collection('usuarios').insertOne(nuevoUsuario);
     const userId = result.insertedId.toString();
-    const token = generateToken(userId, email);
+    const token = generateToken(userId, email, 'user');
 
     res.status(201).json({
       mensaje: 'Usuario registrado exitosamente',
@@ -38,6 +39,7 @@ async function registro(req, res) {
         id: userId,
         email,
         username,
+        role: 'user',
         balance: 1000,
         collection: [],
         createdAt: nuevoUsuario.createdAt,
@@ -67,7 +69,7 @@ async function login(req, res) {
     }
 
     const userId = usuario._id.toString();
-    const token = generateToken(userId, email);
+    const token = generateToken(userId, email, usuario.role || 'user');
 
     const redis = getRedis();
     await redis.set(`session:${token}`, userId, { EX: 86400 });

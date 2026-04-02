@@ -19,6 +19,11 @@ function getDB() {
   return db;
 }
 
+function getClient() {
+  if (!client) throw new Error('MongoDB no inicializado. Llamá connectDB() primero.');
+  return client;
+}
+
 async function closeDB() {
   if (client) {
     await client.close();
@@ -28,4 +33,4 @@ async function closeDB() {
   }
 }
 
-module.exports = { connectDB, getDB, closeDB };
+module.exports = { connectDB, getDB, getClient, closeDB };

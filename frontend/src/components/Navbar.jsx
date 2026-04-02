@@ -3,12 +3,11 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Search, ShoppingCart, Sparkles, Heart, X,
-  User, ShoppingBag, ChevronRight, Menu, LogOut, Settings, Ticket, BookOpen,
+  User, ShoppingBag, ChevronRight, Menu, LogOut, Settings, Ticket, BookOpen, Shield,
 } from 'lucide-react';
 import { useCart } from '../hooks/useCart';
 import { useWishlist } from '../hooks/useWishlist';
 
-const CARD_PRICE = 10;
 
 // ─── Main component ───────────────────────────────────────────────
 
@@ -60,7 +59,7 @@ export default function Navbar() {
   }
 
   const cartItems = cart || [];
-  const cartTotal = cartItems.reduce((sum, item) => sum + (item.quantity || 1) * CARD_PRICE, 0);
+  const cartTotal = cartItems.reduce((sum, item) => sum + (item.quantity || 1) * (item.price || 0), 0);
 
   return (
     <>
@@ -223,6 +222,17 @@ export default function Navbar() {
                             onClick={() => { setProfileOpen(false); setCartOpen(true); }}
                           />
                         </div>
+
+                        {/* Admin Panel - only for admins */}
+                        {user.role === 'admin' && (
+                          <div className="py-1.5 border-t border-white/5">
+                            <DropdownItem
+                              icon={<Shield className="w-3.5 h-3.5" />}
+                              label="Admin Panel"
+                              onClick={() => { setProfileOpen(false); navigate('/admin'); }}
+                            />
+                          </div>
+                        )}
 
                         {/* Logout */}
                         <div className="py-1.5 border-t border-white/5">
@@ -489,7 +499,7 @@ export default function Navbar() {
                           <div className="flex items-center justify-between">
                             <span className="text-gray-600 text-xs">×{item.quantity || 1}</span>
                             <span className="text-white text-sm font-bold">
-                              ${(item.quantity || 1) * CARD_PRICE}
+                              ${(item.quantity || 1) * (item.price || 0)}
                             </span>
                           </div>
                         </div>

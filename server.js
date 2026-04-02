@@ -37,6 +37,7 @@ app.use('/api/cartas', require('./routes/cartas'));
 app.use('/api/usuarios', require('./routes/usuarios'));
 app.use('/api/compras', require('./routes/compras'));
 app.use('/api/scratch', require('./routes/scratch'));
+app.use('/api/admin', require('./routes/admin'));
 
 // Graceful shutdown
 async function shutdown() {

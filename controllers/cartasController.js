@@ -4,17 +4,41 @@ const { ObjectId } = require('mongodb');
 async function obtenerCartas(req, res) {
   try {
     const db = getDB();
-    const { type, hp_min, rarity, page = 1, limit = 20, name, ids } = req.query;
+    const { type, hp_min, rarity, page = 1, limit = 20, name, ids, collected } = req.query;
 
     const filter = {};
     if (type) filter.type = { $regex: new RegExp(type, 'i') };
     if (hp_min) filter.hp = { $gte: parseInt(hp_min) };
-    if (rarity) filter.rarity = { $regex: new RegExp(rarity, 'i') };
+    if (rarity) filter.rarity = rarity;
     if (name) filter.name = { $regex: new RegExp(name, 'i') };
+    
+    // Filtro por colección (si el usuario está logueado)
+    if (collected && req.userId) {
+      const usuario = await db.collection('usuarios').findOne({ _id: new ObjectId(req.userId) });
+      const collection = (usuario && usuario.collection) || [];
+      const collectionIds = collection.map(id => new ObjectId(id));
+      
+      if (collected === 'true') {
+        filter._id = { $in: collectionIds };
+      } else if (collected === 'false') {
+        filter._id = { $nin: collectionIds };
+      }
+    }
+
     if (ids) {
       const idArray = ids.split(',').filter(id => ObjectId.isValid(id)).map(id => new ObjectId(id));
       if (idArray.length > 0) {
-        filter._id = { $in: idArray };
+        // Combinar con filtro de colección si ya existe _id
+        if (filter._id) {
+          const existing = filter._id.$in || filter._id.$nin || [];
+          if (filter._id.$in) {
+            filter._id.$in = existing.filter(id => idArray.some(aid => aid.equals(id)));
+          } else {
+            filter._id.$nin = [...new Set([...existing, ...idArray])];
+          }
+        } else {
+          filter._id = { $in: idArray };
+        }
       }
     }
 
@@ -24,8 +48,21 @@ async function obtenerCartas(req, res) {
       db.collection('cartas').countDocuments(filter),
     ]);
 
+    // Enriquecer con información de si el usuario ya la posee
+    let cartasEnriquecidas = cartas;
+    if (req.userId) {
+      const usuario = await db.collection('usuarios').findOne({ _id: new ObjectId(req.userId) });
+      const userCertIds = (usuario && usuario.collection) || [];
+      const userCertIdsStr = userCertIds.map(id => id.toString());
+      
+      cartasEnriquecidas = cartas.map(carta => ({
+        ...carta,
+        isCollected: userCertIdsStr.includes(carta._id.toString())
+      }));
+    }
+
     res.json({
-      cartas,
+      cartas: cartasEnriquecidas,
       pagination: {
         total,
         page: parseInt(page),

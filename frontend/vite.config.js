@@ -7,7 +7,7 @@ export default defineConfig({
   server: {
     proxy: {
       // If WSL localhost forwarding breaks, use WSL IP: wsl -e hostname -I
-      '/api': 'http://172.29.203.188:3000',
+      '/api': 'http://localhost:3000',
     },
   },
 })

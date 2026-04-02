@@ -4,13 +4,12 @@ import { motion, AnimatePresence, useMotionValue, useTransform, animate } from '
 import { ShieldAlert, Fingerprint, RefreshCcw, ArrowRight, Zap, Target, ArrowUpRight, Battery, Activity } from 'lucide-react';
 import api from '../services/api';
 
-const PRICE_PER_CARD = 10;
 
 const TYPE_BADGE = {
   Fire:      { border: '#ef4444', text: '#ef4444', glow: 'rgba(239, 68, 68, 0.4)' },
   Water:     { border: '#3b82f6', text: '#3b82f6', glow: 'rgba(59, 130, 246, 0.4)' },
   Grass:     { border: '#22c55e', text: '#22c55e', glow: 'rgba(34, 197, 94, 0.4)' },
-  Electric:  { border: '#eab308', text: '#eab308', glow: 'rgba(234, 179, 8, 0.4)' },
+  Lightning: { border: '#eab308', text: '#eab308', glow: 'rgba(234, 179, 8, 0.4)' },
   Psychic:   { border: '#a855f7', text: '#a855f7', glow: 'rgba(168, 85, 247, 0.4)' },
   Fighting:  { border: '#f97316', text: '#f97316', glow: 'rgba(249, 115, 22, 0.4)' },
   Darkness:  { border: '#6b7280', text: '#9ca3af', glow: 'rgba(107, 114, 128, 0.4)' },
@@ -189,7 +188,7 @@ function CheckoutModal({ carrito, subtotal, totalItems, onConfirm, onClose, conf
 /* ─────────────────────────────── CARGO ROW (Replaces ItemCard) ──────────────────────────── */
 function CargoRow({ item, idx, onRemove, onChangeQty }) {
   const badge = TYPE_BADGE[item.type] || TYPE_BADGE.Colorless;
-  const lineTotal = parseInt(item.quantity) * PRICE_PER_CARD;
+  const lineTotal = parseInt(item.quantity) * (item.price || 0);
 
   // Tiny 3D tilt for the image thumbnail only, to add that premium feel
   const x = useMotionValue(0);
@@ -349,7 +348,7 @@ export default function Carrito() {
     if (next <= 0) { removeItem(cardId); return; }
     
     // Store previous total for animation
-    const currentSub = carrito.reduce((s, i) => s + parseInt(i.quantity), 0) * PRICE_PER_CARD;
+    const currentSub = carrito.reduce((s, i) => s + (parseInt(i.quantity) * (i.price || 0)), 0);
     setPrevSubtotal(currentSub);
 
     setCarrito((c) => c.map((i) => i.cardId === cardId ? { ...i, quantity: next } : i));
@@ -370,6 +369,7 @@ export default function Carrito() {
       setCarrito([]);
       setShowModal(false);
       setSuccessMsg(`TRANSFERENCIA COMPLETADA. TOTAL DEDUCIDO: $${data.totalPrice}`);
+      window.dispatchEvent(new CustomEvent('cart-updated'));
     } catch (err) {
       setShowModal(false);
       setSuccessMsg(err.response?.data?.error || 'ERROR CRÍTICO AL CONTACTAR EL SERVIDOR DE FONDOS');
@@ -379,7 +379,7 @@ export default function Carrito() {
   }
 
   const totalItems = carrito.reduce((s, i) => s + parseInt(i.quantity), 0);
-  const subtotal   = totalItems * PRICE_PER_CARD;
+  const subtotal   = carrito.reduce((s, i) => s + (parseInt(i.quantity) * (i.price || 0)), 0);
 
   /* ── 1. LOADING STATE ── */
   if (loading) return (

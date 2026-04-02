@@ -8,6 +8,8 @@ const TYPE = {
   Water:     { border: '#1E88E5', glow: 'rgba(30,136,229,0.8)', badge: '#1e3a5f' },
   Grass:     { border: '#43A047', glow: 'rgba(67,160,71,0.8)',  badge: '#14532d' },
   Electric:  { border: '#FFEB3B', glow: 'rgba(255,235,59,0.8)', badge: '#713f12' },
+  Lightning: { border: '#FFEB3B', glow: 'rgba(255,235,59,0.8)', badge: '#713f12' },
+  'Trainer/Energy': { border: '#BDBDBD', glow: 'rgba(252,211,77,0.3)', badge: '#451a03' },
   Psychic:   { border: '#E91E63', glow: 'rgba(233,30,99,0.8)',  badge: '#4a1772' },
   Dragon:    { border: '#7C4DFF', glow: 'rgba(124,77,255,0.8)', badge: '#312e81' },
   Colorless: { border: '#9E9E9E', glow: 'rgba(158,158,158,0.5)', badge: '#374151' },

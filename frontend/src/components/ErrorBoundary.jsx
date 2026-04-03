@@ -18,10 +18,10 @@ class ErrorBoundary extends React.Component {
     if (this.state.hasError) {
       return (
         <div className="min-h-screen bg-black text-white p-8 flex items-center justify-center font-sans">
-          <div className="max-w-xl w-full glass p-8 rounded-3xl border border-red-500/30 text-center">
+          <div className="max-w-xl w-full glass p-8 rounded-md border border-red-500/30 text-center">
             <h1 className="text-3xl font-black mb-4 text-red-500">Oh no! Algo salió mal</h1>
             <p className="text-gray-400 mb-6">Estamos teniendo problemas para cargar esta sección. Por favor, intenta refrescar la página.</p>
-            <div className="bg-red-500/10 p-4 rounded-xl mb-6 text-left border border-red-500/20 overflow-auto max-h-40">
+            <div className="bg-red-500/10 p-4 rounded-md mb-6 text-left border border-red-500/20 overflow-auto max-h-40">
               <code className="text-red-400 text-sm whitespace-pre-wrap">
                 {this.state.error?.toString()}
               </code>

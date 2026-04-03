@@ -61,7 +61,7 @@ function CardModal({ card, onClose, onSave }) {
       <motion.div
         initial={{ scale: 0.9, y: 30 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 30 }}
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-lg rounded-2xl border border-white/10 p-6"
+        className="w-full max-w-lg rounded-lg border border-white/10 p-6"
         style={{ background: 'linear-gradient(135deg, #1a1a2e, #16162a)' }}
       >
         <div className="flex items-center justify-between mb-6">
@@ -73,24 +73,24 @@ function CardModal({ card, onClose, onSave }) {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="text-[10px] uppercase tracking-widest text-gray-500 font-bold mb-1 block">Nombre *</label>
-              <input name="name" value={form.name} onChange={onChange} className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:border-[#7C4DFF] focus:outline-none transition-colors" />
+              <input name="name" value={form.name} onChange={onChange} className="w-full px-3 py-2.5 rounded-md bg-white/5 border border-white/10 text-white text-sm focus:border-[#7C4DFF] focus:outline-none transition-colors" />
             </div>
             <div>
               <label className="text-[10px] uppercase tracking-widest text-gray-500 font-bold mb-1 block">HP</label>
-              <input name="hp" type="number" value={form.hp} onChange={onChange} className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:border-[#7C4DFF] focus:outline-none transition-colors" />
+              <input name="hp" type="number" value={form.hp} onChange={onChange} className="w-full px-3 py-2.5 rounded-md bg-white/5 border border-white/10 text-white text-sm focus:border-[#7C4DFF] focus:outline-none transition-colors" />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="text-[10px] uppercase tracking-widest text-gray-500 font-bold mb-1 block">Tipo *</label>
-              <select name="type" value={form.type} onChange={onChange} className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:border-[#7C4DFF] focus:outline-none transition-colors">
+              <select name="type" value={form.type} onChange={onChange} className="w-full px-3 py-2.5 rounded-md bg-white/5 border border-white/10 text-white text-sm focus:border-[#7C4DFF] focus:outline-none transition-colors">
                 {TYPES.filter(Boolean).map(t => <option key={t} value={t}>{t}</option>)}
               </select>
             </div>
             <div>
               <label className="text-[10px] uppercase tracking-widest text-gray-500 font-bold mb-1 block">Rareza</label>
-              <select name="rarity" value={form.rarity} onChange={onChange} className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:border-[#7C4DFF] focus:outline-none transition-colors">
+              <select name="rarity" value={form.rarity} onChange={onChange} className="w-full px-3 py-2.5 rounded-md bg-white/5 border border-white/10 text-white text-sm focus:border-[#7C4DFF] focus:outline-none transition-colors">
                 {RARITIES.filter(Boolean).map(r => <option key={r} value={r}>{r}</option>)}
               </select>
             </div>
@@ -99,31 +99,31 @@ function CardModal({ card, onClose, onSave }) {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="text-[10px] uppercase tracking-widest text-gray-500 font-bold mb-1 block">Set</label>
-              <input name="set_name" value={form.set_name} onChange={onChange} className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:border-[#7C4DFF] focus:outline-none transition-colors" />
+              <input name="set_name" value={form.set_name} onChange={onChange} className="w-full px-3 py-2.5 rounded-md bg-white/5 border border-white/10 text-white text-sm focus:border-[#7C4DFF] focus:outline-none transition-colors" />
             </div>
             <div>
               <label className="text-[10px] uppercase tracking-widest text-gray-500 font-bold mb-1 block">Nro. Carta</label>
-              <input name="card_number" type="number" value={form.card_number} onChange={onChange} className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:border-[#7C4DFF] focus:outline-none transition-colors" />
+              <input name="card_number" type="number" value={form.card_number} onChange={onChange} className="w-full px-3 py-2.5 rounded-md bg-white/5 border border-white/10 text-white text-sm focus:border-[#7C4DFF] focus:outline-none transition-colors" />
             </div>
           </div>
 
           <div>
             <label className="text-[10px] uppercase tracking-widest text-gray-500 font-bold mb-1 block">URL Imagen</label>
-            <input name="image" value={form.image} onChange={onChange} placeholder="https://..." className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:border-[#7C4DFF] focus:outline-none transition-colors" />
+            <input name="image" value={form.image} onChange={onChange} placeholder="https://..." className="w-full px-3 py-2.5 rounded-md bg-white/5 border border-white/10 text-white text-sm focus:border-[#7C4DFF] focus:outline-none transition-colors" />
           </div>
 
           <div>
             <label className="text-[10px] uppercase tracking-widest text-gray-500 font-bold mb-1 block">URL Detalle</label>
-            <input name="url" value={form.url} onChange={onChange} placeholder="https://..." className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:border-[#7C4DFF] focus:outline-none transition-colors" />
+            <input name="url" value={form.url} onChange={onChange} placeholder="https://..." className="w-full px-3 py-2.5 rounded-md bg-white/5 border border-white/10 text-white text-sm focus:border-[#7C4DFF] focus:outline-none transition-colors" />
           </div>
 
           {error && <p className="text-red-400 text-sm font-medium">{error}</p>}
 
           <div className="flex gap-3 pt-2">
-            <button type="button" onClick={onClose} className="flex-1 py-3 rounded-xl border border-white/10 text-gray-400 font-bold text-sm hover:bg-white/5 transition-colors">
+            <button type="button" onClick={onClose} className="flex-1 py-3 rounded-md border border-white/10 text-gray-400 font-bold text-sm hover:bg-white/5 transition-colors">
               Cancelar
             </button>
-            <button type="submit" disabled={saving} className="flex-1 py-3 rounded-xl bg-[#7C4DFF] text-white font-bold text-sm hover:bg-[#6a3de8] transition-colors flex items-center justify-center gap-2 disabled:opacity-50">
+            <button type="submit" disabled={saving} className="flex-1 py-3 rounded-md bg-[#7C4DFF] text-white font-bold text-sm hover:bg-[#6a3de8] transition-colors flex items-center justify-center gap-2 disabled:opacity-50">
               {saving ? '...' : <><Check className="w-4 h-4" /> {card?._id ? 'Guardar' : 'Crear'}</>}
             </button>
           </div>
@@ -144,16 +144,16 @@ function ConfirmModal({ message, onConfirm, onCancel }) {
       <motion.div
         initial={{ scale: 0.9 }} animate={{ scale: 1 }} exit={{ scale: 0.9 }}
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-sm rounded-2xl border border-red-500/20 p-6 text-center"
+        className="w-full max-w-sm rounded-lg border border-red-500/20 p-6 text-center"
         style={{ background: 'linear-gradient(135deg, #1a1a2e, #1e1028)' }}
       >
         <AlertTriangle className="w-12 h-12 text-red-400 mx-auto mb-4" />
         <p className="text-white font-bold mb-6">{message}</p>
         <div className="flex gap-3">
-          <button onClick={onCancel} className="flex-1 py-3 rounded-xl border border-white/10 text-gray-400 font-bold text-sm hover:bg-white/5 transition-colors">
+          <button onClick={onCancel} className="flex-1 py-3 rounded-md border border-white/10 text-gray-400 font-bold text-sm hover:bg-white/5 transition-colors">
             Cancelar
           </button>
-          <button onClick={onConfirm} className="flex-1 py-3 rounded-xl bg-red-500 text-white font-bold text-sm hover:bg-red-600 transition-colors">
+          <button onClick={onConfirm} className="flex-1 py-3 rounded-md bg-red-500 text-white font-bold text-sm hover:bg-red-600 transition-colors">
             Eliminar
           </button>
         </div>
@@ -249,7 +249,7 @@ export default function AdminCards() {
         {/* Header */}
         <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 border-b border-white/[0.06] pb-6">
           <div className="flex items-center gap-4">
-            <Link to="/admin" className="p-2 rounded-xl border border-white/10 hover:bg-white/5 text-gray-400 transition-colors">
+            <Link to="/admin" className="p-2 rounded-md border border-white/10 hover:bg-white/5 text-gray-400 transition-colors">
               <ArrowLeft className="w-5 h-5" />
             </Link>
             <div>
@@ -263,7 +263,7 @@ export default function AdminCards() {
           <motion.button
             whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
             onClick={() => setModalCard({})}
-            className="flex items-center gap-2 px-5 py-3 rounded-xl bg-[#7C4DFF] text-white font-bold text-sm shadow-lg shadow-[#7C4DFF]/30 hover:bg-[#6a3de8] transition-colors"
+            className="flex items-center gap-2 px-5 py-3 rounded-md bg-[#7C4DFF] text-white font-bold text-sm shadow-lg shadow-[#7C4DFF]/30 hover:bg-[#6a3de8] transition-colors"
           >
             <Plus className="w-5 h-5" /> Nueva Carta
           </motion.button>
@@ -277,7 +277,7 @@ export default function AdminCards() {
               value={filters.q}
               onChange={(e) => setFilter('q', e.target.value)}
               placeholder="Buscar por nombre..."
-              className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:border-[#7C4DFF] focus:outline-none transition-colors"
+              className="w-full pl-10 pr-4 py-3 rounded-md bg-white/5 border border-white/10 text-white text-sm focus:border-[#7C4DFF] focus:outline-none transition-colors"
             />
           </div>
           <div className="flex items-center gap-2">
@@ -285,7 +285,7 @@ export default function AdminCards() {
             <select
               value={filters.type}
               onChange={(e) => setFilter('type', e.target.value)}
-              className="px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:border-[#7C4DFF] focus:outline-none transition-colors"
+              className="px-4 py-3 rounded-md bg-white/5 border border-white/10 text-white text-sm focus:border-[#7C4DFF] focus:outline-none transition-colors"
             >
               <option value="">Todos los tipos</option>
               {TYPES.filter(Boolean).map(t => <option key={t} value={t}>{t}</option>)}
@@ -298,7 +298,7 @@ export default function AdminCards() {
           {selected.size > 0 && (
             <motion.div
               initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
-              className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center gap-3"
+              className="mb-4 p-3 rounded-md bg-red-500/10 border border-red-500/20 flex items-center gap-3"
             >
               <span className="text-sm font-bold text-red-300">{selected.size} seleccionada(s)</span>
               <button
@@ -315,7 +315,7 @@ export default function AdminCards() {
         </AnimatePresence>
 
         {/* Table */}
-        <div className="rounded-2xl border border-white/[0.06] overflow-hidden" style={{ background: 'rgba(255,255,255,0.02)' }}>
+        <div className="rounded-lg border border-white/[0.06] overflow-hidden" style={{ background: 'rgba(255,255,255,0.02)' }}>
           {/* Table Header */}
           <div className="grid grid-cols-[40px_60px_1fr_100px_80px_120px_100px] gap-3 px-4 py-3 border-b border-white/[0.06] bg-white/[0.02] text-[10px] uppercase tracking-widest text-gray-500 font-bold items-center">
             <button onClick={toggleAll} className="flex items-center justify-center">
@@ -383,7 +383,7 @@ export default function AdminCards() {
             <button
               onClick={() => setFilters(f => ({ ...f, page: Math.max(1, f.page - 1) }))}
               disabled={filters.page <= 1}
-              className="p-2 rounded-xl border border-white/10 text-gray-400 hover:bg-white/5 disabled:opacity-30 transition-colors"
+              className="p-2 rounded-md border border-white/10 text-gray-400 hover:bg-white/5 disabled:opacity-30 transition-colors"
             >
               <ChevronLeft className="w-5 h-5" />
             </button>
@@ -393,7 +393,7 @@ export default function AdminCards() {
             <button
               onClick={() => setFilters(f => ({ ...f, page: Math.min(totalPages, f.page + 1) }))}
               disabled={filters.page >= totalPages}
-              className="p-2 rounded-xl border border-white/10 text-gray-400 hover:bg-white/5 disabled:opacity-30 transition-colors"
+              className="p-2 rounded-md border border-white/10 text-gray-400 hover:bg-white/5 disabled:opacity-30 transition-colors"
             >
               <ChevronRight className="w-5 h-5" />
             </button>

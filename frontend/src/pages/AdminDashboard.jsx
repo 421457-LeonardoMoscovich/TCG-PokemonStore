@@ -1,9 +1,9 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, animate } from 'framer-motion';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell, AreaChart, Area, CartesianGrid
+  PieChart, Pie, Cell, AreaChart, Area, CartesianGrid, Legend
 } from 'recharts';
 import {
   LayoutDashboard, CreditCard, Users, ShoppingCart, DollarSign,
@@ -12,6 +12,11 @@ import {
 import api from '../services/api';
 
 /* ── Color Palette (matches TYPE_STYLES) ── */
+const TYPE_COLORS = {
+  Fire: '#E53935', Water: '#1E88E5', Grass: '#43A047', Lightning: '#FFEB3B',
+  Psychic: '#E91E63', Fighting: '#F57C00', Darkness: '#607D8B',
+  Metal: '#90A4AE', Dragon: '#7C4DFF', Colorless: '#9E9E9E',
+};
 const CHART_COLORS = ['#7C4DFF', '#E91E63', '#1E88E5', '#43A047', '#FFEB3B', '#F57C00', '#607D8B', '#90A4AE', '#9E9E9E', '#00ACC1', '#C0CA33', '#8D6E63'];
 
 /* ── Animated Counter ── */
@@ -33,7 +38,7 @@ function AnimCounter({ to, prefix = '', suffix = '' }) {
 function CustomTooltip({ active, payload, label }) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="bg-[#1a1a2e] border border-white/10 rounded-xl px-4 py-3 shadow-2xl">
+    <div className="bg-[#1a1a2e] border border-white/10 rounded-md px-4 py-3 shadow-2xl">
       <p className="text-xs text-gray-400 mb-1">{label}</p>
       {payload.map((p, i) => (
         <p key={i} className="text-sm font-bold" style={{ color: p.color || '#fff' }}>
@@ -48,10 +53,10 @@ function CustomTooltip({ active, payload, label }) {
 function KPICard({ icon: Icon, label, value, color, prefix = '', suffix = '', delay = 0 }) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 30, scale: 0.95 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ delay, type: 'spring', stiffness: 300, damping: 25 }}
-      className="group relative rounded-3xl p-7 overflow-hidden border border-white/[0.08] backdrop-blur-2xl transition-all hover:scale-[1.02] hover:border-white/20"
+      initial={{ opacity: 0, y: 40, filter: 'blur(10px)' }}
+      animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+      transition={{ delay, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+      className="group relative rounded-md p-7 overflow-hidden border border-white/[0.08] backdrop-blur-2xl transition-all hover:scale-[1.02] hover:border-white/20"
       style={{
         background: `linear-gradient(135deg, ${color}15, rgba(20,20,40,0.4))`,
         boxShadow: `0 30px 60px rgba(0,0,0,0.4), 0 0 40px ${color}10`,
@@ -60,7 +65,7 @@ function KPICard({ icon: Icon, label, value, color, prefix = '', suffix = '', de
       <div className="absolute inset-0 bg-gradient-to-br from-white/[0.03] to-transparent" />
       <div className="relative z-10">
         <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: `${color}20`, border: `1px solid ${color}40` }}>
+          <div className="w-10 h-10 rounded-md flex items-center justify-center" style={{ background: `${color}20`, border: `1px solid ${color}40` }}>
             <Icon className="w-5 h-5" style={{ color }} />
           </div>
           <span className="text-xs uppercase tracking-[0.2em] font-bold text-gray-400">{label}</span>
@@ -74,13 +79,13 @@ function KPICard({ icon: Icon, label, value, color, prefix = '', suffix = '', de
 }
 
 /* ── Section Wrapper ── */
-function Section({ title, icon: Icon, children, className = '' }) {
+function Section({ title, icon: Icon, children, className = '', delay = 0.3 }) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.3, duration: 0.5 }}
-      className={`rounded-3xl border border-white/[0.06] p-8 backdrop-blur-3xl shadow-2xl ${className}`}
+      initial={{ opacity: 0, y: 24, filter: 'blur(8px)' }}
+      animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+      transition={{ delay, duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
+      className={`rounded-md border border-white/[0.06] p-8 backdrop-blur-3xl shadow-2xl ${className}`}
       style={{ 
         background: 'linear-gradient(165deg, rgba(255,255,255,0.04), rgba(255,255,255,0.01))',
         boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.02)'
@@ -102,6 +107,25 @@ function Section({ title, icon: Icon, children, className = '' }) {
 export default function AdminDashboard() {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
+  
+  // Interactive Toggles
+  const [hiddenTypes, setHiddenTypes] = useState(new Set());
+  const [hiddenRarities, setHiddenRarities] = useState(new Set());
+  const [hiddenMonths, setHiddenMonths] = useState(new Set());
+  const [hiddenSets, setHiddenSets] = useState(new Set());
+
+  // Filtered Data for Charts (Memoized for Performance) - Moved to top level to comply with React Rules of Hooks
+  const filteredTypes = useMemo(() => stats?.cartasPorTipo?.filter(t => !hiddenTypes.has(t.name)) || [], [stats, hiddenTypes]);
+  const filteredRarities = useMemo(() => stats?.cartasPorRareza?.filter(r => !hiddenRarities.has(r.name)) || [], [stats, hiddenRarities]);
+  const filteredMonths = useMemo(() => stats?.ingresosPorMes?.filter(m => !hiddenMonths.has(m.label)) || [], [stats, hiddenMonths]);
+  const filteredSets = useMemo(() => stats?.cartasPorSet?.filter(s => !hiddenSets.has(s.name)) || [], [stats, hiddenSets]);
+
+  const toggleHidden = (set, setter, item) => {
+    const next = new Set(set);
+    if (next.has(item)) next.delete(item);
+    else next.add(item);
+    setter(next);
+  };
 
   useEffect(() => {
     async function load() {
@@ -153,7 +177,7 @@ export default function AdminDashboard() {
           className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10 border-b border-white/[0.06] pb-8"
         >
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#7C4DFF] to-[#E91E63] flex items-center justify-center shadow-lg shadow-[#7C4DFF]/30">
+            <div className="w-14 h-14 rounded-lg bg-gradient-to-br from-[#7C4DFF] to-[#E91E63] flex items-center justify-center shadow-lg shadow-[#7C4DFF]/30">
               <Shield className="w-7 h-7 text-white" />
             </div>
             <div>
@@ -162,10 +186,10 @@ export default function AdminDashboard() {
             </div>
           </div>
           <div className="flex gap-3">
-            <Link to="/admin/cartas" className="flex items-center gap-2 px-5 py-3 rounded-xl bg-[#7C4DFF]/15 border border-[#7C4DFF]/30 text-[#7C4DFF] font-bold text-sm hover:bg-[#7C4DFF]/25 transition-colors">
+            <Link to="/admin/cartas" className="flex items-center gap-2 px-5 py-3 rounded-md bg-[#7C4DFF]/15 border border-[#7C4DFF]/30 text-[#7C4DFF] font-bold text-sm hover:bg-[#7C4DFF]/25 transition-colors">
               <CreditCard className="w-4 h-4" /> Gestionar Cartas <ChevronRight className="w-4 h-4" />
             </Link>
-            <Link to="/admin/usuarios" className="flex items-center gap-2 px-5 py-3 rounded-xl bg-[#E91E63]/15 border border-[#E91E63]/30 text-[#E91E63] font-bold text-sm hover:bg-[#E91E63]/25 transition-colors">
+            <Link to="/admin/usuarios" className="flex items-center gap-2 px-5 py-3 rounded-md bg-[#E91E63]/15 border border-[#E91E63]/30 text-[#E91E63] font-bold text-sm hover:bg-[#E91E63]/25 transition-colors">
               <Users className="w-4 h-4" /> Gestionar Usuarios <ChevronRight className="w-4 h-4" />
             </Link>
           </div>
@@ -182,54 +206,80 @@ export default function AdminDashboard() {
         {/* Charts Row 1 */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
           {/* Cartas por Tipo — Donut */}
-          <Section title="Distribución por Tipo" icon={Package}>
-            <div className="h-[320px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
+          <Section title="Distribución por Tipo" icon={Package} delay={0.3}>
+            <div className="h-[320px] outline-none ring-0 select-none">
+              <ResponsiveContainer width="100%" height="100%" className="outline-none ring-0">
+                <PieChart className="outline-none ring-0">
                   <Pie
-                    data={cartasPorTipo}
+                    data={filteredTypes}
                     cx="50%" cy="50%"
                     innerRadius={70} outerRadius={120}
                     paddingAngle={3}
                     dataKey="value"
                     stroke="none"
+                    animationBegin={0}
+                    animationDuration={1000}
+                    animationEasing="ease-out"
                   >
-                    {cartasPorTipo.map((entry, i) => (
-                      <Cell key={i} fill={TYPE_COLORS[entry.name] || CHART_COLORS[i % CHART_COLORS.length]} />
+                    {filteredTypes.map((entry, i) => (
+                      <Cell key={i} fill={CHART_COLORS[cartasPorTipo.findIndex(t => t.name === entry.name) % CHART_COLORS.length]} />
                     ))}
                   </Pie>
                   <Tooltip content={<CustomTooltip />} />
+                  <Legend 
+                    onClick={(e) => toggleHidden(hiddenTypes, setHiddenTypes, e.value)}
+                    iconType="circle"
+                    formatter={(value) => (
+                      <span className={`text-[10px] font-bold uppercase tracking-wider ${hiddenTypes.has(value) ? 'opacity-30 line-through' : 'text-gray-300'}`}>
+                        {value}
+                      </span>
+                    )}
+                  />
                 </PieChart>
               </ResponsiveContainer>
             </div>
             <div className="flex flex-wrap gap-2 mt-4 justify-center">
               {cartasPorTipo.map((t, i) => (
-                <motion.span 
+                <motion.button 
                   key={i} 
+                  layout
+                  onClick={() => toggleHidden(hiddenTypes, setHiddenTypes, t.name)}
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: 0.5 + i * 0.05 }}
-                  className="flex items-center gap-1.5 text-[10px] font-bold text-gray-300 px-3 py-1.5 rounded-full border border-white/10 bg-white/[0.04] shadow-lg"
+                  className={`flex items-center gap-1.5 text-[10px] font-bold px-3 py-1.5 rounded-md border transition-all ${hiddenTypes.has(t.name) ? 'opacity-40 grayscale border-white/5 bg-transparent' : 'text-gray-300 border-white/10 bg-white/[0.04] shadow-lg'}`}
                 >
-                  <span className="w-2.5 h-2.5 rounded-full" style={{ background: CHART_COLORS[i % CHART_COLORS.length], boxShadow: `0 0 10px ${CHART_COLORS[i % CHART_COLORS.length]}` }} />
+                  <span className="w-2.5 h-2.5 rounded-sm" style={{ background: CHART_COLORS[i % CHART_COLORS.length], boxShadow: hiddenTypes.has(t.name) ? 'none' : `0 0 10px ${CHART_COLORS[i % CHART_COLORS.length]}` }} />
                   {t.name} ({t.value})
-                </motion.span>
+                </motion.button>
               ))}
             </div>
           </Section>
 
           {/* Cartas por Rareza — Bar */}
-          <Section title="Distribución por Rareza" icon={TrendingUp}>
-            <div className="h-[360px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={cartasPorRareza} layout="vertical" margin={{ left: 10, right: 20 }}>
+          <Section title="Distribución por Rareza" icon={TrendingUp} delay={0.4}>
+            <div className="h-[360px] outline-none ring-0 select-none">
+              <ResponsiveContainer width="100%" height="100%" className="outline-none ring-0">
+                <BarChart data={cartasPorRareza} layout="vertical" margin={{ left: 10, right: 20 }} className="outline-none ring-0">
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
                   <XAxis type="number" tick={{ fill: '#6b7280', fontSize: 11 }} axisLine={false} />
                   <YAxis type="category" dataKey="name" tick={{ fill: '#9ca3af', fontSize: 12 }} width={80} axisLine={false} />
                   <Tooltip content={<CustomTooltip />} />
-                  <Bar dataKey="value" name="Cartas" radius={[0, 8, 8, 0]} maxBarSize={28}>
-                    {cartasPorRareza.map((_, i) => (
-                      <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
+                  <Legend 
+                    onClick={(e) => toggleHidden(hiddenRarities, setHiddenRarities, e.value)}
+                    formatter={(value) => <span className={`text-[10px] font-bold ${hiddenRarities.has(value) ? 'opacity-30' : ''}`}>{value}</span>}
+                  />
+                  <Bar 
+                    dataKey="value" 
+                    name="Cartas" 
+                    radius={[0, 8, 8, 0]} 
+                    maxBarSize={28}
+                    animationBegin={0}
+                    animationDuration={1000}
+                    animationEasing="ease-out"
+                  >
+                    {filteredRarities.map((_, i) => (
+                      <Cell key={i} fill={CHART_COLORS[cartasPorRareza.findIndex(r => r.name === _.name) % CHART_COLORS.length]} />
                     ))}
                   </Bar>
                 </BarChart>
@@ -241,11 +291,11 @@ export default function AdminDashboard() {
         {/* Charts Row 2 */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
           {/* Ingresos por Mes — Area Chart */}
-          <Section title="Ingresos por Mes" icon={DollarSign}>
+          <Section title="Ingresos por Mes" icon={DollarSign} delay={0.45}>
             {ingresosPorMes.length > 0 ? (
-              <div className="h-[300px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={ingresosPorMes} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+              <div className="h-[300px] outline-none ring-0 select-none">
+                <ResponsiveContainer width="100%" height="100%" className="outline-none ring-0">
+                  <AreaChart data={ingresosPorMes} margin={{ top: 10, right: 10, left: 0, bottom: 0 }} className="outline-none ring-0">
                     <defs>
                       <linearGradient id="incomeGrad" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="5%" stopColor="#7C4DFF" stopOpacity={0.4} />
@@ -255,7 +305,23 @@ export default function AdminDashboard() {
                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
                     <XAxis dataKey="label" tick={{ fill: '#6b7280', fontSize: 11 }} axisLine={false} />
                     <YAxis tick={{ fill: '#6b7280', fontSize: 11 }} axisLine={false} />
-                    <Area type="monotone" dataKey="total" name="Ingresos" stroke="#7C4DFF" strokeWidth={4} fill="url(#incomeGrad)" dot={{ r: 4, fill: '#7C4DFF', strokeWidth: 2, stroke: '#fff' }} activeDot={{ r: 6, strokeWidth: 0 }} />
+                    <Area 
+                      type="monotone" 
+                      dataKey="total" 
+                      name="Ingresos" 
+                      stroke="#7C4DFF" 
+                      strokeWidth={4} 
+                      fill="url(#incomeGrad)" 
+                      dot={{ r: 4, fill: '#7C4DFF', strokeWidth: 2, stroke: '#fff' }} 
+                      activeDot={{ r: 6, strokeWidth: 0 }} 
+                      animationBegin={0}
+                      animationDuration={1000}
+                      animationEasing="ease-out"
+                    />
+                    <Legend 
+                      onClick={(e) => toggleHidden(hiddenMonths, setHiddenMonths, e.payload.label)}
+                      formatter={() => <span className="text-[10px] uppercase font-bold text-gray-500">Ocultar/Mostrar Meses</span>}
+                    />
                   </AreaChart>
                 </ResponsiveContainer>
               </div>
@@ -267,7 +333,7 @@ export default function AdminDashboard() {
           </Section>
 
           {/* Top Wishlist — Bar Chart */}
-          <Section title="Cartas Más Deseadas (Wishlist)" icon={Heart}>
+          <Section title="Cartas Más Deseadas (Wishlist)" icon={Heart} delay={0.5}>
             {topWishlist.length > 0 ? (
               <div className="space-y-3">
                 {topWishlist.map((card, i) => (
@@ -276,7 +342,7 @@ export default function AdminDashboard() {
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.05 * i }}
-                    className="flex items-center gap-3 px-4 py-3 rounded-xl border border-white/[0.04] bg-white/[0.02] hover:bg-white/[0.04] transition-colors"
+                    className="flex items-center gap-3 px-4 py-3 rounded-md border border-white/[0.04] bg-white/[0.02] hover:bg-white/[0.04] transition-colors"
                   >
                     <span className="text-xs font-black text-gray-500 w-6 text-center">#{i + 1}</span>
                     {card.image && (
@@ -307,10 +373,10 @@ export default function AdminDashboard() {
         {/* Bottom Row */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
           {/* Top Sets — Horizontal Bar */}
-          <Section title="Top Sets" icon={Package} className="lg:col-span-1">
-            <div className="h-[340px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={cartasPorSet} layout="vertical" margin={{ left: 0, right: 20 }}>
+          <Section title="Top Sets" icon={Package} className="lg:col-span-1" delay={0.6}>
+            <div className="h-[340px] outline-none ring-0 select-none">
+              <ResponsiveContainer width="100%" height="100%" className="outline-none ring-0">
+                <BarChart data={cartasPorSet} layout="vertical" margin={{ left: 0, right: 20 }} className="outline-none ring-0">
                   <XAxis type="number" tick={{ fill: '#6b7280', fontSize: 10 }} axisLine={false} />
                   <YAxis type="category" dataKey="name" tick={{ fill: '#9ca3af', fontSize: 9 }} width={120} axisLine={false} />
                   <Tooltip content={<CustomTooltip />} />
@@ -321,7 +387,7 @@ export default function AdminDashboard() {
           </Section>
 
           {/* Usuarios Recientes */}
-          <Section title="Usuarios Recientes" icon={Users} className="lg:col-span-1">
+          <Section title="Usuarios Recientes" icon={Users} className="lg:col-span-1" delay={0.65}>
             <div className="space-y-2 max-h-[340px] overflow-y-auto pr-2 custom-scrollbar">
               {usuariosRecientes.map((u, i) => (
                 <motion.div
@@ -329,9 +395,9 @@ export default function AdminDashboard() {
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.04 * i }}
-                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl border border-white/[0.04] bg-white/[0.02]"
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-md border border-white/[0.04] bg-white/[0.02]"
                 >
-                  <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#7C4DFF] to-[#E91E63] flex items-center justify-center text-[11px] font-black text-white shrink-0 shadow-lg shadow-[#7C4DFF]/20 border border-white/20">
+                  <div className="w-9 h-9 rounded-md bg-gradient-to-br from-[#7C4DFF] to-[#E91E63] flex items-center justify-center text-[11px] font-black text-white shrink-0 shadow-lg shadow-[#7C4DFF]/20 border border-white/20">
                     {(u.username || u.email || '?')[0].toUpperCase()}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -347,7 +413,7 @@ export default function AdminDashboard() {
           </Section>
 
           {/* Compras Recientes */}
-          <Section title="Compras Recientes" icon={ShoppingCart} className="lg:col-span-1">
+          <Section title="Compras Recientes" icon={ShoppingCart} className="lg:col-span-1" delay={0.7}>
             <div className="space-y-2 max-h-[340px] overflow-y-auto pr-2 custom-scrollbar">
               {comprasRecientes.length > 0 ? comprasRecientes.map((c, i) => (
                 <motion.div
@@ -355,7 +421,7 @@ export default function AdminDashboard() {
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.04 * i }}
-                  className="flex items-center justify-between px-3 py-2.5 rounded-xl border border-white/[0.04] bg-white/[0.02]"
+                  className="flex items-center justify-between px-3 py-2.5 rounded-md border border-white/[0.04] bg-white/[0.02]"
                 >
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-bold text-white">

@@ -245,3 +245,14 @@ body {
   height: 1px;
   background: linear-gradient(to right, transparent, rgba(255,255,255,0.08), transparent);
 }
+
+/* ── Performance Utilities ── */
+.transform-gpu {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000;
+}
+
+.will-change-transform {
+  will-change: transform;
+}

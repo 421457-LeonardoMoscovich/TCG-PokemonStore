@@ -138,9 +138,11 @@ export default function Cartas() {
     return c;
   }, [filters]);
 
-  const displayedCartas = filters.favoritos
-    ? cartas.filter((c) => (wishlist || []).includes(c._id))
-    : cartas;
+  const displayedCartas = useMemo(() => {
+    return filters.favoritos
+      ? cartas.filter((c) => (wishlist || []).includes(c._id))
+      : cartas;
+  }, [cartas, filters.favoritos, wishlist]);
 
   return (
     <div className="min-h-screen bg-bg-base text-white relative overflow-hidden">
@@ -192,7 +194,7 @@ export default function Cartas() {
           
           <div className="flex items-center gap-4 shrink-0">
             {pagination?.total != null && (
-              <div className="glass-panel px-6 py-3 rounded-2xl flex flex-col items-end border border-white/10" style={{ boxShadow: `0 10px 30px ${accentColor}15` }}>
+              <div className="glass-panel px-6 py-3 rounded-lg flex flex-col items-end border border-white/10" style={{ boxShadow: `0 10px 30px ${accentColor}15` }}>
                 <span className="text-[10px] uppercase tracking-[0.3em] font-black text-gray-500 mb-1">Total Encontrado</span>
                 <span className="text-2xl font-black text-white tabular-nums tracking-tighter" style={{ textShadow: `0 0 20px ${accentColor}80` }}>
                   {(pagination?.total || 0).toLocaleString()}
@@ -223,7 +225,7 @@ export default function Cartas() {
                       <motion.button
                         key={value}
                         onClick={() => setFilter('type', value)}
-                        className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-bold text-left relative overflow-hidden group transition-all"
+                        className="flex items-center gap-3 px-4 py-2.5 rounded-md text-sm font-bold text-left relative overflow-hidden group transition-all"
                         style={{
                           background: active ? `${color}25` : 'transparent',
                           color: active ? '#fff' : '#8892b0',
@@ -326,7 +328,7 @@ export default function Cartas() {
                       <motion.button
                         key={opt.value}
                         onClick={() => setFilter('collected', opt.value)}
-                        className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all text-left border ${
+                        className={`px-4 py-2.5 rounded-md text-xs font-bold transition-all text-left border ${
                           active ? 'bg-indigo-500/20 border-indigo-500/50 text-white' : 'bg-white/5 border-transparent text-gray-400 hover:bg-white/10'
                         }`}
                         whileHover={{ x: 4 }}
@@ -349,7 +351,7 @@ export default function Cartas() {
                   >
                     <motion.button
                       onClick={clearFilters}
-                      className="w-full py-3.5 rounded-xl text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2 border border-red-500/30 text-red-500 hover:bg-red-500 hover:text-white transition-colors overflow-hidden"
+                      className="w-full py-3.5 rounded-md text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2 border border-red-500/30 text-red-500 hover:bg-red-500 hover:text-white transition-colors overflow-hidden"
                       whileHover={{ scale: 1.02, boxShadow: '0 0 20px rgba(239, 68, 68, 0.4)' }}
                       whileTap={{ scale: 0.97 }}
                       transition={spring}
@@ -471,7 +473,7 @@ export default function Cartas() {
                         className="relative z-10"
                         style={{ perspective: '1000px' }}
                       >
-                        <div className="w-32 h-32 rounded-3xl flex items-center justify-center backdrop-blur-xl"
+                        <div className="w-32 h-32 rounded-md flex items-center justify-center backdrop-blur-xl"
                           style={{
                             background: `linear-gradient(135deg, ${accentColor}15, rgba(255,255,255,0.05))`,
                             border: `1px solid ${accentColor}40`,

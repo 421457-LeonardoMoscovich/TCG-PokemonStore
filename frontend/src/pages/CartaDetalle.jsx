@@ -65,7 +65,7 @@ export default function CartaDetalle() {
       >
         <div className="h-8 bg-gray-800 rounded w-1/3 animate-pulse" />
         <div className="flex gap-8">
-          <div className="w-72 aspect-[3/4] bg-gray-800 rounded-2xl animate-pulse" />
+          <div className="w-72 aspect-[3/4] bg-gray-800 rounded-lg animate-pulse" />
           <div className="flex-1 space-y-4">
             <div className="h-8 bg-gray-800 rounded w-3/4" />
             <div className="h-5 bg-gray-800 rounded w-1/2" />
@@ -107,7 +107,7 @@ export default function CartaDetalle() {
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.15 }}
-        className="relative overflow-hidden rounded-3xl bg-bg-elevated"
+        className="relative overflow-hidden rounded-md bg-bg-elevated"
         style={{
           border: `1px solid ${t.border}44`,
           boxShadow: `0 0 60px ${t.glow}`,
@@ -124,7 +124,7 @@ export default function CartaDetalle() {
             onMouseMove={handleMouseMove}
           >
             <motion.div 
-              className="relative rounded-2xl overflow-hidden preserve-3d"
+              className="relative rounded-lg overflow-hidden preserve-3d"
               style={{
                 boxShadow: `0 25px 60px ${t.glow}, 0 0 0 1px ${t.border}33`,
                 rotateY: (mousePos.x - 0.5) * 15,
@@ -235,7 +235,7 @@ export default function CartaDetalle() {
               initial={{ y: 10, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.4 }}
-              className="glass-panel rounded-xl px-4 py-3 space-y-2.5 mt-2"
+              className="glass-panel rounded-md px-4 py-3 space-y-2.5 mt-2"
             >
               {carta.rarity && (
                 <div className="flex items-center gap-3">
@@ -277,7 +277,7 @@ export default function CartaDetalle() {
                 whileTap={{ scale: 0.98 }}
                 onClick={agregarAlCarrito}
                 disabled={adding}
-                className="w-full py-4 rounded-xl font-black text-lg tracking-wide transition-all disabled:opacity-50"
+                className="w-full py-4 rounded-md font-black text-lg tracking-wide transition-all disabled:opacity-50"
                 style={{
                   background: t.border,
                   color: isDarkType ? '#fff' : '#000',

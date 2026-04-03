@@ -20,16 +20,16 @@ function ConfirmModal({ message, onConfirm, onCancel, danger = true }) {
       <motion.div
         initial={{ scale: 0.9 }} animate={{ scale: 1 }} exit={{ scale: 0.9 }}
         onClick={(e) => e.stopPropagation()}
-        className={`w-full max-w-sm rounded-2xl border p-6 text-center ${danger ? 'border-red-500/20' : 'border-[#7C4DFF]/20'}`}
+        className={`w-full max-w-sm rounded-lg border p-6 text-center ${danger ? 'border-red-500/20' : 'border-[#7C4DFF]/20'}`}
         style={{ background: 'linear-gradient(135deg, #1a1a2e, #16162a)' }}
       >
         <AlertTriangle className={`w-12 h-12 mx-auto mb-4 ${danger ? 'text-red-400' : 'text-[#7C4DFF]'}`} />
         <p className="text-white font-bold mb-6">{message}</p>
         <div className="flex gap-3">
-          <button onClick={onCancel} className="flex-1 py-3 rounded-xl border border-white/10 text-gray-400 font-bold text-sm hover:bg-white/5 transition-colors">
+          <button onClick={onCancel} className="flex-1 py-3 rounded-md border border-white/10 text-gray-400 font-bold text-sm hover:bg-white/5 transition-colors">
             Cancelar
           </button>
-          <button onClick={onConfirm} className={`flex-1 py-3 rounded-xl text-white font-bold text-sm transition-colors ${danger ? 'bg-red-500 hover:bg-red-600' : 'bg-[#7C4DFF] hover:bg-[#6a3de8]'}`}>
+          <button onClick={onConfirm} className={`flex-1 py-3 rounded-md text-white font-bold text-sm transition-colors ${danger ? 'bg-red-500 hover:bg-red-600' : 'bg-[#7C4DFF] hover:bg-[#6a3de8]'}`}>
             Confirmar
           </button>
         </div>
@@ -109,7 +109,7 @@ export default function AdminUsers() {
         {/* Header */}
         <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 border-b border-white/[0.06] pb-6">
           <div className="flex items-center gap-4">
-            <Link to="/admin" className="p-2 rounded-xl border border-white/10 hover:bg-white/5 text-gray-400 transition-colors">
+            <Link to="/admin" className="p-2 rounded-md border border-white/10 hover:bg-white/5 text-gray-400 transition-colors">
               <ArrowLeft className="w-5 h-5" />
             </Link>
             <div>
@@ -128,7 +128,7 @@ export default function AdminUsers() {
             value={search}
             onChange={(e) => handleSearch(e.target.value)}
             placeholder="Buscar por nombre o email..."
-            className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:border-[#E91E63] focus:outline-none transition-colors"
+            className="w-full pl-10 pr-4 py-3 rounded-md bg-white/5 border border-white/10 text-white text-sm focus:border-[#E91E63] focus:outline-none transition-colors"
           />
         </div>
 
@@ -147,7 +147,7 @@ export default function AdminUsers() {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.03 }}
-                  className={`rounded-2xl border p-5 flex flex-col sm:flex-row sm:items-center gap-4 transition-colors ${isCurrentUser ? 'border-[#7C4DFF]/30 bg-[#7C4DFF]/5' : 'border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.04]'}`}
+                  className={`rounded-lg border p-5 flex flex-col sm:flex-row sm:items-center gap-4 transition-colors ${isCurrentUser ? 'border-[#7C4DFF]/30 bg-[#7C4DFF]/5' : 'border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.04]'}`}
                 >
                   {/* Avatar */}
                   <div className={`w-12 h-12 rounded-full flex items-center justify-center text-lg font-black text-white shrink-0 ${user.role === 'admin' ? 'bg-gradient-to-br from-[#7C4DFF] to-[#E91E63]' : 'bg-gradient-to-br from-gray-600 to-gray-800'}`}>
@@ -230,7 +230,7 @@ export default function AdminUsers() {
             <button
               onClick={() => setPage(p => Math.max(1, p - 1))}
               disabled={page <= 1}
-              className="p-2 rounded-xl border border-white/10 text-gray-400 hover:bg-white/5 disabled:opacity-30 transition-colors"
+              className="p-2 rounded-md border border-white/10 text-gray-400 hover:bg-white/5 disabled:opacity-30 transition-colors"
             >
               <ChevronLeft className="w-5 h-5" />
             </button>
@@ -240,7 +240,7 @@ export default function AdminUsers() {
             <button
               onClick={() => setPage(p => Math.min(totalPages, p + 1))}
               disabled={page >= totalPages}
-              className="p-2 rounded-xl border border-white/10 text-gray-400 hover:bg-white/5 disabled:opacity-30 transition-colors"
+              className="p-2 rounded-md border border-white/10 text-gray-400 hover:bg-white/5 disabled:opacity-30 transition-colors"
             >
               <ChevronRight className="w-5 h-5" />
             </button>

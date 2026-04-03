@@ -69,17 +69,18 @@ const VideoScene = () => {
     <div className="absolute inset-0 z-0 overflow-hidden flex items-center justify-center pointer-events-none">
       {/* 1. Blurred Ambient Video Background (Ambilight Effect) */}
       <video
-        autoPlay loop muted playsInline
+        preload="metadata"
         className="absolute inset-0 w-full h-full object-cover opacity-20 blur-3xl scale-125 saturate-150 mix-blend-screen"
         src="/pixel-landscape.mp4"
       />
       
       {/* 2. Cyber-Deck Video Frame (The "Portal") */}
-      <div className="relative w-full max-w-5xl aspect-[16/9] mx-4 md:mx-12 rounded-2xl overflow-hidden border border-white/5 shadow-[0_0_80px_rgba(124,77,255,0.2),_inset_0_0_30px_rgba(255,235,59,0.05)] bg-black/50 z-10">
+      <div className="relative w-full max-w-5xl aspect-[16/9] mx-4 md:mx-12 rounded-lg overflow-hidden border border-white/5 shadow-[0_0_80px_rgba(124,77,255,0.2),_inset_0_0_30px_rgba(255,235,59,0.05)] bg-black/50 z-10">
         
         {/* Crisp Centered Inner Video */}
         <video
           autoPlay loop muted playsInline
+          preload="metadata"
           className="absolute inset-0 w-full h-full object-cover opacity-90 mix-blend-screen"
           style={{ imageRendering: 'pixelated', scale: '1.35', transformOrigin: 'center center' }}
           poster="/pixel-landscape.png"
@@ -251,7 +252,7 @@ export default function Home() {
                           z: 60,
                         }}
                         transition={{ type: 'spring', stiffness: 280, damping: 18 }}
-                        className="relative w-full h-full rounded-2xl overflow-hidden"
+                        className="relative w-full h-full rounded-lg overflow-hidden"
                         style={{
                           transformStyle: 'preserve-3d',
                           background: '#0d0d0d',
@@ -267,6 +268,7 @@ export default function Home() {
                             src={card.image}
                             alt={card.name}
                             className="w-full h-full object-cover"
+                            loading="lazy"
                           />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center" style={{ background: '#0a0a0a' }}>
@@ -290,7 +292,7 @@ export default function Home() {
                         <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black via-black/70 to-transparent">
                           <p className="font-bold text-white text-xs truncate">{card.name}</p>
                           <div className="flex items-center gap-1.5 mt-1">
-                            <span className="text-[10px] px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(255,235,59,0.15)', color: '#FFEB3B' }}>
+                            <span className="text-[10px] px-1.5 py-0.5 rounded-md" style={{ background: 'rgba(255,235,59,0.15)', color: '#FFEB3B' }}>
                               {card.type}
                             </span>
                             {card.price && <span className="text-green-400 text-[10px] font-bold ml-1">${card.price}</span>}
@@ -303,7 +305,7 @@ export default function Home() {
                 })
               ) : (
                 [0, 1, 2].map(i => (
-                  <div key={i} className="rounded-2xl animate-pulse shrink-0" style={{
+                  <div key={i} className="rounded-lg animate-pulse shrink-0" style={{
                     background: '#111111',
                     border: '2px solid #1a1a1a',
                     width: i === 1 ? 240 : 168,
@@ -333,7 +335,7 @@ export default function Home() {
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
                 onClick={() => navigate('/catalogo')}
-                className="flex items-center gap-3 px-8 py-4 rounded-full font-black text-base uppercase tracking-widest bg-gradient-to-br from-[#FFEB3B] via-[#FFD600] to-[#F57C00] text-black shadow-[0_0_20px_rgba(255,235,59,0.3)] hover:shadow-[0_0_30px_rgba(255,235,59,0.5)] transition-shadow"
+                className="flex items-center gap-3 px-8 py-4 rounded-md font-black text-base uppercase tracking-widest bg-gradient-to-br from-[#FFEB3B] via-[#FFD600] to-[#F57C00] text-black shadow-[0_0_20px_rgba(255,235,59,0.3)] hover:shadow-[0_0_30px_rgba(255,235,59,0.5)] transition-shadow"
               >
                 Explorar Catálogo
                 <ArrowRight className="w-5 h-5" />
@@ -342,7 +344,7 @@ export default function Home() {
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
                 onClick={() => document.getElementById('featured')?.scrollIntoView({ behavior: 'smooth' })}
-                className="flex items-center gap-3 px-8 py-4 rounded-full font-black text-base uppercase tracking-widest border-2 border-white/20 text-white hover:bg-white/5 transition-colors"
+                className="flex items-center gap-3 px-8 py-4 rounded-md font-black text-base uppercase tracking-widest border-2 border-white/20 text-white hover:bg-white/5 transition-colors"
               >
                 Ver Destacados
               </motion.button>
@@ -385,7 +387,7 @@ export default function Home() {
                 whileHover={{ scale: 1.02, y: -3 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => navigate(`/catalogo?type=${value}`)}
-                className="flex items-center gap-3 px-4 py-3 md:px-5 md:py-4 rounded-xl relative overflow-hidden group bg-bg-elevated border border-white/5 transition-colors hover:border-white/10"
+                className="flex items-center gap-3 px-4 py-3 md:px-5 md:py-4 rounded-md relative overflow-hidden group bg-bg-elevated border border-white/5 transition-colors hover:border-white/10"
               >
                 <div className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-300 pointer-events-none" 
                   style={{ background: color }} 
@@ -423,16 +425,16 @@ export default function Home() {
             {loading ? (
               <div className="flex gap-4 px-4">
                 {[1,2,3,4,5,6].map(i => (
-                  <div key={i} className="w-44 md:w-52 aspect-[3/4] rounded-xl animate-pulse shrink-0 bg-bg-elevated" />
+                  <div key={i} className="w-44 md:w-52 aspect-[3/4] rounded-md animate-pulse shrink-0 bg-bg-elevated" />
                 ))}
               </div>
             ) : featuredCards.length > 0 ? (
-              <div className="flex animate-marquee hover:[animation-play-state:paused] w-max">
+              <div className="flex animate-marquee hover:[animation-play-state:paused] w-max" style={{ perspective: '1000px', willChange: 'transform' }}>
                 {[...featuredCards, ...featuredCards].map((carta, i) => (
                   <div key={`${carta._id}-${i}`} className="flex-shrink-0 px-3">
                     <Link
                       to={`/carta/${carta._id}`}
-                      className="block w-44 md:w-52 rounded-2xl overflow-hidden bg-bg-elevated border border-white/5 transition-colors hover:border-white/10 group"
+                      className="block w-44 md:w-52 rounded-lg overflow-hidden bg-bg-elevated border border-white/5 transition-colors hover:border-white/10 group"
                     >
                       <div className="aspect-[3/4] overflow-hidden bg-bg-surface relative">
                         {carta.image ? (
@@ -447,7 +449,7 @@ export default function Home() {
                         <p className="font-bold text-white text-sm truncate">{carta.name}</p>
                         <div className="flex items-center justify-between mt-1">
                           <span 
-                            className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-primary/10 text-primary"
+                            className="text-[10px] px-2 py-0.5 rounded-md font-bold bg-primary/10 text-primary"
                           >
                             {carta.type}
                           </span>
@@ -657,7 +659,7 @@ export default function Home() {
             {/* Brand & Newsletter Column */}
             <div className="lg:col-span-4 flex flex-col items-start pr-8">
               <div className="flex items-center gap-4 mb-8">
-                <div className="w-12 h-12 rounded-xl flex items-center justify-center border border-white/10 shadow-[0_0_20px_rgba(255,235,59,0.1)]" style={{ background: 'linear-gradient(135deg, rgba(255,235,59,0.15) 0%, rgba(245,124,0,0.15) 100%)' }}>
+                <div className="w-12 h-12 rounded-md flex items-center justify-center border border-white/10 shadow-[0_0_20px_rgba(255,235,59,0.1)]" style={{ background: 'linear-gradient(135deg, rgba(255,235,59,0.15) 0%, rgba(245,124,0,0.15) 100%)' }}>
                   <Sparkles className="w-6 h-6 text-primary" />
                 </div>
                 <span className="font-black text-3xl tracking-tighter">
@@ -673,9 +675,9 @@ export default function Home() {
                 <input 
                   type="email" 
                   placeholder="Únete al VIP Newsletter..." 
-                  className="w-full bg-white/5 border border-white/10 rounded-xl pl-5 pr-32 py-4 text-xs text-white placeholder:text-gray-700 focus:outline-none focus:border-primary/50 focus:bg-white/10 transition-all font-bold"
+                  className="w-full bg-white/5 border border-white/10 rounded-md pl-5 pr-32 py-4 text-xs text-white placeholder:text-gray-700 focus:outline-none focus:border-primary/50 focus:bg-white/10 transition-all font-bold"
                 />
-                <button className="absolute right-2 top-2 bottom-2 px-6 bg-[linear-gradient(135deg,#FFEB3B,#F57C00)] text-[#0a0a0a] font-black text-[10px] uppercase tracking-[0.2em] rounded-lg shadow-[0_0_15px_rgba(255,235,59,0.1)] hover:shadow-[0_0_25px_rgba(255,235,59,0.4)] transition-all">
+                <button className="absolute right-2 top-2 bottom-2 px-6 bg-[linear-gradient(135deg,#FFEB3B,#F57C00)] text-[#0a0a0a] font-black text-[10px] uppercase tracking-[0.2em] rounded-md shadow-[0_0_15px_rgba(255,235,59,0.1)] hover:shadow-[0_0_25px_rgba(255,235,59,0.4)] transition-all">
                   Unirse
                 </button>
               </div>
@@ -714,7 +716,7 @@ export default function Home() {
             <div className="lg:col-span-2 flex items-center mt-8 lg:mt-0">
               <div className="flex gap-4">
                 {['TW', 'IG', 'DC'].map((label) => (
-                  <div key={label} className="w-10 h-10 rounded-xl flex items-center justify-center cursor-pointer transition-all duration-300 hover:scale-110 hover:-translate-y-1 bg-white/5 border border-white/10 hover:border-primary/50 text-gray-500 hover:text-white">
+                  <div key={label} className="w-10 h-10 rounded-md flex items-center justify-center cursor-pointer transition-all duration-300 hover:scale-110 hover:-translate-y-1 bg-white/5 border border-white/10 hover:border-primary/50 text-gray-500 hover:text-white">
                     <span className="text-[10px] font-black">{label}</span>
                   </div>
                 ))}

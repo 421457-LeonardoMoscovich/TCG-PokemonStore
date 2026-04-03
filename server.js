@@ -38,6 +38,8 @@ app.use('/api/usuarios', require('./routes/usuarios'));
 app.use('/api/compras', require('./routes/compras'));
 app.use('/api/scratch', require('./routes/scratch'));
 app.use('/api/admin', require('./routes/admin'));
+app.use('/api/recompensas', require('./routes/recompensas'));
+
 
 // Graceful shutdown
 async function shutdown() {
@@ -53,11 +55,20 @@ process.on('SIGTERM', shutdown);
 async function start() {
   await connectDB();
   await connectRedis();
-  app.listen(PORT, () => {
+  const server = app.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`);
     console.log(`   Health: http://localhost:${PORT}/health`);
     console.log(`   Cartas: http://localhost:${PORT}/api/cartas`);
   });
+
+  return server;
 }
 
-start().catch(err => { console.error('Error al iniciar:', err); process.exit(1); });
+if (require.main === module) {
+  start().catch(err => {
+    console.error('Error al iniciar:', err);
+    process.exit(1);
+  });
+}
+
+module.exports = { app, start };

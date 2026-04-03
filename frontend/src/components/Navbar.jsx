@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Search, ShoppingCart, Sparkles, Heart, X,
-  User, ShoppingBag, ChevronRight, Menu, LogOut, Settings, Ticket, BookOpen, Shield,
+  User, ShoppingBag, ChevronRight, Menu, LogOut, Settings, Ticket, BookOpen, Shield, Coins,
 } from 'lucide-react';
 import { useCart } from '../hooks/useCart';
 import { useWishlist } from '../hooks/useWishlist';
@@ -14,17 +14,28 @@ import { useWishlist } from '../hooks/useWishlist';
 export default function Navbar() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const location = useLocation();
   const { cartCount, cart, refreshCart } = useCart();
   const { wishlist } = useWishlist();
   const wishlistCount = wishlist.length;
   const user = JSON.parse(localStorage.getItem('user') || 'null');
+
   const [query, setQuery] = useState(searchParams.get('q') || '');
   const [cartOpen, setCartOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [cartLoading, setCartLoading] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  
   const profileRef = useRef(null);
+
+  // Auto-close drawers on route change
+  useEffect(() => {
+    setCartOpen(false);
+    setSearchOpen(false);
+    setProfileOpen(false);
+    setMobileMenuOpen(false);
+  }, [location.pathname]);
 
   // Close profile dropdown on outside click
   useEffect(() => {
@@ -159,6 +170,17 @@ export default function Navbar() {
                 </NavIconBtn>
               )}
 
+              {/* Recompensas */}
+              {user && (
+                <NavIconBtn
+                  as={Link}
+                  to="/recompensas"
+                  title="Recompensas"
+                >
+                  <Coins className="w-[18px] h-[18px] text-yellow-400" />
+                </NavIconBtn>
+              )}
+
               {/* Scratch & Win */}
               {user && (
                 <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="ml-1 mr-2">
@@ -193,7 +215,7 @@ export default function Navbar() {
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: -8, scale: 0.95 }}
                         transition={{ type: 'spring', stiffness: 400, damping: 28 }}
-                        className="absolute right-0 top-11 w-52 rounded-2xl overflow-hidden z-50 glass-dropdown"
+                        className="absolute right-0 top-11 w-52 rounded-lg overflow-hidden z-50 glass-dropdown"
                       >
                         {/* User info */}
                         <div className="px-4 py-3 border-b border-white/10">
@@ -220,6 +242,11 @@ export default function Navbar() {
                             label="Mi Carrito"
                             badge={cartCount}
                             onClick={() => { setProfileOpen(false); setCartOpen(true); }}
+                          />
+                          <DropdownItem
+                            icon={<Coins className="w-3.5 h-3.5" />}
+                            label="Recompensas"
+                            onClick={() => { setProfileOpen(false); navigate('/recompensas'); }}
                           />
                         </div>
 
@@ -255,7 +282,7 @@ export default function Navbar() {
                 >
                   <Link
                     to="/login"
-                    className="flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-bold bg-primary text-black"
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-md text-sm font-bold bg-primary text-black"
                   >
                     <User className="w-3.5 h-3.5" />
                     Ingresar
@@ -296,7 +323,7 @@ export default function Navbar() {
                   onChange={e => setQuery(e.target.value)}
                   placeholder="Buscar cartas..."
                   autoFocus
-                  className="w-full rounded-full text-sm text-white placeholder-gray-500 outline-none bg-white/[6%] border border-primary/30"
+                  className="w-full rounded-md text-sm text-white placeholder-gray-500 outline-none bg-white/[6%] border border-primary/30"
                   style={{ paddingLeft: '40px', paddingRight: '16px', paddingTop: '10px', paddingBottom: '10px' }}
                 />
               </div>
@@ -329,7 +356,7 @@ export default function Navbar() {
                   onClick={() => setMobileMenuOpen(false)}
                 />
                 <button
-                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 transition-all text-left"
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 transition-all text-left"
                   onClick={() => { setMobileMenuOpen(false); setCartOpen(true); }}
                 >
                   <ShoppingCart className="w-4 h-4" />
@@ -356,13 +383,19 @@ export default function Navbar() {
                       onClick={() => setMobileMenuOpen(false)}
                     />
                     <MobileNavLink
+                      to="/recompensas"
+                      icon={<Coins className="w-4 h-4" />}
+                      label="Recompensas"
+                      onClick={() => setMobileMenuOpen(false)}
+                    />
+                    <MobileNavLink
                       to="/perfil"
                       icon={<User className="w-4 h-4" />}
                       label="Mi Perfil"
                       onClick={() => setMobileMenuOpen(false)}
                     />
                     <button
-                      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all text-left text-red-400 hover:bg-red-400/[8%]"
+                      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-all text-left text-red-400 hover:bg-red-400/[8%]"
                       onClick={() => { setMobileMenuOpen(false); handleLogout(); }}
                     >
                       <LogOut className="w-4 h-4" />
@@ -372,7 +405,7 @@ export default function Navbar() {
                 ) : (
                   <Link
                     to="/login"
-                    className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold bg-primary text-black"
+                    className="flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-bold bg-primary text-black"
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     <User className="w-4 h-4" />
@@ -410,7 +443,7 @@ export default function Navbar() {
               {/* Header */}
               <div className="flex items-center justify-between px-5 py-4 shrink-0 border-b border-white/[7%]">
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-xl flex items-center justify-center bg-primary/12">
+                  <div className="w-8 h-8 rounded-md flex items-center justify-center bg-primary/12">
                     <ShoppingCart className="w-4 h-4 text-primary" />
                   </div>
                   <div>
@@ -428,7 +461,7 @@ export default function Navbar() {
                   whileTap={{ scale: 0.88 }}
                   transition={{ type: 'spring', stiffness: 500, damping: 18 }}
                   onClick={() => setCartOpen(false)}
-                  className="w-8 h-8 rounded-xl flex items-center justify-center text-gray-500 hover:text-white transition-colors bg-white/5"
+                  className="w-8 h-8 rounded-md flex items-center justify-center text-gray-500 hover:text-white transition-colors bg-white/5"
                   title="Cerrar"
                 >
                   <X className="w-4 h-4" />
@@ -466,10 +499,10 @@ export default function Navbar() {
                         initial={{ opacity: 0, x: 16 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: i * 0.05, type: 'spring', stiffness: 320, damping: 26 }}
-                        className="flex gap-3 p-3 rounded-2xl bg-white/[4%] border border-white/[6%]"
+                        className="flex gap-3 p-3 rounded-lg bg-white/[4%] border border-white/[6%]"
                       >
                         {/* Card thumbnail */}
-                        <div className="w-[52px] h-[72px] rounded-xl overflow-hidden shrink-0 bg-[#161616]">
+                        <div className="w-[52px] h-[72px] rounded-md overflow-hidden shrink-0 bg-[#161616]">
                           {item.image ? (
                             <img
                               src={item.image}
@@ -525,7 +558,7 @@ export default function Navbar() {
                     whileHover={{ scale: 1.01, boxShadow: '0 0 28px rgba(255,235,59,0.22)' }}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => { setCartOpen(false); navigate('/carrito'); }}
-                    className="w-full py-3.5 rounded-2xl font-black text-sm flex items-center justify-center gap-2 bg-primary text-black"
+                    className="w-full py-3.5 rounded-lg font-black text-sm flex items-center justify-center gap-2 bg-primary text-black"
                   >
                     Ver carrito completo
                     <ChevronRight className="w-4 h-4" />
@@ -630,7 +663,7 @@ function MobileNavLink({ to, icon, label, badge, onClick }) {
     <Link
       to={to}
       onClick={onClick}
-      className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 transition-all"
+      className="flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 transition-all"
     >
       <span className="text-primary">{icon}</span>
       <span className="flex-1">{label}</span>
@@ -649,7 +682,7 @@ function MobileNavLink({ to, icon, label, badge, onClick }) {
 function CartEmptyState({ icon, title, subtitle, actionLabel, onAction }) {
   return (
     <div className="flex flex-col items-center justify-center h-full text-center gap-4 py-10">
-      <div className="w-16 h-16 rounded-2xl flex items-center justify-center bg-white/[4%] border border-white/[7%]">
+      <div className="w-16 h-16 rounded-lg flex items-center justify-center bg-white/[4%] border border-white/[7%]">
         {icon}
       </div>
       <div className="space-y-1">

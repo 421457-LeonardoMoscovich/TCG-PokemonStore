@@ -10,6 +10,7 @@ import Carrito from './pages/Carrito';
 import Perfil from './pages/Perfil';
 import ScratchWin from './pages/ScratchWin';
 import Pokedex from './pages/Pokedex';
+import Recompensas from './pages/Recompensas';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminCards from './pages/AdminCards';
 import AdminUsers from './pages/AdminUsers';
@@ -53,6 +54,10 @@ export default function App() {
                         <Route
                           path="/pokedex"
                           element={<ProtectedRoute><Pokedex /></ProtectedRoute>}
+                        />
+                        <Route
+                          path="/recompensas"
+                          element={<ProtectedRoute><Recompensas /></ProtectedRoute>}
                         />
                         {/* Admin Routes */}
                         <Route

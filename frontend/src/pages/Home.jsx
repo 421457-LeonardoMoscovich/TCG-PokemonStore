@@ -323,14 +323,14 @@ export default function Home() {
             transition={{ delay: 0.6, duration: 0.7 }}
             className="text-center max-w-2xl"
           >
-            <h1 className="text-4xl lg:text-6xl font-black mb-4 leading-tight">
+            <h1 className="text-4xl lg:text-6xl font-black mb-6 leading-tight">
               <span className="text-white">Cartas que </span>
               <span className="text-gradient-primary">Definen Leyendas</span>
             </h1>
-            <p className="text-lg text-gray-400 mb-8 max-w-md mx-auto leading-relaxed">
+            <p className="text-lg text-gray-400 mb-10 max-w-md mx-auto leading-relaxed">
               Colección premium de cartas Pokémon. Desde clásicos hasta Rare Holos y ediciones exclusivas.
             </p>
-            <div className="flex flex-wrap justify-center gap-4">
+            <div className="flex flex-wrap justify-center gap-6">
               <motion.button
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
@@ -364,15 +364,15 @@ export default function Home() {
       </section>
 
       {/* Categories Section */}
-      <section className="py-[160px] bg-bg-surface">
-        <div className="w-full px-4 md:px-6">
+      <section className="bg-bg-surface" style={{ paddingTop: '100px', paddingBottom: '100px' }}>
+        <div className="w-full px-6 md:px-12 max-w-[1600px] mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center mb-8"
+            className="text-center mb-16"
           >
-            <span className="text-xs font-semibold uppercase tracking-[0.2em] mb-2 block text-primary">
+            <span className="text-xs font-semibold uppercase tracking-[0.2em] mb-3 block text-primary">
               Colección
             </span>
             <h2 className="text-2xl md:text-3xl font-black text-white">
@@ -380,14 +380,14 @@ export default function Home() {
             </h2>
           </motion.div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-5 gap-3 md:gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-5 gap-5 md:gap-8">
             {TYPES.map(({ value, label, Icon, color, gradient }, i) => (
               <motion.button
                 key={value}
                 whileHover={{ scale: 1.02, y: -3 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => navigate(`/catalogo?type=${value}`)}
-                className="flex items-center gap-3 px-4 py-3 md:px-5 md:py-4 rounded-md relative overflow-hidden group bg-bg-elevated border border-white/5 transition-colors hover:border-white/10"
+                className="flex items-center gap-3 px-5 py-4 md:px-6 md:py-5 rounded-md relative overflow-hidden group bg-bg-elevated border border-white/5 transition-colors hover:border-white/10"
               >
                 <div className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-300 pointer-events-none" 
                   style={{ background: color }} 
@@ -403,15 +403,15 @@ export default function Home() {
       </section>
 
       {/* Featured Cards Section - Continuous Marquee */}
-      <section id="featured" className="py-40 bg-bg-base overflow-hidden">
+      <section id="featured" className="bg-bg-base overflow-hidden" style={{ paddingTop: '100px', paddingBottom: '100px' }}>
         <div className="w-full">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center mb-8 md:mb-12"
+            className="text-center mb-16 px-6 md:px-12"
           >
-            <span className="text-xs font-semibold uppercase tracking-[0.2em] mb-2 block text-primary">
+            <span className="text-xs font-semibold uppercase tracking-[0.2em] mb-3 block text-primary">
               Destacados
             </span>
             <h2 className="text-2xl md:text-3xl font-black text-white">
@@ -423,7 +423,7 @@ export default function Home() {
           <div className="marquee-fade">{/* mask applied via CSS class */}
 
             {loading ? (
-              <div className="flex gap-4 px-4">
+              <div className="flex gap-6 px-6">
                 {[1,2,3,4,5,6].map(i => (
                   <div key={i} className="w-44 md:w-52 aspect-[3/4] rounded-md animate-pulse shrink-0 bg-bg-elevated" />
                 ))}
@@ -431,7 +431,7 @@ export default function Home() {
             ) : featuredCards.length > 0 ? (
               <div className="flex animate-marquee hover:[animation-play-state:paused] w-max" style={{ perspective: '1000px', willChange: 'transform' }}>
                 {[...featuredCards, ...featuredCards].map((carta, i) => (
-                  <div key={`${carta._id}-${i}`} className="flex-shrink-0 px-3">
+                  <div key={`${carta._id}-${i}`} className="flex-shrink-0 px-4">
                     <Link
                       to={`/carta/${carta._id}`}
                       className="block w-44 md:w-52 rounded-lg overflow-hidden bg-bg-elevated border border-white/5 transition-colors hover:border-white/10 group"
@@ -445,11 +445,11 @@ export default function Home() {
                           </div>
                         )}
                       </div>
-                      <div className="p-3">
+                      <div className="p-4">
                         <p className="font-bold text-white text-sm truncate">{carta.name}</p>
-                        <div className="flex items-center justify-between mt-1">
-                          <span 
-                            className="text-[10px] px-2 py-0.5 rounded-md font-bold bg-primary/10 text-primary"
+                        <div className="flex items-center justify-between mt-3">
+                          <span
+                            className="text-[10px] px-3 py-1 rounded-md font-bold bg-primary/10 text-primary"
                           >
                             {carta.type}
                           </span>
@@ -471,14 +471,14 @@ export default function Home() {
       </section>
 
       {/* Premium Features Section - Bento Grid */}
-      <section className="bg-bg-surface relative overflow-hidden mt-[150px] md:mt-[250px] py-40 border-t border-white/5 flex flex-col justify-center items-center">
-        <div className="w-full px-4 md:px-8 max-w-7xl mx-auto relative z-10 flex flex-col items-center text-center">
+      <section className="bg-bg-surface relative overflow-hidden border-t border-white/5 flex flex-col justify-center items-center" style={{ marginTop: '80px', paddingTop: '120px', paddingBottom: '120px' }}>
+        <div className="w-full px-6 md:px-12 max-w-7xl mx-auto relative z-10 flex flex-col items-center text-center">
           {/* Section Header */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center mb-24 w-full"
+            className="text-center mb-32 w-full"
           >
             <span className="text-xs font-semibold uppercase tracking-[0.2em] mb-3 block text-primary">
               ¿Por qué elegirnos?
@@ -492,7 +492,7 @@ export default function Home() {
           </motion.div>
 
           {/* Bento Grid */}
-          <div className="w-full mx-auto grid grid-cols-1 md:grid-cols-3 md:grid-rows-2 gap-4 md:gap-6 justify-items-center">
+          <div className="w-full mx-auto grid grid-cols-1 md:grid-cols-3 md:grid-rows-2 gap-6 md:gap-8 justify-items-center">
             
             {/* Bento Item 1 - Large Highlight */}
             <motion.div
@@ -531,10 +531,10 @@ export default function Home() {
             >
               <div className="absolute top-0 right-0 w-64 h-64 bg-purple-500/10 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/3 pointer-events-none group-hover:bg-purple-500/20 transition-colors duration-700" />
               <div className="relative z-10">
-                <div className="w-12 h-12 rounded-md flex items-center justify-center mb-6 bg-white/5 text-purple-400 group-hover:bg-purple-500/10 group-hover:text-purple-300 transition-colors">
+                <div className="w-12 h-12 rounded-md flex items-center justify-center mb-8 bg-white/5 text-purple-400 group-hover:bg-purple-500/10 group-hover:text-purple-300 transition-colors">
                   <Award className="w-6 h-6" />
                 </div>
-                <h3 className="text-xl font-bold text-white mb-3">Curación Experta</h3>
+                <h3 className="text-xl font-bold text-white mb-4">Curación Experta</h3>
                 <p className="text-sm text-gray-400">
                   Especialistas grado PSA seleccionan cada unidad evaluando centering, bordes y foil.
                 </p>
@@ -556,10 +556,10 @@ export default function Home() {
             >
               <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/3 pointer-events-none group-hover:bg-blue-500/20 transition-colors duration-700" />
               <div className="relative z-10">
-                <div className="w-12 h-12 rounded-md flex items-center justify-center mb-6 bg-white/5 text-blue-400 group-hover:bg-blue-500/10 group-hover:text-blue-300 transition-colors">
+                <div className="w-12 h-12 rounded-md flex items-center justify-center mb-8 bg-white/5 text-blue-400 group-hover:bg-blue-500/10 group-hover:text-blue-300 transition-colors">
                   <Truck className="w-6 h-6" />
                 </div>
-                <h3 className="text-xl font-bold text-white mb-3">Envío Blindado</h3>
+                <h3 className="text-xl font-bold text-white mb-4">Envío Blindado</h3>
                 <p className="text-sm text-gray-400">
                   Logística internacional Climate-Controlled asegurando la integridad estructural de extremo a extremo.
                 </p>
@@ -575,9 +575,9 @@ export default function Home() {
       </section>
 
       {/* Trust Bar */}
-      <section className="border-y border-white/5 bg-bg-base" style={{ paddingTop: '35px', paddingBottom: '35px' }}>
-        <div className="w-full px-6 md:px-12">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
+      <section className="border-y border-white/5 bg-bg-base" style={{ paddingTop: '60px', paddingBottom: '60px', marginTop: '80px' }}>
+        <div className="w-full px-6 md:px-12 max-w-[1600px] mx-auto">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12">
             {[
               { icon: Package, label: 'Envío gratis', sub: 'En pedidos +$100' },
               { icon: Lock, label: 'Pago seguro', sub: '100% protegido' },
@@ -590,7 +590,7 @@ export default function Home() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.05 }}
-                className="flex items-center gap-3 justify-center md:justify-start group"
+                className="flex items-center gap-4 justify-center md:justify-start group"
               >
                 <div className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 bg-bg-elevated border border-white/5 group-hover:border-primary/30 transition-colors">
                   <Icon className="w-5 h-5 text-primary" />
@@ -606,13 +606,13 @@ export default function Home() {
       </section>
 
       {/* Ecosystem Video Section with Framed Portal */}
-      <section className="relative overflow-hidden bg-bg-base border-t border-white/5" style={{ minHeight: '80vh' }}>
+      <section className="relative overflow-hidden bg-bg-base border-t border-white/5" style={{ minHeight: '80vh', marginTop: '80px', paddingTop: '60px', paddingBottom: '60px' }}>
         <VideoScene />
         <div className="w-full px-6 md:px-12 relative z-10 flex flex-col items-center justify-center min-h-[80vh] pointer-events-none" />
       </section>
 
       {/* Retro Animated Pokemon Marquee Spacer */}
-      <div className="h-[40px] bg-black overflow-hidden relative flex items-center w-full">
+      <div className="h-[40px] bg-black overflow-hidden relative flex items-center w-full" style={{ marginTop: '80px', marginBottom: '80px' }}>
         {/* Track holding 200vw translates -100vw for a pixel-perfect infinite loop */}
         <div className="flex w-[200vw] animate-marquee opacity-80 hover:opacity-100 transition-opacity duration-300 pointer-events-none">
           
@@ -648,96 +648,164 @@ export default function Home() {
       </div>
 
       {/* Premium Footer - Refined Luxury Aesthetic */}
-      <footer className="relative mt-20 pt-24 pb-8 border-t border-white/5 overflow-hidden" style={{ background: 'linear-gradient(to bottom, #050508, #000000)' }}>
+      <footer className="relative pt-[200px] pb-[40px] mt-20 border-t border-white/5 overflow-hidden" style={{ background: 'linear-gradient(to bottom, #050508, #000000)' }}>
         {/* Subtle Glow Effects */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-2/3 h-[1px] bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
-        <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[600px] h-32 bg-primary/5 blur-[120px] pointer-events-none" />
+        <motion.div className="absolute top-0 left-1/2 -translate-x-1/2 w-2/3 h-[1px] bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
+        <motion.div
+          animate={{ opacity: [0.3, 0.6, 0.3] }}
+          transition={{ duration: 8, repeat: Infinity }}
+          className="absolute -top-32 left-1/2 -translate-x-1/2 w-[600px] h-32 bg-primary/10 blur-[120px] pointer-events-none"
+        />
 
-        <div className="w-full px-[8vw] max-w-7xl mx-auto relative z-10">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-16 lg:gap-12 mb-16 mt-8 justify-center">
+        <div className="w-full px-[4vw] max-w-[1600px] mx-auto relative z-10">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-12 mb-16 justify-center">
             
             {/* Brand & Newsletter Column */}
-            <div className="lg:col-span-4 flex flex-col items-start pr-8">
-              <div className="flex items-center gap-4 mb-8">
-                <div className="w-12 h-12 rounded-md flex items-center justify-center border border-white/10 shadow-[0_0_20px_rgba(255,235,59,0.1)]" style={{ background: 'linear-gradient(135deg, rgba(255,235,59,0.15) 0%, rgba(245,124,0,0.15) 100%)' }}>
-                  <Sparkles className="w-6 h-6 text-primary" />
-                </div>
-                <span className="font-black text-3xl tracking-tighter">
+            <motion.div
+              className="lg:col-span-4 flex flex-col items-center text-center pr-8"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+            >
+              <motion.div
+                className="flex items-center gap-4 mb-10"
+                whileHover={{ scale: 1.05 }}
+                transition={{ type: 'spring', stiffness: 300 }}
+              >
+                <motion.div
+                  className="w-14 h-14 rounded-lg flex items-center justify-center border border-white/20 shadow-[0_0_20px_rgba(255,235,59,0.2)]"
+                  style={{ background: 'linear-gradient(135deg, rgba(255,235,59,0.15) 0%, rgba(245,124,0,0.15) 100%)' }}
+                  animate={{ boxShadow: ['0 0 20px rgba(255,235,59,0.1)', '0 0 40px rgba(255,235,59,0.3)', '0 0 20px rgba(255,235,59,0.1)'] }}
+                  transition={{ duration: 3, repeat: Infinity }}
+                >
+                  <Sparkles className="w-7 h-7 text-primary" />
+                </motion.div>
+                <span className="font-black text-4xl tracking-tighter">
                   <span className="text-white drop-shadow-sm">TCG </span>
                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FFEB3B] to-[#F57C00]">VAULT</span>
                 </span>
-              </div>
-              <p className="text-gray-500 text-sm mb-10 leading-relaxed max-w-xs font-medium opacity-80">
+              </motion.div>
+              <p className="text-gray-500 text-sm mb-12 leading-relaxed max-w-xs font-medium opacity-80">
                 La bóveda definitiva para coleccionistas de élite. Preservación, comercio y exhibición de clase mundial.
               </p>
               
-              <div className="w-full max-w-sm relative group mb-12">
-                <input 
-                  type="email" 
-                  placeholder="Únete al VIP Newsletter..." 
-                  className="w-full bg-white/5 border border-white/10 rounded-md pl-5 pr-32 py-4 text-xs text-white placeholder:text-gray-700 focus:outline-none focus:border-primary/50 focus:bg-white/10 transition-all font-bold"
+              <motion.div
+                className="w-full max-w-sm relative group mb-16"
+                whileHover={{ scale: 1.02 }}
+                transition={{ type: 'spring', stiffness: 200 }}
+              >
+                <input
+                  type="email"
+                  placeholder="Únete al VIP Newsletter..."
+                  className="w-full bg-white/5 border border-white/10 rounded-lg pl-6 pr-36 py-5 text-sm text-white placeholder:text-gray-600 focus:outline-none focus:border-primary/50 focus:bg-white/10 transition-all font-semibold"
                 />
-                <button className="absolute right-2 top-2 bottom-2 px-6 bg-[linear-gradient(135deg,#FFEB3B,#F57C00)] text-[#0a0a0a] font-black text-[10px] uppercase tracking-[0.2em] rounded-md shadow-[0_0_15px_rgba(255,235,59,0.1)] hover:shadow-[0_0_25px_rgba(255,235,59,0.4)] transition-all">
+                <motion.button
+                  whileHover={{ scale: 1.08, boxShadow: '0 0 30px rgba(255,235,59,0.5)' }}
+                  whileTap={{ scale: 0.95 }}
+                  className="absolute right-2 top-2 bottom-2 px-8 bg-gradient-to-r from-[#FFEB3B] to-[#F57C00] text-[#0a0a0a] font-black text-[11px] uppercase tracking-[0.2em] rounded-lg shadow-lg hover:shadow-[0_0_30px_rgba(255,235,59,0.5)] transition-all"
+                >
                   Unirse
-                </button>
-              </div>
-            </div>
+                </motion.button>
+              </motion.div>
+            </motion.div>
 
             <div className="hidden lg:block lg:col-span-2" />
             
             {/* Links Columns */}
-            <div className="lg:col-span-2">
-              <h4 className="font-black text-white/40 mb-8 text-[10px] uppercase tracking-[0.3em]">Mercado</h4>
-              <ul className="flex flex-col gap-y-5">
-                {['Explorar Todo', 'Últimos Drops', 'Cartas Graduadas', 'Cajas Selladas'].map(t => (
-                  <li key={t}>
+            <motion.div
+              className="lg:col-span-2 text-center"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.1 }}
+            >
+              <h4 className="font-black text-white/40 mb-10 text-[10px] uppercase tracking-[0.3em]">Mercado</h4>
+              <ul className="flex flex-col gap-y-6">
+                {['Explorar Todo', 'Últimos Drops', 'Cartas Graduadas', 'Cajas Selladas'].map((t, i) => (
+                  <motion.li key={t} whileHover={{ x: 6 }} transition={{ type: 'spring', stiffness: 300 }}>
                     <Link to="/catalogo" className="text-[13px] font-semibold text-gray-500 hover:text-primary transition-all flex items-center gap-3 group/link">
                       <ChevronRight className="w-3 h-3 text-transparent group-hover/link:text-primary transition-colors group-hover/link:translate-x-1" />
                       {t}
                     </Link>
-                  </li>
+                  </motion.li>
                 ))}
               </ul>
-            </div>
-            
-            <div className="lg:col-span-2">
-              <h4 className="font-black text-white/40 mb-8 text-[10px] uppercase tracking-[0.3em]">Legal</h4>
-              <ul className="flex flex-col gap-y-5 mb-12">
-                {['Centro de Ayuda', 'Políticas', 'Privacidad', 'Términos'].map(s => (
-                  <li key={s} className="text-[13px] font-semibold text-gray-500 hover:text-primary transition-all cursor-pointer flex items-center gap-3 group/link">
-                    <ChevronRight className="w-3 h-3 text-transparent group-hover/link:text-primary transition-colors group-hover/link:translate-x-1" />
-                    {s}
-                  </li>
+            </motion.div>
+
+            <motion.div
+              className="lg:col-span-2 text-center"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+            >
+              <h4 className="font-black text-white/40 mb-10 text-[10px] uppercase tracking-[0.3em]">Legal</h4>
+              <ul className="flex flex-col gap-y-6">
+                {['Centro de Ayuda', 'Políticas', 'Privacidad', 'Términos'].map((s) => (
+                  <motion.li key={s} whileHover={{ x: 6 }} transition={{ type: 'spring', stiffness: 300 }}>
+                    <div className="text-[13px] font-semibold text-gray-500 hover:text-primary transition-all cursor-pointer flex items-center gap-3 group/link">
+                      <ChevronRight className="w-3 h-3 text-transparent group-hover/link:text-primary transition-colors group-hover/link:translate-x-1" />
+                      {s}
+                    </div>
+                  </motion.li>
                 ))}
               </ul>
-            </div>
+            </motion.div>
 
             {/* Socials Column */}
-            <div className="lg:col-span-2 flex items-center mt-8 lg:mt-0">
-              <div className="flex gap-4">
+            <motion.div
+              className="lg:col-span-2 flex flex-col items-center justify-center mt-8 lg:mt-0"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+            >
+              <div className="flex gap-5 justify-center">
                 {['TW', 'IG', 'DC'].map((label) => (
-                  <div key={label} className="w-10 h-10 rounded-md flex items-center justify-center cursor-pointer transition-all duration-300 hover:scale-110 hover:-translate-y-1 bg-white/5 border border-white/10 hover:border-primary/50 text-gray-500 hover:text-white">
-                    <span className="text-[10px] font-black">{label}</span>
-                  </div>
+                  <motion.div
+                    key={label}
+                    className="w-12 h-12 rounded-lg flex items-center justify-center cursor-pointer bg-white/5 border border-white/10 hover:border-primary/50 text-gray-500 hover:text-white font-black text-[11px]"
+                    whileHover={{ scale: 1.15, y: -4, boxShadow: '0 10px 30px rgba(255,235,59,0.2)' }}
+                    whileTap={{ scale: 0.9 }}
+                    transition={{ type: 'spring', stiffness: 400 }}
+                  >
+                    {label}
+                  </motion.div>
                 ))}
               </div>
-            </div>
+            </motion.div>
           </div>
           
           {/* Footer Bottom */}
-          <div className="pt-16 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-12">
-            <div className="text-gray-700 text-[10px] font-bold tracking-[0.4em] uppercase">
+          <motion.div
+            className="mt-10 pt-8 border-t border-white/5 flex flex-col md:flex-row items-center justify-center gap-12 mb-0 pb-0"
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+          >
+            <motion.div
+              className="text-gray-600 text-[10px] font-bold tracking-[0.4em] uppercase hover:text-primary transition-colors"
+              whileHover={{ scale: 1.05 }}
+            >
               © {new Date().getFullYear()} TCG VAULT INC.
-            </div>
-            <div className="flex items-center gap-10">
-              <span className="flex items-center gap-3 text-[10px] font-bold text-gray-600 uppercase tracking-widest opacity-60">
+            </motion.div>
+            <div className="flex items-center gap-8">
+              <motion.span
+                className="flex items-center gap-3 text-[11px] font-semibold text-gray-500 uppercase tracking-widest hover:text-primary transition-colors cursor-pointer"
+                whileHover={{ scale: 1.08, x: 4 }}
+              >
                 <Lock className="w-4 h-4" /> Encriptado
-              </span>
-              <span className="flex items-center gap-3 text-[10px] font-bold text-gray-600 uppercase tracking-widest opacity-60">
+              </motion.span>
+              <motion.span
+                className="flex items-center gap-3 text-[11px] font-semibold text-gray-500 uppercase tracking-widest hover:text-primary transition-colors cursor-pointer"
+                whileHover={{ scale: 1.08, x: 4 }}
+              >
                 <Globe className="w-4 h-4" /> Global
-              </span>
+              </motion.span>
             </div>
-          </div>
+          </motion.div>
         </div>
       </footer>
     </div>

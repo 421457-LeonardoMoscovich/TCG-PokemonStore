@@ -11,10 +11,14 @@ const COSTO_RULETA = 2;
 
 // Probabilidades de la Ruleta
 const PREMIOS_RULETA = [
-  { tipo: 'monedas', valor: 50, prob: 0.50, label: '50 Monedas' },
-  { tipo: 'energia', valor: 1, prob: 0.30, label: '+1 Energía' },
-  { tipo: 'monedas', valor: 200, prob: 0.15, label: '200 Monedas' },
-  { tipo: 'carta', valor: 'rare', prob: 0.05, label: '¡Carta Rara!' }
+  { tipo: 'monedas', valor: 50, prob: 0.20, label: '50 Monedas' },
+  { tipo: 'carta', valor: 'epic', prob: 0.05, label: '¡Carta Épica!' },
+  { tipo: 'monedas', valor: 100, prob: 0.15, label: '100 Monedas' },
+  { tipo: 'energia', valor: 1, prob: 0.25, label: '+1 Energía' },
+  { tipo: 'monedas', valor: 75, prob: 0.15, label: '75 Monedas' },
+  { tipo: 'carta', valor: 'rare', prob: 0.10, label: 'Carta Rara' },
+  { tipo: 'monedas', valor: 200, prob: 0.08, label: '200 Monedas' },
+  { tipo: 'jackpot', valor: 1000, prob: 0.02, label: '¡JACKPOT! (1000)' }
 ];
 
 /** 
@@ -219,16 +223,20 @@ async function verificarTrivia(req, res) {
     if (!correctId) return res.status(400).json({ error: 'Sesión de juego expirada o inexistente' });
 
     // Sincronizar energía antes de restar (por si pasó el tiempo de recarga justo antes de responder)
-    await sincronizarEnergia(req.userId);
+    const energiaPrevia = await sincronizarEnergia(req.userId);
 
     const db = getDB();
     const cartaCorrecta = await db.collection('cartas').findOne({ _id: new ObjectId(correctId) });
     const esCorrecto = cartaCorrecta.name.toLowerCase() === respuesta.toLowerCase();
 
     const updateData = { 
-      $inc: { energy: -1, "stats.triviasJugadas": 1 },
-      $set: { lastEnergyUpdate: new Date() }
+      $inc: { energy: -1, "stats.triviasJugadas": 1 }
     };
+
+    // Solo seteamos la fecha si bajamos del máximo por primera vez
+    if (energiaPrevia.energy === ENERGIA_MAXIMA) {
+      updateData.$set = { lastEnergyUpdate: new Date() };
+    }
 
     if (esCorrecto) {
       updateData.$inc["stats.triviasGanadas"] = 1;
@@ -245,12 +253,13 @@ async function verificarTrivia(req, res) {
       return res.status(403).json({ error: 'No tienes energía suficiente.' });
     }
 
-    const nuevaEnergia = updateResult.energy;
+    const nuevaEnergia = updateResult.energy || 0;
     await redis.del(`trivia:${req.userId}`);
 
     if (esCorrecto) {
       return res.json({
         success: true,
+        correct: true,
         mensaje: `¡Correcto! Es ${cartaCorrecta.name}. Ganaste ${RECOMPENSA_TRIVIA} monedas.`,
         monedasGanadas: RECOMPENSA_TRIVIA,
         energiaActual: nuevaEnergia
@@ -258,6 +267,7 @@ async function verificarTrivia(req, res) {
     } else {
       return res.json({
         success: false,
+        correct: false,
         mensaje: `¡Incorrecto! Era ${cartaCorrecta.name}.`,
         monedasGanadas: 0,
         energiaActual: nuevaEnergia
@@ -292,16 +302,21 @@ async function girarRuleta(req, res) {
     }
 
     const updateData = {
-      $inc: { energy: -COSTO_RULETA, "stats.girosRuleta": 1 },
-      $set: { lastEnergyUpdate: new Date() }
+      $inc: { "stats.girosRuleta": 1 }
     };
 
+    // Solo seteamos la fecha si bajamos del máximo por primera vez
+    if (energiaActualizada.energy === ENERGIA_MAXIMA) {
+      updateData.$set = { lastEnergyUpdate: new Date() };
+    }
+
     let responseExtra = {};
+    let energiaRestante = energiaActualizada.energy - COSTO_RULETA;
 
     if (premioGanado.tipo === 'monedas') {
       updateData.$inc.balance = premioGanado.valor;
     } else if (premioGanado.tipo === 'energia') {
-      updateData.$inc.energy += premioGanado.valor;
+      energiaRestante = Math.min(ENERGIA_MAXIMA, energiaRestante + premioGanado.valor);
     } else if (premioGanado.tipo === 'carta') {
       // Obtenemos una carta rara al azar
       const carta = await db.collection('cartas').aggregate([
@@ -313,7 +328,11 @@ async function girarRuleta(req, res) {
         updateData.$push = { collection: carta._id };
         responseExtra.carta = { name: carta.name, image: carta.image };
       }
+    } else if (premioGanado.tipo === 'jackpot') {
+      updateData.$inc.balance = premioGanado.valor;
     }
+
+    updateData.$set.energy = energiaRestante;
 
     const usuarioActualizado = await db.collection('usuarios').findOneAndUpdate(
       { _id: new ObjectId(req.userId), energy: { $gte: COSTO_RULETA } },
@@ -321,8 +340,14 @@ async function girarRuleta(req, res) {
       { returnDocument: 'after' }
     );
 
+    if (!usuarioActualizado) {
+      return res.status(403).json({ error: 'Energía insuficiente. Esperá a que se recargue.' });
+    }
+
     res.json({
       success: true,
+      index: PREMIOS_RULETA.indexOf(premioGanado), // Para sincronizar la ruleta visual
+      recompensa: premioGanado.label,
       premio: premioGanado,
       energiaActual: usuarioActualizado.energy,
       nuevoBalance: usuarioActualizado.balance,
@@ -339,17 +364,20 @@ async function obtenerLogros(req, res) {
     const db = getDB();
     const usuario = await db.collection('usuarios').findOne({ _id: new ObjectId(req.userId) });
     const stats = usuario.stats || {};
+    const reclamados = usuario.logrosReclamados || [];
     
+    // Extraemos la definición para reusarla
     const LOGROS_DEF = [
       { id: 'primer_paso', titulo: 'Primer Paso', desc: 'Juega tu primera trivia', meta: 1, actual: stats.triviasJugadas || 0, premio: 50 },
       { id: 'experto_trivia', titulo: 'Experto en Trivia', desc: 'Gana 10 trivias', meta: 10, actual: stats.triviasGanadas || 0, premio: 200 },
       { id: 'suertudo', titulo: 'Suertudo', desc: 'Gira la ruleta 5 veces', meta: 5, actual: stats.girosRuleta || 0, premio: 100 },
-      { id: 'coleccionista', titulo: 'Coleccionista Novato', desc: 'Ten 5 cartas en tu colección', meta: 5, actual: usuario.collection?.length || 0, premio: 150 }
+      { id: 'coleccionista', titulo: 'Coleccionista Novato', desc: 'Ten 5 cartas en tu colección', meta: 5, actual: (usuario.collection || []).length, premio: 150 }
     ];
 
     const logrosProcesados = LOGROS_DEF.map(l => ({
       ...l,
       completado: l.actual >= l.meta,
+      reclamado: reclamados.includes(l.id),
       progreso: Math.min(100, Math.floor((l.actual / l.meta) * 100))
     }));
 
@@ -359,11 +387,61 @@ async function obtenerLogros(req, res) {
   }
 }
 
+async function reclamarLogro(req, res) {
+  try {
+    const { logroId } = req.body;
+    const db = getDB();
+    const usuario = await db.collection('usuarios').findOne({ _id: new ObjectId(req.userId) });
+
+    if (!usuario) return res.status(404).json({ error: 'Usuario no encontrado' });
+
+    const stats = usuario.stats || {};
+    const reclamados = usuario.logrosReclamados || [];
+
+    if (reclamados.includes(logroId)) {
+      return res.status(400).json({ error: 'Logro ya reclamado' });
+    }
+
+    // Definición idéntica a obtenerLogros
+    const LOGROS_DEF = [
+      { id: 'primer_paso', meta: 1, actual: stats.triviasJugadas || 0, premio: 50 },
+      { id: 'experto_trivia', meta: 10, actual: stats.triviasGanadas || 0, premio: 200 },
+      { id: 'suertudo', meta: 5, actual: stats.girosRuleta || 0, premio: 100 },
+      { id: 'coleccionista', meta: 5, actual: (usuario.collection || []).length, premio: 150 }
+    ];
+
+    const logro = LOGROS_DEF.find(l => l.id === logroId);
+    if (!logro) return res.status(404).json({ error: 'Logro no definido' });
+
+    if (logro.actual < logro.meta) {
+      return res.status(400).json({ error: 'Meta no alcanzada' });
+    }
+
+    await db.collection('usuarios').updateOne(
+      { _id: new ObjectId(req.userId) },
+      { 
+        $inc: { balance: logro.premio },
+        $push: { logrosReclamados: logroId }
+      }
+    );
+
+    res.json({ 
+      success: true, 
+      mensaje: `¡Reclamaste ${logro.premio} monedas!`,
+      nuevoBalance: (usuario.balance || 0) + logro.premio
+    });
+
+  } catch (err) {
+    res.status(500).json({ error: 'Error al reclamar logro', detail: err.message });
+  }
+}
+
 module.exports = {
   obtenerEstadoRecompensas,
   reclamarBonusDiario,
   obtenerTrivia,
   verificarTrivia,
   girarRuleta,
-  obtenerLogros
+  obtenerLogros,
+  reclamarLogro
 };

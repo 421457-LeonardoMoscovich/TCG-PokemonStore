@@ -201,13 +201,13 @@ export default function Perfil() {
         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03] mix-blend-overlay" />
       </div>
 
-      <div className="relative z-10 w-full px-4 md:px-8 lg:px-12 pt-8 flex flex-col gap-0 max-w-[1600px] mx-auto">
-        
+      <div className="relative z-10 w-full px-6 md:px-12 pt-16 flex flex-col gap-0 max-w-[1600px] mx-auto">
+
         {/* ── HEADER (Sharp/Retro Style) ── */}
-        <motion.header 
+        <motion.header
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="w-full flex items-center gap-4 mb-10 border-b-2 border-white/[8%] pb-6"
+          className="w-full flex items-center gap-4 mb-16 border-b-2 border-white/[8%] pb-8"
         >
           <div className="w-14 h-14 bg-gradient-to-br from-[#7C4DFF] to-primary flex items-center justify-center shrink-0 shadow-[4px_4px_0_rgba(124,77,255,0.5)] border border-white/20">
             <ShieldCheck className="w-7 h-7 text-black" />
@@ -223,14 +223,14 @@ export default function Perfil() {
         </motion.header>
 
         {/* ── WIDE LAYOUT GRID ── */}
-        <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-stretch pb-6">
+        <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-stretch pb-12">
           
           {/* LEFT COLUMN: Trainer Card & Stats */}
-          <div className="lg:col-span-4 flex flex-col gap-8 h-full">
+          <div className="lg:col-span-4 flex flex-col gap-10 h-full">
             <TrainerCard perfil={perfil} username={username} setUsername={setUsername} onSave={guardarPerfil} saving={saving} msg={msg} />
 
             {/* Stats Telemetry (Sharp layout) */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-5">
               <StatCard label="Aprobación" icon={<ShieldCheck strokeWidth={3} className="w-5 h-5" />} color="#7C4DFF" delay={0.1}>
                 Lv. <AnimatedCounter to={Math.max(1, Math.floor(totalCartas / 10))} />
               </StatCard>

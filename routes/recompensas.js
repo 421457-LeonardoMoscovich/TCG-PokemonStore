@@ -6,7 +6,8 @@ const {
   obtenerTrivia, 
   verificarTrivia,
   girarRuleta,
-  obtenerLogros
+  obtenerLogros,
+  reclamarLogro
 } = require('../controllers/recompensasController');
 const { authMiddleware } = require('../middleware/auth');
 
@@ -19,5 +20,6 @@ router.get('/trivia', obtenerTrivia);
 router.post('/trivia/verificar', verificarTrivia);
 router.post('/ruleta/girar', girarRuleta);
 router.get('/logros', obtenerLogros);
+router.post('/logros/reclamar', reclamarLogro);
 
 module.exports = router;

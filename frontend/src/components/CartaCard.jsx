@@ -150,7 +150,7 @@ function CartaCard({ carta, onAddedToCart, showWishlist = true }) {
           whileHover={{ scale: 1.2 }}
           whileTap={{ scale: 0.9 }}
           onClick={handleWishlist}
-          className={`absolute top-3 right-3 z-40 p-2 rounded-full border border-white/10 ${isFavorite ? 'bg-red-600' : 'bg-black/60 backdrop-blur-md'}`}
+          className={`absolute top-4 right-4 z-40 p-3 rounded-full border border-white/10 ${isFavorite ? 'bg-red-600' : 'bg-black/60 backdrop-blur-md'}`}
         >
           <Heart className="w-4 h-4 text-white" fill={isFavorite ? '#fff' : 'none'} />
         </motion.button>
@@ -158,7 +158,7 @@ function CartaCard({ carta, onAddedToCart, showWishlist = true }) {
 
       {/* Content */}
       <div style={{ transform: "translateZ(30px)", transformStyle: "preserve-3d" }} className="flex-1 flex flex-col">
-        <div className="aspect-[3/4] w-full relative overflow-hidden bg-bg-elevated p-1.5 pb-0">
+        <div className="aspect-[3/4] w-full relative overflow-hidden bg-bg-elevated p-2 pb-0">
           <div className="w-full h-full relative rounded-t-xl overflow-hidden border border-white/10">
             {carta.image ? (
               <motion.img
@@ -178,7 +178,7 @@ function CartaCard({ carta, onAddedToCart, showWishlist = true }) {
             <AnimatePresence>
               {cardInCart && !carta.isCollected && (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                  className="absolute inset-0 z-20 bg-green-500/20 backdrop-blur-[2px] flex flex-col items-center justify-center gap-2"
+                  className="absolute inset-0 z-20 bg-green-500/20 backdrop-blur-[2px] flex flex-col items-center justify-center gap-3"
                 >
                   <div className="w-10 h-10 rounded-full bg-green-500 flex items-center justify-center shadow-lg">
                     <Check className="w-6 h-6 text-white" strokeWidth={3} />
@@ -190,10 +190,10 @@ function CartaCard({ carta, onAddedToCart, showWishlist = true }) {
           </div>
         </div>
 
-        <div className="p-3.5 flex flex-col gap-2 bg-bg-elevated/90 backdrop-blur-xl border-t border-white/10 shrink-0">
+        <div className="p-5 flex flex-col gap-3 bg-bg-elevated/90 backdrop-blur-xl border-t border-white/10 shrink-0">
           <p className="font-extrabold text-white text-[15px] truncate">{carta.name}</p>
-          <div className="flex items-center justify-between gap-1">
-            <span className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider px-2.5 py-1 rounded-md font-black text-white"
+          <div className="flex items-center justify-between gap-2">
+            <span className="flex items-center gap-2 text-[10px] uppercase tracking-wider px-3 py-1.5 rounded-md font-black text-white"
               style={{ background: t.badge, border: `1px solid ${t.badgeBorder}`, boxShadow: `0 0 10px ${t.glow}` }}
             >
               <TypeIcon className="w-3 h-3" style={{ color: t.iconColor }} />
@@ -211,18 +211,18 @@ function CartaCard({ carta, onAddedToCart, showWishlist = true }) {
       <motion.div
         initial={{ y: '100%', opacity: 0 }}
         animate={{ y: hovered ? 0 : '100%', opacity: hovered ? 1 : 0 }}
-        className="absolute bottom-0 left-0 right-0 z-40 p-2"
+        className="absolute bottom-0 left-0 right-0 z-40 p-3"
       >
         {carta.isCollected ? (
-          <div className="w-full py-3 text-[10px] font-black uppercase rounded-md flex items-center justify-center gap-2 bg-gray-800/90 text-gray-400 border border-gray-700 backdrop-blur-md">
+          <div className="w-full py-3 text-[10px] font-black uppercase rounded-md flex items-center justify-center gap-3 bg-gray-800/90 text-gray-400 border border-gray-700 backdrop-blur-md">
             <Check className="w-4 h-4 text-green-500" /> Colección
           </div>
         ) : cardInCart ? (
-          <button onClick={handleRemove} className="w-full py-3 text-[10px] font-black uppercase rounded-md flex items-center justify-center gap-2 bg-red-500/20 border border-red-500/40 text-red-400 hover:bg-red-500/30 backdrop-blur-md">
+          <button onClick={handleRemove} className="w-full py-3 text-[10px] font-black uppercase rounded-md flex items-center justify-center gap-3 bg-red-500/20 border border-red-500/40 text-red-400 hover:bg-red-500/30 backdrop-blur-md">
              {adding ? '...' : <><X className="w-4 h-4" /> Quitar</>}
           </button>
         ) : (
-          <button onClick={handleAdd} className={`w-full py-3 text-xs font-black uppercase rounded-md flex items-center justify-center gap-2 border shadow-xl backdrop-blur-md ${added ? 'bg-green-500/95 text-white border-green-400' : 'bg-[#FFEB3B]/95 text-black border-[#F57C00]'}`}>
+          <button onClick={handleAdd} className={`w-full py-3 text-xs font-black uppercase rounded-md flex items-center justify-center gap-3 border shadow-xl backdrop-blur-md ${added ? 'bg-green-500/95 text-white border-green-400' : 'bg-[#FFEB3B]/95 text-black border-[#F57C00]'}`}>
             {added ? 'Listo' : adding ? '...' : <><Plus className="w-4 h-4" /> Añadir</>}
           </button>
         )}

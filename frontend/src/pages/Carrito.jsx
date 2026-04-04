@@ -459,7 +459,7 @@ export default function Carrito() {
 
   /* ── 3. MAIN TERMINAL VIEW ── */
   return (
-    <div className="min-h-screen bg-bg-base relative overflow-hidden flex flex-col pt-8 pb-32">
+    <div className="min-h-screen bg-bg-base relative overflow-hidden flex flex-col pt-16 pb-32">
       <style>
         {`
           @keyframes spin-slow { 100% { transform: rotate(360deg); } }

@@ -172,15 +172,15 @@ export default function Cartas() {
         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03] mix-blend-overlay" />
       </div>
 
-      <div className="relative z-10 w-full px-4 md:px-8 lg:px-12 pt-8 pb-16 flex flex-col gap-0 max-w-[2000px] mx-auto">
+      <div className="relative z-10 w-full px-6 md:px-12 pt-16 pb-24 flex flex-col gap-0 max-w-[2000px] mx-auto">
 
         {/* ═══════════════════════════════════════════
             HERO HEADER
         ═══════════════════════════════════════════ */}
-        <motion.header 
+        <motion.header
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="w-full flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12 border-b border-white/[6%] pb-8"
+          className="w-full flex flex-col md:flex-row md:items-end justify-between gap-6 mb-16 border-b border-white/[6%] pb-8"
         >
           <div className="space-y-3">
             <h1 className="text-4xl md:text-6xl font-black tracking-tight flex items-center gap-4 text-white drop-shadow-2xl">

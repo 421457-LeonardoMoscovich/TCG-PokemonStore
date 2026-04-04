@@ -364,7 +364,7 @@ export default function Home() {
       </section>
 
       {/* Categories Section */}
-      <section className="py-20 md:py-32 bg-bg-surface">
+      <section className="py-[160px] bg-bg-surface">
         <div className="w-full px-4 md:px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -403,7 +403,7 @@ export default function Home() {
       </section>
 
       {/* Featured Cards Section - Continuous Marquee */}
-      <section id="featured" className="py-24 md:py-32 bg-bg-base overflow-hidden">
+      <section id="featured" className="py-40 bg-bg-base overflow-hidden">
         <div className="w-full">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -471,7 +471,7 @@ export default function Home() {
       </section>
 
       {/* Premium Features Section - Bento Grid */}
-      <section className="bg-bg-surface relative overflow-hidden mt-[150px] md:mt-[250px] py-24 md:py-32 border-t border-white/5 flex flex-col justify-center items-center">
+      <section className="bg-bg-surface relative overflow-hidden mt-[150px] md:mt-[250px] py-40 border-t border-white/5 flex flex-col justify-center items-center">
         <div className="w-full px-4 md:px-8 max-w-7xl mx-auto relative z-10 flex flex-col items-center text-center">
           {/* Section Header */}
           <motion.div

@@ -18,7 +18,14 @@
       "Bash(curl -s \"https://contribution.usercontent.google.com/download?c=CgthaWRhX2NvZGVmeBJ8Eh1hcHBfY29tcGFuaW9uX2dlbmVyYXRlZF9maWxlcxpbCiVodG1sXzFjZDI2MGJkMzE3YzQyYTBhYjE1ZWViNWIxYTdiZWQ3EgsSBxDa5KitmxcYAZIBJAoKcHJvamVjdF9pZBIWQhQxMDQ5NDMwMzYwNjU0NTk5Njg4Ng&filename=&opi=96797242\")",
       "Bash(curl -s \"https://contribution.usercontent.google.com/download?c=CgthaWRhX2NvZGVmeBJ8Eh1hcHBfY29tcGFuaW9uX2dlbmVyYXRlZF9maWxlcxpbCiVodG1sX2UxOTU2YTQ1MjdhODRjMzhhMjgxYmI1Yjg2ZjJkZjU2EgsSBxDa5KitmxcYAZIBJAoKcHJvamVjdF9pZBIWQhQxMDQ5NDMwMzYwNjU0NTk5Njg4Ng&filename=&opi=96797242\")",
       "Bash(python3 .claude/skills/ui-ux-pro-max/scripts/search.py \"pokemon trading card ecommerce dark premium gaming\" --design-system -p \"PokémonTCG\")",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(mongosh --eval \"db.adminCommand\\('ping'\\)\" --quiet)",
+      "Bash(mongosh:*)",
+      "Bash(sudo mongod:*)",
+      "Bash(mongoexport:*)",
+      "Bash(mongoimport:*)",
+      "Bash(redis-cli:)",
+      "Bash(dpkg -l)"
     ]
   }
 }

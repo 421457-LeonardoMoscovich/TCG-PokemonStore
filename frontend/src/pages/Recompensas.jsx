@@ -163,7 +163,7 @@ export default function Recompensas() {
   }
 
   return (
-    <div className="max-w-[1400px] mx-auto px-4 py-8 space-y-16 pb-24">
+    <div className="max-w-[1400px] mx-auto px-4 pt-8 pb-24">
       {/* Header Fijo / Flotante Style */}
       <motion.div 
         initial={{ opacity: 0, y: -20 }}
@@ -196,7 +196,7 @@ export default function Recompensas() {
       </motion.div>
 
       {/* SECCIÓN 1: BONUS DIARIO */}
-      <section className="relative">
+      <section className="relative py-[160px]">
         <div className="absolute -left-4 top-0 bottom-0 w-1 bg-gradient-to-b from-yellow-400 to-transparent rounded-full opacity-20"></div>
         <div className="flex items-center gap-4 mb-8">
           <div className="p-3 bg-yellow-500/20 rounded-xl border border-yellow-500/30">
@@ -264,7 +264,7 @@ export default function Recompensas() {
       </section>
 
       {/* SECCIÓN 2: RULETA (NUEVA) */}
-      <section className="relative">
+      <section className="relative py-[160px]">
         <div className="absolute -left-4 top-0 bottom-0 w-1 bg-gradient-to-b from-blue-400 to-transparent rounded-full opacity-20"></div>
         <div className="flex items-center gap-4 mb-8">
           <div className="p-3 bg-blue-500/20 rounded-xl border border-blue-500/30">
@@ -349,7 +349,7 @@ export default function Recompensas() {
       </section>
 
       {/* SECCIÓN 3: TRIVIA */}
-      <section className="relative">
+      <section className="relative py-[160px]">
         <div className="absolute -left-4 top-0 bottom-0 w-1 bg-gradient-to-b from-purple-400 to-transparent rounded-full opacity-20"></div>
         <div className="flex items-center gap-4 mb-8">
           <div className="p-3 bg-purple-500/20 rounded-xl border border-purple-500/30">
@@ -437,7 +437,7 @@ export default function Recompensas() {
       </section>
 
       {/* SECCIÓN 4: LOGROS */}
-      <section className="relative">
+      <section className="relative py-[160px]">
         <div className="absolute -left-4 top-0 bottom-0 w-1 bg-gradient-to-b from-green-400 to-transparent rounded-full opacity-20"></div>
         <div className="flex items-center gap-4 mb-8">
           <div className="p-3 bg-green-500/20 rounded-xl border border-green-500/30">

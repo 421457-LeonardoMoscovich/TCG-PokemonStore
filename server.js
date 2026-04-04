@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 const { connectDB } = require('./config/db');
 const { connectRedis } = require('./config/redis');
 const { closeDB } = require('./config/db');
@@ -32,7 +33,7 @@ app.get('/health', async (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString(), services: { mongodb: mongoOk, redis: redisOk } });
 });
 
-// Rutas
+// Rutas API
 app.use('/api/cartas', require('./routes/cartas'));
 app.use('/api/usuarios', require('./routes/usuarios'));
 app.use('/api/compras', require('./routes/compras'));
@@ -40,6 +41,13 @@ app.use('/api/scratch', require('./routes/scratch'));
 app.use('/api/admin', require('./routes/admin'));
 app.use('/api/recompensas', require('./routes/recompensas'));
 
+// Servir frontend estático (SPA)
+app.use(express.static(path.join(__dirname, 'frontend/dist')));
+
+// Catch-all para rutas del cliente (SPA)
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'frontend/dist/index.html'));
+});
 
 // Graceful shutdown
 async function shutdown() {

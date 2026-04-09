@@ -100,7 +100,7 @@ export default function AdminUsers() {
   const totalPages = pagination.pages || 1;
 
   return (
-    <div className="space-y-6 pb-12 w-full">
+    <div className="space-y-8 pb-16 w-full">
       {/* Header Section */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-2">
          <div className="space-y-1">
@@ -115,7 +115,7 @@ export default function AdminUsers() {
       </div>
 
       {/* Controller Area */}
-      <div className="admin-glass p-4 flex flex-col md:flex-row gap-4 items-center relative overflow-hidden z-10">
+      <div className="admin-glass p-5 flex flex-col md:flex-row gap-4 items-center relative overflow-hidden z-10">
         <div className="relative flex-1 w-full flex items-center group">
           <Search className="absolute left-4 w-5 h-5 text-gray-500 group-focus-within:text-white transition-colors" />
           <input
@@ -282,7 +282,7 @@ export default function AdminUsers() {
 
         {/* Modern Pagination */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-between p-4 border-t border-white/10">
+          <div className="flex items-center justify-between p-5 border-t border-white/10">
              <p className="text-sm text-gray-400">
                 Showing {((page - 1) * LIMIT) + 1}-{Math.min(page * LIMIT, pagination.total || 0)} of {pagination.total || 0} users
              </p>

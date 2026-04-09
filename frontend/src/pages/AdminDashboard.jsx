@@ -143,7 +143,7 @@ export default function AdminDashboard() {
   const { kpis, cartasPorTipo, revenueByType, discountSuggestions, comprasRecientes } = stats;
 
   return (
-    <div className="space-y-6 pb-12 w-full text-white">
+    <div className="space-y-8 pb-16 w-full text-white">
 
       {/* KPI Matrix */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -244,7 +244,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* Secondary Data Matrix */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         
         {/* Digital Ledger Trace — Transaction Hub */}
         <HUDSection title="Recent Transactions" subtitle="Latest completed orders" delay={0.4}>

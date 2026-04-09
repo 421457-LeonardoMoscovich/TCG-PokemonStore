@@ -257,7 +257,7 @@ export default function AdminCards() {
   const totalPages = pagination.pages || 1;
 
   return (
-    <div className="space-y-6 pb-12 mx-auto max-w-[1600px] w-full">
+    <div className="space-y-8 pb-16 w-full">
       {/* HUD Controller Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-2">
         <div className="space-y-1">
@@ -364,7 +364,7 @@ export default function AdminCards() {
                 </div>
 
                 {/* Card Info */}
-                <div className="p-4">
+                <div className="p-5">
                   <h3 className="font-black text-white mb-1">{carta.name}</h3>
                   <div className="flex items-center justify-between mb-3">
                     <span className="inline-block px-2 py-0.5 bg-gradient-to-r from-purple-600/20 to-blue-600/20 border border-purple-500/30 text-purple-300 rounded text-xs font-bold">

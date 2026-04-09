@@ -504,6 +504,22 @@
   transform: translateY(-4px);
 }
 
+/* Blue variant KPI card */
+.admin-kpi-blue {
+  background: linear-gradient(135deg, rgba(30, 136, 229, 0.1) 0%, rgba(66, 165, 245, 0.04) 100%);
+  border: 1px solid rgba(30, 136, 229, 0.2);
+  box-shadow: 0 0 20px -5px rgba(30, 136, 229, 0.25);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+}
+
+.admin-kpi-blue:hover {
+  border-color: rgba(30, 136, 229, 0.45);
+  box-shadow: 0 0 30px -5px rgba(30, 136, 229, 0.45);
+  transform: translateY(-4px);
+}
+
 /* Purple-Blue Gradient */
 .gradient-purple-blue {
   background: linear-gradient(135deg, #A855F7 0%, #1E88E5 100%);

@@ -259,13 +259,13 @@ export default function AdminShell({ children }) {
         </header>
 
         {/* Page Content */}
-        <div className="flex-1 overflow-y-auto px-6 py-8 md:px-10 xl:px-14">
+        <div className="flex-1 overflow-y-auto py-10 px-6 sm:px-10 md:px-16 xl:px-24">
           <motion.div
             key={location.pathname}
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ type: 'spring', damping: 32, stiffness: 320, mass: 0.8 }}
-            className="max-w-[1280px] mx-auto"
+            className="max-w-5xl mx-auto w-full"
           >
             {children}
           </motion.div>

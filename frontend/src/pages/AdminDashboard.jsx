@@ -52,23 +52,27 @@ function CustomTooltip({ active, payload, label }) {
 
 /* ── Glass-Tech KPI Card ── */
 function KPICard({ icon: Icon, label, value, prefix = '', suffix = '', delay = 0, trend = '+0.0%', variant = 'purple' }) {
+  const isBlue = variant === 'blue';
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.98 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ delay, duration: 0.5, ease: "easeOut" }}
-      className={variant === 'blue' ? 'admin-kpi-blue group' : 'admin-kpi group'}
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay, duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+      className={isBlue ? 'admin-kpi-blue group' : 'admin-kpi group'}
     >
-      <div className="flex justify-between items-start mb-4">
-          <div className={`p-3 rounded-xl ${variant === 'blue' ? 'bg-blue-600/20 border border-blue-500/30' : 'gradient-purple-blue'}`}>
-              <Icon className={`w-5 h-5 ${variant === 'blue' ? 'text-blue-400' : 'text-white'}`} />
-          </div>
-          <span className="flex items-center text-emerald-400 text-[10px] font-bold tracking-wide bg-emerald-500/20 px-2 py-0.5 rounded border border-emerald-500/30">
-              <TrendingUp className="w-3 h-3 mr-1" /> {trend}
-          </span>
+      <div className="flex justify-between items-start mb-5">
+        <div className={`p-3 rounded-xl ${isBlue
+          ? 'bg-blue-500/10 border border-blue-500/20'
+          : 'bg-purple-500/10 border border-purple-500/20'}`}
+        >
+          <Icon className={`w-5 h-5 ${isBlue ? 'text-blue-400' : 'text-purple-400'}`} />
+        </div>
+        <span className="flex items-center gap-1 text-emerald-400 text-[10px] font-bold tracking-widest bg-emerald-500/10 px-2.5 py-1 rounded-lg border border-emerald-500/20">
+          <TrendingUp className="w-2.5 h-2.5" /> {trend}
+        </span>
       </div>
-      <p className="text-sm font-medium text-gray-400 mb-1">{label}</p>
-      <h3 className="text-4xl font-black text-white font-mono tracking-tight">
+      <p className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: 'rgba(255,255,255,0.35)' }}>{label}</p>
+      <h3 className="text-5xl font-black text-white font-mono tracking-tight leading-none">
         <AnimCounter to={value || 0} prefix={prefix} suffix={suffix} />
       </h3>
     </motion.div>
@@ -79,15 +83,15 @@ function KPICard({ icon: Icon, label, value, prefix = '', suffix = '', delay = 0
 function HUDSection({ title, subtitle, children, className = '', delay = 0 }) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 10 }}
+      initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay, duration: 0.5 }}
+      transition={{ delay, duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
       className={`admin-section flex flex-col ${className}`}
     >
-      <div className="mb-6 flex shrink-0 justify-between items-start">
+      <div className="mb-7 shrink-0 flex justify-between items-start">
         <div>
-          <h3 className="text-xl font-black text-white">{title}</h3>
-          {subtitle && <p className="text-sm text-gray-400 mt-1">{subtitle}</p>}
+          <h3 className="text-lg font-black text-white tracking-tight">{title}</h3>
+          {subtitle && <p className="text-xs mt-1.5 font-medium" style={{ color: 'rgba(255,255,255,0.35)' }}>{subtitle}</p>}
         </div>
       </div>
       <div className="flex-1 flex flex-col min-h-0 relative">
@@ -143,22 +147,22 @@ export default function AdminDashboard() {
   const { kpis, cartasPorTipo, revenueByType, discountSuggestions, comprasRecientes } = stats;
 
   return (
-    <div className="space-y-8 pb-16 w-full text-white">
+    <div className="space-y-10 pb-16 w-full text-white">
 
       {/* KPI Matrix */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <KPICard icon={Database} label="Total Vault Value" value={kpis.valorTotal} prefix="$" delay={0.1} trend="+12.5%" />
-        <KPICard icon={Layers} label="Total Cards" value={kpis.totalCartas} delay={0.2} trend="+4.1%" variant="blue" />
-        <KPICard icon={Users} label="Active Users" value={kpis.totalUsuarios} delay={0.3} trend="+8.2%" />
-        <KPICard icon={ShoppingCart} label="Net Orders" value={kpis.totalCompras} delay={0.4} trend="+2.4%" variant="blue" />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <KPICard icon={Database} label="Total Vault Value" value={kpis.valorTotal} prefix="$" delay={0.05} trend="+12.5%" />
+        <KPICard icon={Layers} label="Total Cards" value={kpis.totalCartas} delay={0.1} trend="+4.1%" variant="blue" />
+        <KPICard icon={Users} label="Active Users" value={kpis.totalUsuarios} delay={0.15} trend="+8.2%" />
+        <KPICard icon={ShoppingCart} label="Net Orders" value={kpis.totalCompras} delay={0.2} trend="+2.4%" variant="blue" />
       </div>
 
       {/* Primary Analytics Matrix */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         
         {/* Sales by Type — Tactical Bar Chart */}
         <HUDSection title="Revenue Analytics" subtitle="Transaction volume across card types" className="lg:col-span-2" delay={0.2}>
-          <div className="w-full h-64">
+          <div className="w-full h-72">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={revenueByType} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <defs>
@@ -244,7 +248,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* Secondary Data Matrix */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         
         {/* Digital Ledger Trace — Transaction Hub */}
         <HUDSection title="Recent Transactions" subtitle="Latest completed orders" delay={0.4}>

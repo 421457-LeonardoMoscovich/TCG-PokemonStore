@@ -257,7 +257,7 @@ export default function AdminCards() {
   const totalPages = pagination.pages || 1;
 
   return (
-    <div className="space-y-8 pb-16 w-full">
+    <div className="space-y-10 pb-16 w-full">
       {/* HUD Controller Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-2">
         <div className="space-y-1">
@@ -342,7 +342,7 @@ export default function AdminCards() {
           <p className="text-gray-500 font-medium">No cards found matching your criteria.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
           {cartas.map((carta, i) => (
             <motion.div
               key={carta._id}

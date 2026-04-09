@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
+import AdminShell from './components/AdminShell';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminRoute from './components/AdminRoute';
 import Login from './pages/Login';
@@ -28,6 +29,24 @@ export default function App() {
           <div className="min-h-screen bg-black">
             <Routes>
               <Route path="/login" element={<Login />} />
+              {/* Admin Area — Separate from main shop navigation */}
+              <Route
+                path="/admin/*"
+                element={
+                  <AdminRoute>
+                    <AdminShell>
+                      <Routes>
+                        <Route path="/" element={<AdminDashboard />} />
+                        <Route path="/cartas" element={<AdminCards />} />
+                        <Route path="/usuarios" element={<AdminUsers />} />
+                        <Route path="*" element={<Navigate to="/admin" replace />} />
+                      </Routes>
+                    </AdminShell>
+                  </AdminRoute>
+                }
+              />
+
+              {/* Main Shop Area */}
               <Route
                 path="/*"
                 element={
@@ -58,19 +77,6 @@ export default function App() {
                         <Route
                           path="/recompensas"
                           element={<ProtectedRoute><Recompensas /></ProtectedRoute>}
-                        />
-                        {/* Admin Routes */}
-                        <Route
-                          path="/admin"
-                          element={<AdminRoute><AdminDashboard /></AdminRoute>}
-                        />
-                        <Route
-                          path="/admin/cartas"
-                          element={<AdminRoute><AdminCards /></AdminRoute>}
-                        />
-                        <Route
-                          path="/admin/usuarios"
-                          element={<AdminRoute><AdminUsers /></AdminRoute>}
                         />
                         <Route path="/cartas" element={<Navigate to="/catalogo" replace />} />
                         <Route path="*" element={<Navigate to="/" replace />} />

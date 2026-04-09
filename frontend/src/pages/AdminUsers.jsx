@@ -100,7 +100,7 @@ export default function AdminUsers() {
   const totalPages = pagination.pages || 1;
 
   return (
-    <div className="space-y-8 pb-16 w-full">
+    <div className="space-y-10 pb-16 w-full">
       {/* Header Section */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-2">
          <div className="space-y-1">

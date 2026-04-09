@@ -476,16 +476,17 @@
 
 /* Admin Glass Panel */
 .admin-glass {
-  background: rgba(30, 30, 35, 0.6) !important;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(22, 22, 28, 0.7) !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 1.25rem;
   transition: border-color 200ms ease, background 200ms ease;
 }
 
 .admin-glass:hover {
-  border-color: rgba(168, 85, 247, 0.35);
-  background: rgba(30, 30, 35, 0.75) !important;
+  border-color: rgba(168, 85, 247, 0.3);
+  background: rgba(22, 22, 28, 0.85) !important;
 }
 
 /* Admin KPI Cards */
@@ -534,11 +535,12 @@
 
 /* Admin Section */
 .admin-section {
-  background: rgba(30, 30, 35, 0.6) !important;
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 1.25rem;
-  padding: 2rem;
+  background: rgba(22, 22, 28, 0.7) !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 1.5rem;
+  padding: 2rem 2.25rem;
 }
 
 .admin-section h3 {

@@ -469,3 +469,184 @@
   );
   background-size: 100% 4px;
 }
+
+/* ═══════════════════════════════════════════
+    ADMIN PANEL STYLES - BOLD & CONTEMPORARY
+   ═══════════════════════════════════════════ */
+
+/* Admin Glass Panel */
+.admin-glass {
+  background: rgba(30, 30, 35, 0.6) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.admin-glass:hover {
+  border-color: rgba(168, 85, 247, 0.4);
+  background: rgba(30, 30, 35, 0.8) !important;
+  transition: all 0.3s ease;
+}
+
+/* Admin KPI Cards */
+.admin-kpi {
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.1) 0%, rgba(30, 136, 229, 0.05) 100%);
+  border: 1px solid rgba(168, 85, 247, 0.2);
+  box-shadow: 0 0 20px -5px rgba(168, 85, 247, 0.3);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+}
+
+.admin-kpi:hover {
+  border-color: rgba(168, 85, 247, 0.4);
+  box-shadow: 0 0 30px -5px rgba(168, 85, 247, 0.5);
+  transform: translateY(-4px);
+}
+
+/* Purple-Blue Gradient */
+.gradient-purple-blue {
+  background: linear-gradient(135deg, #A855F7 0%, #1E88E5 100%);
+}
+
+/* Neon Glow Purple */
+.neon-glow-purple {
+  box-shadow: 0 0 20px rgba(168, 85, 247, 0.4);
+}
+
+/* Admin Section */
+.admin-section {
+  background: rgba(30, 30, 35, 0.6) !important;
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 1rem;
+  padding: 1.5rem;
+}
+
+.admin-section h3 {
+  font-size: 1.25rem;
+  font-weight: 900;
+  color: white;
+  letter-spacing: -0.02em;
+}
+
+.admin-section p {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.875rem;
+}
+
+/* Card Grid Items */
+.admin-card {
+  background: rgba(30, 30, 35, 0.6) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.75rem;
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.admin-card:hover {
+  border-color: rgba(168, 85, 247, 0.4);
+  background: rgba(30, 30, 35, 0.8) !important;
+  box-shadow: 0 0 20px -5px rgba(168, 85, 247, 0.4);
+  transform: translateY(-4px);
+}
+
+.admin-card-image {
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.2), rgba(30, 136, 229, 0.2));
+  height: 12rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.admin-card-image img {
+  transition: transform 0.3s ease;
+}
+
+.admin-card:hover .admin-card-image img {
+  transform: scale(1.1);
+}
+
+/* Admin Table */
+.admin-table {
+  background: rgba(30, 30, 35, 0.6) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 1rem;
+  overflow: hidden;
+}
+
+.admin-table thead {
+  background: rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.admin-table thead th {
+  font-weight: 900;
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  color: rgba(255, 255, 255, 0.6);
+  padding: 1rem 1.5rem;
+}
+
+.admin-table tbody tr {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  transition: background 0.2s ease;
+}
+
+.admin-table tbody tr:hover {
+  background: rgba(168, 85, 247, 0.05);
+}
+
+.admin-table td {
+  padding: 1rem 1.5rem;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* Sidebar */
+.admin-sidebar {
+  background: linear-gradient(180deg, #1a1a1a 0%, #0f0f0f 100%);
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.admin-sidebar-item {
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  transition: all 0.2s ease;
+  color: rgba(255, 255, 255, 0.6);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.admin-sidebar-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: white;
+}
+
+.admin-sidebar-item.active {
+  background: rgba(168, 85, 247, 0.15);
+  border-left: 3px solid #A855F7;
+  color: white;
+  padding-left: calc(1rem - 3px);
+}
+
+/* Badge styles */
+.admin-badge-purple {
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.2), rgba(192, 132, 252, 0.1));
+  border: 1px solid rgba(168, 85, 247, 0.3);
+  color: #C084FC;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.375rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.admin-badge-blue {
+  background: linear-gradient(135deg, rgba(30, 136, 229, 0.2), rgba(66, 165, 245, 0.1));
+  border: 1px solid rgba(30, 136, 229, 0.3);
+  color: #42A5F5;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.375rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+}

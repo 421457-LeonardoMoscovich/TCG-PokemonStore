@@ -1,36 +1,39 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Search, ArrowLeft, Users, Shield, ShieldOff, Trash2, X,
-  AlertTriangle, Mail, Calendar, Wallet, ChevronLeft, ChevronRight
+  Search, Users, Shield, ShieldOff, Trash2,
+  AlertTriangle, Mail, Calendar, Wallet, ChevronLeft, ChevronRight,
+  Database, Fingerprint, Activity, Clock
 } from 'lucide-react';
 import api from '../services/api';
 
 const LIMIT = 15;
 
-/* ── Confirm Modal ── */
+/* ── Access Portal (Modal) ── */
 function ConfirmModal({ message, onConfirm, onCancel, danger = true }) {
   return (
     <motion.div
       initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[100] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4"
+      className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
       onClick={onCancel}
     >
       <motion.div
-        initial={{ scale: 0.9 }} animate={{ scale: 1 }} exit={{ scale: 0.9 }}
+        initial={{ scale: 0.95, opacity: 0, y: 10 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.95, opacity: 0, y: 10 }}
         onClick={(e) => e.stopPropagation()}
-        className={`w-full max-w-sm rounded-lg border p-6 text-center ${danger ? 'border-red-500/20' : 'border-[#7C4DFF]/20'}`}
-        style={{ background: 'linear-gradient(135deg, #1a1a2e, #16162a)' }}
+        className={`w-full max-w-sm bg-[#121214] border ${danger ? 'border-red-500/20' : 'border-primary/20'} p-8 rounded-2xl text-center relative overflow-hidden shadow-[0_10px_40px_rgba(0,0,0,0.5)]`}
       >
-        <AlertTriangle className={`w-12 h-12 mx-auto mb-4 ${danger ? 'text-red-400' : 'text-[#7C4DFF]'}`} />
-        <p className="text-white font-bold mb-6">{message}</p>
+        <div className={`absolute top-0 left-0 w-full h-1 ${danger ? 'bg-red-500' : 'bg-primary'}`}></div>
+        <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6 ${danger ? 'bg-red-500/10 border border-red-500/20 text-red-500' : 'bg-primary/10 border border-primary/20 text-primary'}`}>
+          {danger ? <AlertTriangle className="w-8 h-8" /> : <Shield className="w-8 h-8" />}
+        </div>
+        <h3 className="text-lg font-bold text-white mb-2">Confirm Action</h3>
+        <p className="text-gray-400 text-sm leading-relaxed mb-8">{message}</p>
         <div className="flex gap-3">
-          <button onClick={onCancel} className="flex-1 py-3 rounded-md border border-white/10 text-gray-400 font-bold text-sm hover:bg-white/5 transition-colors">
-            Cancelar
+          <button onClick={onCancel} className="flex-1 py-2.5 rounded-xl border border-white/[0.06] text-gray-400 font-semibold text-sm hover:text-white hover:bg-white/[0.04] transition-colors">
+            Cancel
           </button>
-          <button onClick={onConfirm} className={`flex-1 py-3 rounded-md text-white font-bold text-sm transition-colors ${danger ? 'bg-red-500 hover:bg-red-600' : 'bg-[#7C4DFF] hover:bg-[#6a3de8]'}`}>
-            Confirmar
+          <button onClick={onConfirm} className={`flex-1 py-2.5 rounded-xl text-white font-bold text-sm transition-colors shadow-lg ${danger ? 'bg-red-500 hover:bg-red-600 shadow-red-500/20' : 'bg-primary hover:bg-primary/90 text-black shadow-primary/20'}`}>
+            Confirm
           </button>
         </div>
       </motion.div>
@@ -40,7 +43,7 @@ function ConfirmModal({ message, onConfirm, onCancel, danger = true }) {
 
 /* ═══════════════════════════════════════════
     MAIN COMPONENT
-═══════════════════════════════════════════ */
+/* ═══════════════════════════════════════════ */
 
 export default function AdminUsers() {
   const [usuarios, setUsuarios] = useState([]);
@@ -48,7 +51,7 @@ export default function AdminUsers() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
-  const [confirmAction, setConfirmAction] = useState(null); // { type, user, message }
+  const [confirmAction, setConfirmAction] = useState(null);
 
   const currentUser = JSON.parse(localStorage.getItem('user') || 'null');
 
@@ -81,7 +84,6 @@ export default function AdminUsers() {
       fetchUsers();
     } catch (err) {
       console.error(err);
-      alert(err.response?.data?.error || 'Error al cambiar rol');
     }
   }
 
@@ -92,163 +94,222 @@ export default function AdminUsers() {
       fetchUsers();
     } catch (err) {
       console.error(err);
-      alert(err.response?.data?.error || 'Error al eliminar usuario');
     }
   }
 
   const totalPages = pagination.pages || 1;
 
   return (
-    <div className="min-h-screen bg-[#0a0a1a] text-white">
-      {/* Ambient */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute -top-[20vh] left-[20vw] w-[50vw] h-[50vh] rounded-full blur-[180px] bg-[#E91E63]/8" />
+    <div className="space-y-6 pb-12 w-full">
+      {/* Header Section */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-2">
+         <div className="space-y-1">
+            <h2 className="text-3xl font-black tracking-tight text-white">User Management</h2>
+            <div className="flex items-center gap-3 text-sm text-gray-400 font-medium">
+               <div className="flex items-center gap-1.5">
+                  <Users className="w-4 h-4 text-purple-400" />
+                  <span className="text-gray-300 font-mono">{pagination.total?.toLocaleString() || 0} Users</span>
+               </div>
+            </div>
+         </div>
       </div>
 
-      <div className="relative z-10 max-w-[1200px] mx-auto px-6 lg:px-12 py-8">
-        {/* Header */}
-        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 border-b border-white/[0.06] pb-6">
-          <div className="flex items-center gap-4">
-            <Link to="/admin" className="p-2 rounded-md border border-white/10 hover:bg-white/5 text-gray-400 transition-colors">
-              <ArrowLeft className="w-5 h-5" />
-            </Link>
-            <div>
-              <h1 className="text-2xl font-black tracking-tight flex items-center gap-3">
-                <Users className="w-6 h-6 text-[#E91E63]" /> Gestión de Usuarios
-              </h1>
-              <p className="text-gray-500 text-sm mt-0.5">{pagination.total?.toLocaleString() || 0} usuarios registrados</p>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Search */}
-        <div className="relative mb-6">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+      {/* Controller Area */}
+      <div className="admin-glass p-4 flex flex-col md:flex-row gap-4 items-center relative overflow-hidden z-10">
+        <div className="relative flex-1 w-full flex items-center group">
+          <Search className="absolute left-4 w-5 h-5 text-gray-500 group-focus-within:text-white transition-colors" />
           <input
             value={search}
             onChange={(e) => handleSearch(e.target.value)}
-            placeholder="Buscar por nombre o email..."
-            className="w-full pl-10 pr-4 py-3 rounded-md bg-white/5 border border-white/10 text-white text-sm focus:border-[#E91E63] focus:outline-none transition-colors"
+            placeholder="Search by name, email, or CID..."
+            className="w-full pl-12 pr-4 py-3 rounded-xl bg-transparent border border-transparent text-sm text-white focus:bg-white/[0.02] focus:border-white/[0.06] outline-none transition-all placeholder:text-gray-600 font-medium"
           />
         </div>
+      </div>
 
-        {/* User Cards Grid */}
-        <div className="space-y-3">
-          {loading ? (
-            <div className="py-20 text-center text-gray-500">Cargando...</div>
-          ) : usuarios.length === 0 ? (
-            <div className="py-20 text-center text-gray-500">No se encontraron usuarios</div>
-          ) : (
-            usuarios.map((user, i) => {
-              const isCurrentUser = currentUser?.id === user._id?.toString();
-              return (
-                <motion.div
-                  key={user._id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.03 }}
-                  className={`rounded-lg border p-5 flex flex-col sm:flex-row sm:items-center gap-4 transition-colors ${isCurrentUser ? 'border-[#7C4DFF]/30 bg-[#7C4DFF]/5' : 'border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.04]'}`}
-                >
-                  {/* Avatar */}
-                  <div className={`w-12 h-12 rounded-full flex items-center justify-center text-lg font-black text-white shrink-0 ${user.role === 'admin' ? 'bg-gradient-to-br from-[#7C4DFF] to-[#E91E63]' : 'bg-gradient-to-br from-gray-600 to-gray-800'}`}>
-                    {(user.username || user.email || '?')[0].toUpperCase()}
-                  </div>
-
-                  {/* Info */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <p className="text-base font-bold text-white truncate">{user.username || 'Sin nombre'}</p>
-                      {isCurrentUser && (
-                        <span className="text-[9px] px-2 py-0.5 rounded-full bg-[#7C4DFF]/20 text-[#7C4DFF] border border-[#7C4DFF]/30 font-bold">TÚ</span>
-                      )}
-                      <span className={`text-[9px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${user.role === 'admin' ? 'bg-[#7C4DFF]/20 text-[#7C4DFF] border border-[#7C4DFF]/30' : 'bg-white/5 text-gray-400 border border-white/10'}`}>
-                        {user.role || 'user'}
-                      </span>
-                    </div>
-                    <div className="flex flex-wrap gap-4 text-xs text-gray-500">
-                      <span className="flex items-center gap-1"><Mail className="w-3 h-3" /> {user.email}</span>
-                      <span className="flex items-center gap-1"><Wallet className="w-3 h-3" /> ${user.balance ?? 0}</span>
-                      <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> {user.createdAt ? new Date(user.createdAt).toLocaleDateString('es-AR') : '—'}</span>
-                    </div>
-                  </div>
-
-                  {/* Actions */}
-                  <div className="flex items-center gap-2 shrink-0">
-                    {/* Toggle Role */}
-                    {user.role === 'admin' ? (
-                      <button
-                        onClick={() => setConfirmAction({
-                          type: 'role',
-                          userId: user._id,
-                          newRole: 'user',
-                          message: `¿Quitar permisos de admin a "${user.username}"?`
-                        })}
-                        disabled={isCurrentUser}
-                        className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-white/10 text-gray-400 text-xs font-bold hover:bg-white/5 transition-colors disabled:opacity-30"
-                        title={isCurrentUser ? 'No puedes quitarte admin a ti mismo' : 'Quitar Admin'}
-                      >
-                        <ShieldOff className="w-3.5 h-3.5" /> Quitar Admin
-                      </button>
-                    ) : (
-                      <button
-                        onClick={() => setConfirmAction({
-                          type: 'role',
-                          userId: user._id,
-                          newRole: 'admin',
-                          message: `¿Promover "${user.username}" a Admin?`
-                        })}
-                        className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-[#7C4DFF]/30 text-[#7C4DFF] text-xs font-bold hover:bg-[#7C4DFF]/10 transition-colors"
-                        title="Promover a Admin"
-                      >
-                        <Shield className="w-3.5 h-3.5" /> Hacer Admin
-                      </button>
-                    )}
-
-                    {/* Delete */}
-                    <button
-                      onClick={() => setConfirmAction({
-                        type: 'delete',
-                        userId: user._id,
-                        message: `¿Eliminar al usuario "${user.username}"? Esta acción no se puede deshacer.`
-                      })}
-                      disabled={isCurrentUser}
-                      className="p-2 rounded-lg hover:bg-red-500/20 text-gray-400 hover:text-red-400 transition-colors disabled:opacity-30"
-                      title={isCurrentUser ? 'No puedes eliminarte a ti mismo' : 'Eliminar usuario'}
+      {/* Main Registry Table */}
+      <div className="admin-glass rounded-2xl relative overflow-hidden z-0">
+        <div className="overflow-x-auto custom-scrollbar">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-white/5 border-b border-white/10 text-xs font-black text-gray-400 uppercase tracking-wider">
+                <th className="py-4 pl-6 font-semibold">User Identity</th>
+                <th className="py-4 font-semibold">Access Level</th>
+                <th className="py-4 font-semibold">Contact Node</th>
+                <th className="py-4 font-semibold text-right">Credit Balance</th>
+                <th className="py-4 font-semibold text-right pr-6">Security Protocols</th>
+              </tr>
+            </thead>
+            <tbody className="text-sm font-medium">
+              {loading ? (
+                <tr>
+                  <td colSpan="5" className="py-24 text-center">
+                    <div className="inline-block w-8 h-8 border-[3px] border-white/5 border-t-primary rounded-full animate-spin mb-4"></div>
+                    <p className="text-xs text-gray-500 font-semibold uppercase tracking-wider">Fetching Registry...</p>
+                  </td>
+                </tr>
+              ) : usuarios.length === 0 ? (
+                <tr>
+                   <td colSpan="5" className="py-24 text-center">
+                        <Users className="w-8 h-8 text-white/10 mx-auto mb-3" />
+                        <p className="text-gray-500 font-medium">No users found matching your criteria.</p>
+                   </td>
+                </tr>
+              ) : (
+                usuarios.map((user, i) => {
+                  const isCurrentUser = currentUser?.id === user._id?.toString();
+                  const isAdmin = user.role === 'admin';
+                  
+                  return (
+                    <motion.tr
+                      key={user._id}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: i * 0.02, duration: 0.3 }}
+                      className={`border-b border-white/5 hover:bg-purple-600/5 transition-colors group/row ${isCurrentUser ? 'bg-purple-600/10' : ''}`}
                     >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                </motion.div>
-              );
-            })
-          )}
+                      {/* Identity */}
+                      <td className="py-4 pl-6">
+                        <div className="flex items-center gap-3">
+                          <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-sm font-bold border transition-colors ${isAdmin ? 'bg-primary/10 border-primary/20 text-primary' : 'bg-white/5 border-white/10 text-gray-400'}`}>
+                            {(user.username || user.email || '?')[0].toUpperCase()}
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-bold text-white group-hover/row:text-primary transition-colors">
+                                {user.username || 'NO_NAME'}
+                              </span>
+                              {isCurrentUser && (
+                                <span className="text-[10px] px-1.5 py-0.5 rounded bg-primary/20 text-primary border border-primary/30 font-bold tracking-wider">YOU</span>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-1.5 mt-0.5 text-gray-500">
+                              <Fingerprint className="w-3 h-3" />
+                              <span className="text-[10px] font-mono uppercase tracking-wider">CID: {user._id.toString().slice(-8)}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* Role */}
+                      <td className="py-4">
+                        <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded border text-[11px] font-bold tracking-wider uppercase transition-colors ${isAdmin ? 'bg-primary/10 border-primary/20 text-primary' : 'bg-white/[0.04] border-white/[0.06] text-gray-400'}`}>
+                          {isAdmin ? <Shield className="w-3 h-3" /> : <Activity className="w-3 h-3" />}
+                          {user.role || 'user'}
+                        </div>
+                      </td>
+
+                      {/* Contact */}
+                      <td className="py-4">
+                        <div className="flex flex-col gap-1">
+                          <div className="flex items-center gap-2 text-gray-300">
+                            <Mail className="w-3 h-3 text-gray-500" />
+                            <span className="text-[11px]">{user.email}</span>
+                          </div>
+                          <div className="flex items-center gap-2 text-gray-500">
+                            <Clock className="w-3 h-3" />
+                            <span className="text-[10px] font-mono">
+                              {user.createdAt ? new Date(user.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : 'Unknown Date'}
+                            </span>
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* Financials */}
+                      <td className="py-4 text-right">
+                        <div className="flex flex-col items-end">
+                          <div className="text-sm font-bold text-emerald-400 flex items-center gap-1.5 font-mono">
+                            <Wallet className="w-3 h-3" />
+                            ${user.balance?.toLocaleString() || '0.00'}
+                          </div>
+                          <span className="text-[9px] text-gray-500 font-semibold uppercase mt-0.5 tracking-wider">Credits</span>
+                        </div>
+                      </td>
+
+                      {/* Actions */}
+                      <td className="py-4 pr-6 text-right">
+                        <div className="flex items-center justify-end gap-2 opacity-0 group-hover/row:opacity-100 transition-opacity">
+                          {isAdmin ? (
+                            <button
+                              onClick={() => setConfirmAction({
+                                type: 'role',
+                                userId: user._id,
+                                newRole: 'user',
+                                message: `Are you sure you want to revoke admin privileges for "${user.username}"?`
+                              })}
+                              disabled={isCurrentUser}
+                              className="px-3 py-1.5 rounded-lg border border-white/10 text-gray-400 text-xs font-semibold hover:bg-white/5 hover:text-white transition-all disabled:opacity-30 disabled:hover:bg-transparent flex items-center gap-1.5"
+                            >
+                              <ShieldOff className="w-3.5 h-3.5" />
+                              Revoke
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => setConfirmAction({
+                                type: 'role',
+                                userId: user._id,
+                                newRole: 'admin',
+                                message: `Are you sure you want to promote "${user.username}" to an admin position?`
+                              })}
+                              className="px-3 py-1.5 rounded-lg bg-primary/10 border border-primary/20 text-primary text-xs font-bold hover:bg-primary hover:text-black transition-all flex items-center gap-1.5"
+                            >
+                              <Shield className="w-3.5 h-3.5" />
+                              Promote
+                            </button>
+                          )}
+
+                          <button
+                            onClick={() => setConfirmAction({
+                              type: 'delete',
+                              userId: user._id,
+                              message: `Are you sure you want to permanently delete the account for "${user.username}"? This action is irreversible.`
+                            })}
+                            disabled={isCurrentUser}
+                            className="p-1.5 rounded-lg text-gray-500 hover:bg-red-500/10 hover:text-red-500 transition-all disabled:opacity-30 disabled:hover:bg-transparent ml-1"
+                            title="Delete User"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </motion.tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
         </div>
 
-        {/* Pagination */}
+        {/* Modern Pagination */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-center gap-2 mt-6">
-            <button
-              onClick={() => setPage(p => Math.max(1, p - 1))}
-              disabled={page <= 1}
-              className="p-2 rounded-md border border-white/10 text-gray-400 hover:bg-white/5 disabled:opacity-30 transition-colors"
-            >
-              <ChevronLeft className="w-5 h-5" />
-            </button>
-            <span className="text-sm font-bold text-gray-400 px-4">
-              {page} / {totalPages}
-            </span>
-            <button
-              onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-              disabled={page >= totalPages}
-              className="p-2 rounded-md border border-white/10 text-gray-400 hover:bg-white/5 disabled:opacity-30 transition-colors"
-            >
-              <ChevronRight className="w-5 h-5" />
-            </button>
+          <div className="flex items-center justify-between p-4 border-t border-white/10">
+             <p className="text-sm text-gray-400">
+                Showing {((page - 1) * LIMIT) + 1}-{Math.min(page * LIMIT, pagination.total || 0)} of {pagination.total || 0} users
+             </p>
+             <div className="flex gap-2">
+                <button
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  disabled={page <= 1}
+                  className="px-3 py-1.5 hover:bg-white/10 rounded-lg transition text-gray-400 hover:text-white text-sm font-semibold disabled:opacity-30"
+                >
+                  ← Previous
+                </button>
+                <button className="px-3 py-1.5 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg text-sm font-semibold">
+                  {page}
+                </button>
+                <button
+                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                  disabled={page >= totalPages}
+                  className="px-3 py-1.5 hover:bg-white/10 rounded-lg transition text-gray-400 hover:text-white text-sm font-semibold disabled:opacity-30"
+                >
+                  Next →
+                </button>
+             </div>
           </div>
         )}
       </div>
 
-      {/* Modals */}
+      {/* Confirmation Access Portals */}
       <AnimatePresence>
         {confirmAction && (
           <ConfirmModal

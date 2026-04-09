@@ -1,9 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Search, Plus, Pencil, Trash2, X, Check, ChevronLeft, ChevronRight,
-  ArrowLeft, CreditCard, Filter, CheckSquare, Square, AlertTriangle
+  Filter, CheckSquare, Square, AlertTriangle, Database
 } from 'lucide-react';
 import api from '../services/api';
 
@@ -11,7 +10,7 @@ const TYPES = ['', 'Fire', 'Water', 'Grass', 'Electric', 'Psychic', 'Fighting', 
 const RARITIES = ['', '◊', '◊◊', '◊◊◊', '◊◊◊◊', '☆', '☆☆', '☆☆☆', 'Crown Rare'];
 const LIMIT = 15;
 
-/* ── Modal de Formulario ── */
+/* ── Access Portal (Form Modal) ── */
 function CardModal({ card, onClose, onSave }) {
   const [form, setForm] = useState({
     name: card?.name || '',
@@ -22,6 +21,7 @@ function CardModal({ card, onClose, onSave }) {
     image: card?.image || '',
     url: card?.url || '',
     card_number: card?.card_number || '',
+    price: card?.price || 10,
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -33,7 +33,7 @@ function CardModal({ card, onClose, onSave }) {
   async function handleSubmit(e) {
     e.preventDefault();
     if (!form.name || !form.type) {
-      setError('Nombre y Tipo son requeridos');
+      setError('FIELD MISSING: Name & Type required');
       return;
     }
     setSaving(true);
@@ -46,7 +46,7 @@ function CardModal({ card, onClose, onSave }) {
       }
       onSave();
     } catch (err) {
-      setError(err.response?.data?.error || 'Error al guardar');
+      setError(err.response?.data?.error || 'UPLINK ERROR: Failed to sync data');
     } finally {
       setSaving(false);
     }
@@ -55,106 +55,124 @@ function CardModal({ card, onClose, onSave }) {
   return (
     <motion.div
       initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[100] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4"
+      className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
       onClick={onClose}
     >
       <motion.div
-        initial={{ scale: 0.9, y: 30 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 30 }}
+        initial={{ scale: 0.95, opacity: 0, y: 10 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.95, opacity: 0, y: 10 }}
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-lg rounded-lg border border-white/10 p-6"
-        style={{ background: 'linear-gradient(135deg, #1a1a2e, #16162a)' }}
+        className="w-full max-w-xl bg-gradient-to-b from-[#121214] to-[#0a0a0c] border border-white/[0.08] shadow-[0_10px_40px_rgba(0,0,0,0.5)] rounded-2xl relative overflow-hidden"
       >
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-black text-white">{card?._id ? 'Editar Carta' : 'Nueva Carta'}</h2>
-          <button onClick={onClose} className="p-2 rounded-lg hover:bg-white/10 text-gray-400"><X className="w-5 h-5" /></button>
+        <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-primary/30 to-transparent"></div>
+
+        <div className="p-8">
+          <div className="flex items-center justify-between mb-8 pb-4 border-b border-white/[0.06]">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center relative overflow-hidden group">
+                  <div className="absolute inset-0 bg-primary/10 translate-y-[100%] group-hover:translate-y-0 transition-transform"></div>
+                  <Database className="w-4 h-4 text-primary relative z-10" />
+              </div>
+              <h2 className="text-sm font-semibold text-white">{card?._id ? 'Edit Entity Details' : 'Create New Entity'}</h2>
+            </div>
+            <button onClick={onClose} className="p-2 rounded-xl text-gray-400 hover:text-white hover:bg-white/[0.04] transition-all"><X className="w-5 h-5" /></button>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div className="grid grid-cols-2 gap-5">
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-semibold text-gray-400 pl-1 uppercase tracking-wider">Entity Name *</label>
+                <input name="name" value={form.name} onChange={onChange} className="w-full px-4 py-3 rounded-xl bg-black/40 border border-white/[0.06] text-white text-sm focus:border-primary/50 focus:bg-white/[0.02] outline-none transition-all placeholder:text-gray-700 font-medium" placeholder="Charizard..." />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-semibold text-gray-400 pl-1 uppercase tracking-wider">Hit Points (HP)</label>
+                <input name="hp" type="number" value={form.hp} onChange={onChange} className="w-full px-4 py-3 rounded-xl bg-black/40 border border-white/[0.06] text-white text-sm focus:border-primary/50 focus:bg-white/[0.02] outline-none transition-all tabular-nums font-mono" />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-5">
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-semibold text-gray-400 pl-1 uppercase tracking-wider">Element Type *</label>
+                <select name="type" value={form.type} onChange={onChange} className="w-full px-4 py-3 rounded-xl bg-black/40 border border-white/[0.06] text-white text-sm focus:border-primary/50 focus:bg-white/[0.02] outline-none transition-all cursor-pointer appearance-none font-medium">
+                  {TYPES.filter(Boolean).map(t => <option key={t} value={t} className="bg-[#121214]">{t}</option>)}
+                </select>
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-semibold text-gray-400 pl-1 uppercase tracking-wider">Rarity Grade</label>
+                <select name="rarity" value={form.rarity} onChange={onChange} className="w-full px-4 py-3 rounded-xl bg-black/40 border border-white/[0.06] text-white text-sm focus:border-primary/50 focus:bg-white/[0.02] outline-none transition-all cursor-pointer appearance-none font-medium">
+                  {RARITIES.filter(Boolean).map(r => <option key={r} value={r} className="bg-[#121214]">{r}</option>)}
+                </select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-5">
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-semibold text-gray-400 pl-1 uppercase tracking-wider">Dataset Origin</label>
+                <input name="set_name" value={form.set_name} onChange={onChange} className="w-full px-4 py-3 rounded-xl bg-black/40 border border-white/[0.06] text-white text-sm focus:border-primary/50 focus:bg-white/[0.02] outline-none transition-all font-medium" />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-semibold text-gray-400 pl-1 uppercase tracking-wider">System ID</label>
+                <input name="card_number" type="number" value={form.card_number} onChange={onChange} className="w-full px-4 py-3 rounded-xl bg-black/40 border border-white/[0.06] text-white text-sm focus:border-primary/50 focus:bg-white/[0.02] outline-none transition-all tabular-nums font-mono" />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-5">
+              <div className="space-y-1.5 flex flex-col">
+                <label className="text-[11px] font-semibold text-gray-400 pl-1 uppercase tracking-wider">Visual Asset URL</label>
+                <input name="image" value={form.image} onChange={onChange} placeholder="https://..." className="w-full px-4 py-3 rounded-xl bg-black/40 border border-white/[0.06] text-white text-sm focus:border-primary/50 focus:bg-white/[0.02] outline-none transition-all font-mono" />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-semibold text-gray-400 pl-1 uppercase tracking-wider">Market Value ($)</label>
+                <input name="price" type="number" step="0.01" value={form.price} onChange={onChange} className="w-full px-4 py-3 rounded-xl bg-black/40 border border-white/[0.06] text-white text-sm focus:border-primary/50 focus:bg-white/[0.02] outline-none transition-all tabular-nums font-mono font-bold text-emerald-400" />
+              </div>
+            </div>
+
+            {error && (
+              <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center gap-3 mt-4">
+                <AlertTriangle className="w-4 h-4 text-red-500 shrink-0" />
+                <p className="text-xs font-semibold text-red-400">{error}</p>
+              </div>
+            )}
+
+            <div className="flex justify-end gap-3 pt-6 mt-4 border-t border-white/[0.06]">
+              <button type="button" onClick={onClose} className="py-2.5 px-6 rounded-xl border border-white/[0.06] text-gray-400 font-semibold text-sm hover:text-white hover:bg-white/[0.04] transition-colors">
+                Cancel
+              </button>
+              <button type="submit" disabled={saving} className="py-2.5 px-8 rounded-xl bg-white text-black font-bold text-sm hover:bg-primary transition-colors flex items-center justify-center gap-2 disabled:opacity-50">
+                {saving ? 'Saving...' : <><Check className="w-4 h-4" /> Save Entity</>}
+              </button>
+            </div>
+          </form>
         </div>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="text-[10px] uppercase tracking-widest text-gray-500 font-bold mb-1 block">Nombre *</label>
-              <input name="name" value={form.name} onChange={onChange} className="w-full px-3 py-2.5 rounded-md bg-white/5 border border-white/10 text-white text-sm focus:border-[#7C4DFF] focus:outline-none transition-colors" />
-            </div>
-            <div>
-              <label className="text-[10px] uppercase tracking-widest text-gray-500 font-bold mb-1 block">HP</label>
-              <input name="hp" type="number" value={form.hp} onChange={onChange} className="w-full px-3 py-2.5 rounded-md bg-white/5 border border-white/10 text-white text-sm focus:border-[#7C4DFF] focus:outline-none transition-colors" />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="text-[10px] uppercase tracking-widest text-gray-500 font-bold mb-1 block">Tipo *</label>
-              <select name="type" value={form.type} onChange={onChange} className="w-full px-3 py-2.5 rounded-md bg-white/5 border border-white/10 text-white text-sm focus:border-[#7C4DFF] focus:outline-none transition-colors">
-                {TYPES.filter(Boolean).map(t => <option key={t} value={t}>{t}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className="text-[10px] uppercase tracking-widest text-gray-500 font-bold mb-1 block">Rareza</label>
-              <select name="rarity" value={form.rarity} onChange={onChange} className="w-full px-3 py-2.5 rounded-md bg-white/5 border border-white/10 text-white text-sm focus:border-[#7C4DFF] focus:outline-none transition-colors">
-                {RARITIES.filter(Boolean).map(r => <option key={r} value={r}>{r}</option>)}
-              </select>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="text-[10px] uppercase tracking-widest text-gray-500 font-bold mb-1 block">Set</label>
-              <input name="set_name" value={form.set_name} onChange={onChange} className="w-full px-3 py-2.5 rounded-md bg-white/5 border border-white/10 text-white text-sm focus:border-[#7C4DFF] focus:outline-none transition-colors" />
-            </div>
-            <div>
-              <label className="text-[10px] uppercase tracking-widest text-gray-500 font-bold mb-1 block">Nro. Carta</label>
-              <input name="card_number" type="number" value={form.card_number} onChange={onChange} className="w-full px-3 py-2.5 rounded-md bg-white/5 border border-white/10 text-white text-sm focus:border-[#7C4DFF] focus:outline-none transition-colors" />
-            </div>
-          </div>
-
-          <div>
-            <label className="text-[10px] uppercase tracking-widest text-gray-500 font-bold mb-1 block">URL Imagen</label>
-            <input name="image" value={form.image} onChange={onChange} placeholder="https://..." className="w-full px-3 py-2.5 rounded-md bg-white/5 border border-white/10 text-white text-sm focus:border-[#7C4DFF] focus:outline-none transition-colors" />
-          </div>
-
-          <div>
-            <label className="text-[10px] uppercase tracking-widest text-gray-500 font-bold mb-1 block">URL Detalle</label>
-            <input name="url" value={form.url} onChange={onChange} placeholder="https://..." className="w-full px-3 py-2.5 rounded-md bg-white/5 border border-white/10 text-white text-sm focus:border-[#7C4DFF] focus:outline-none transition-colors" />
-          </div>
-
-          {error && <p className="text-red-400 text-sm font-medium">{error}</p>}
-
-          <div className="flex gap-3 pt-2">
-            <button type="button" onClick={onClose} className="flex-1 py-3 rounded-md border border-white/10 text-gray-400 font-bold text-sm hover:bg-white/5 transition-colors">
-              Cancelar
-            </button>
-            <button type="submit" disabled={saving} className="flex-1 py-3 rounded-md bg-[#7C4DFF] text-white font-bold text-sm hover:bg-[#6a3de8] transition-colors flex items-center justify-center gap-2 disabled:opacity-50">
-              {saving ? '...' : <><Check className="w-4 h-4" /> {card?._id ? 'Guardar' : 'Crear'}</>}
-            </button>
-          </div>
-        </form>
       </motion.div>
     </motion.div>
   );
 }
 
-/* ── Modal de Confirmación ── */
+/* ── Confirmation HUD ── */
 function ConfirmModal({ message, onConfirm, onCancel }) {
   return (
     <motion.div
       initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[100] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4"
+      className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
       onClick={onCancel}
     >
       <motion.div
-        initial={{ scale: 0.9 }} animate={{ scale: 1 }} exit={{ scale: 0.9 }}
+        initial={{ scale: 0.95, opacity: 0, y: 10 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.95, opacity: 0, y: 10 }}
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-sm rounded-lg border border-red-500/20 p-6 text-center"
-        style={{ background: 'linear-gradient(135deg, #1a1a2e, #1e1028)' }}
+        className="w-full max-w-sm bg-[#121214] border border-red-500/20 p-8 rounded-2xl text-center relative overflow-hidden shadow-[0_10px_40px_rgba(239,68,68,0.15)]"
       >
-        <AlertTriangle className="w-12 h-12 text-red-400 mx-auto mb-4" />
-        <p className="text-white font-bold mb-6">{message}</p>
+        <div className="absolute top-0 left-0 w-full h-1 bg-red-500"></div>
+        <div className="w-16 h-16 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center mx-auto mb-6">
+          <AlertTriangle className="w-8 h-8 text-red-500" />
+        </div>
+        <h3 className="text-lg font-bold text-white mb-2">Confirm Deletion</h3>
+        <p className="text-gray-400 text-sm leading-relaxed mb-8">{message}</p>
         <div className="flex gap-3">
-          <button onClick={onCancel} className="flex-1 py-3 rounded-md border border-white/10 text-gray-400 font-bold text-sm hover:bg-white/5 transition-colors">
-            Cancelar
+          <button onClick={onCancel} className="flex-1 py-2.5 rounded-xl border border-white/[0.06] text-gray-400 font-semibold text-sm hover:text-white hover:bg-white/[0.04] transition-colors">
+            Cancel
           </button>
-          <button onClick={onConfirm} className="flex-1 py-3 rounded-md bg-red-500 text-white font-bold text-sm hover:bg-red-600 transition-colors">
-            Eliminar
+          <button onClick={onConfirm} className="flex-1 py-2.5 rounded-xl bg-red-500 text-white font-bold text-sm hover:bg-red-600 transition-colors shadow-lg shadow-red-500/20">
+            Delete
           </button>
         </div>
       </motion.div>
@@ -164,14 +182,14 @@ function ConfirmModal({ message, onConfirm, onCancel }) {
 
 /* ═══════════════════════════════════════════
     MAIN COMPONENT
-═══════════════════════════════════════════ */
+/* ═══════════════════════════════════════════ */
 
 export default function AdminCards() {
   const [cartas, setCartas] = useState([]);
   const [pagination, setPagination] = useState({});
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({ q: '', type: '', page: 1 });
-  const [modalCard, setModalCard] = useState(null); // null=closed, {}=new, {_id,...}=edit
+  const [modalCard, setModalCard] = useState(null); 
   const [confirmDelete, setConfirmDelete] = useState(null);
   const [selected, setSelected] = useState(new Set());
   const [bulkConfirm, setBulkConfirm] = useState(false);
@@ -186,7 +204,7 @@ export default function AdminCards() {
       setCartas(data.cartas);
       setPagination(data.pagination);
     } catch (err) {
-      console.error(err);
+      console.error('Core Logic Error:', err);
     } finally {
       setLoading(false);
     }
@@ -239,178 +257,192 @@ export default function AdminCards() {
   const totalPages = pagination.pages || 1;
 
   return (
-    <div className="min-h-screen bg-[#0a0a1a] text-white">
-      {/* Ambient */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute -top-[20vh] right-0 w-[50vw] h-[50vh] rounded-full blur-[180px] bg-[#7C4DFF]/8" />
+    <div className="space-y-6 pb-12 mx-auto max-w-[1600px] w-full">
+      {/* HUD Controller Header */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-2">
+        <div className="space-y-1">
+          <h2 className="text-3xl font-bold tracking-tight text-white">Inventory Management</h2>
+          <div className="flex items-center gap-3 text-sm text-gray-500 font-medium">
+             <div className="flex items-center gap-1.5">
+                <Database className="w-4 h-4 text-primary" />
+                <span className="text-gray-300 font-mono">{pagination.total?.toLocaleString() || 0} Entities</span>
+             </div>
+             <span>•</span>
+             <span>Review and modify registry records.</span>
+          </div>
+        </div>
+        
+        <div className="flex items-center">
+            <button 
+              onClick={() => setModalCard({})}
+              className="flex items-center gap-2 px-5 py-2.5 bg-white text-black text-sm font-bold rounded-xl hover:bg-primary transition-colors font-sans"
+            >
+              <Plus className="w-4 h-4" /> New Entity
+            </button>
+        </div>
       </div>
 
-      <div className="relative z-10 max-w-[1400px] mx-auto px-6 lg:px-12 py-8">
-        {/* Header */}
-        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 border-b border-white/[0.06] pb-6">
-          <div className="flex items-center gap-4">
-            <Link to="/admin" className="p-2 rounded-md border border-white/10 hover:bg-white/5 text-gray-400 transition-colors">
-              <ArrowLeft className="w-5 h-5" />
-            </Link>
-            <div>
-              <h1 className="text-2xl font-black tracking-tight flex items-center gap-3">
-                <CreditCard className="w-6 h-6 text-[#7C4DFF]" /> Gestión de Cartas
-              </h1>
-              <p className="text-gray-500 text-sm mt-0.5">{pagination.total?.toLocaleString() || 0} cartas en la base de datos</p>
-            </div>
-          </div>
-
-          <motion.button
-            whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
-            onClick={() => setModalCard({})}
-            className="flex items-center gap-2 px-5 py-3 rounded-md bg-[#7C4DFF] text-white font-bold text-sm shadow-lg shadow-[#7C4DFF]/30 hover:bg-[#6a3de8] transition-colors"
-          >
-            <Plus className="w-5 h-5" /> Nueva Carta
-          </motion.button>
-        </motion.div>
-
-        {/* Filters */}
-        <div className="flex flex-col sm:flex-row gap-3 mb-6">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-            <input
-              value={filters.q}
-              onChange={(e) => setFilter('q', e.target.value)}
-              placeholder="Buscar por nombre..."
-              className="w-full pl-10 pr-4 py-3 rounded-md bg-white/5 border border-white/10 text-white text-sm focus:border-[#7C4DFF] focus:outline-none transition-colors"
-            />
-          </div>
-          <div className="flex items-center gap-2">
-            <Filter className="w-4 h-4 text-gray-500" />
-            <select
-              value={filters.type}
-              onChange={(e) => setFilter('type', e.target.value)}
-              className="px-4 py-3 rounded-md bg-white/5 border border-white/10 text-white text-sm focus:border-[#7C4DFF] focus:outline-none transition-colors"
-            >
-              <option value="">Todos los tipos</option>
-              {TYPES.filter(Boolean).map(t => <option key={t} value={t}>{t}</option>)}
-            </select>
-          </div>
+      {/* Controller Area */}
+      <div className="admin-glass p-4 flex flex-col md:flex-row gap-4 items-center relative overflow-hidden z-10">
+        <div className="relative flex-1 w-full flex items-center group">
+          <Search className="absolute left-4 w-5 h-5 text-gray-500 group-focus-within:text-white transition-colors" />
+          <input
+            value={filters.q}
+            onChange={(e) => setFilter('q', e.target.value)}
+            placeholder="Search by name or ID..."
+            className="w-full pl-12 pr-4 py-3 rounded-xl bg-transparent border border-transparent text-sm text-white focus:bg-white/[0.02] focus:border-white/[0.06] outline-none transition-all placeholder:text-gray-600 font-medium"
+          />
         </div>
+        <div className="h-8 w-px bg-white/[0.06] hidden md:block"></div>
+        <div className="flex items-center gap-2 w-full md:w-auto relative group">
+          <Filter className="absolute left-4 w-4 h-4 text-gray-500 group-focus-within:text-white" />
+          <select
+            value={filters.type}
+            onChange={(e) => setFilter('type', e.target.value)}
+            className="flex-1 md:flex-initial pl-10 pr-8 py-3 rounded-xl bg-transparent border border-transparent text-sm font-semibold text-gray-400 focus:text-white outline-none cursor-pointer hover:bg-white/[0.02] focus:bg-white/[0.02] focus:border-white/[0.06] transition-all appearance-none"
+          >
+            <option value="">All Types</option>
+            {TYPES.filter(Boolean).map(t => <option key={t} value={t} className="bg-[#121214]">{t}</option>)}
+          </select>
+        </div>
+      </div>
 
-        {/* Bulk Actions */}
-        <AnimatePresence>
-          {selected.size > 0 && (
+      {/* Bulk Operations Port */}
+      <AnimatePresence>
+        {selected.size > 0 && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
+            className="overflow-hidden"
+          >
+            <div className="px-5 py-3 admin-glass flex items-center justify-between gap-4 mb-4 border-primary/30">
+                <div className="flex items-center gap-3">
+                   <div className="w-2 h-2 rounded-full bg-primary animate-pulse"></div>
+                   <span className="text-sm font-semibold text-primary">{selected.size} entities selected</span>
+                </div>
+                <div className="flex items-center gap-3 text-sm">
+                   <button onClick={() => setSelected(new Set())} className="font-semibold text-gray-400 hover:text-white transition-colors">Deselect All</button>
+                   <button onClick={() => setBulkConfirm(true)} className="px-4 py-2 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white font-bold rounded-lg transition-colors border border-red-500/20 group flex items-center gap-2">
+                     <Trash2 className="w-4 h-4 group-hover:scale-110 transition-transform" /> Delete Selected
+                   </button>
+                </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Grid View */}
+      {loading ? (
+        <div className="py-24 text-center">
+          <div className="inline-block w-8 h-8 border-[3px] border-white/5 border-t-purple-600 rounded-full animate-spin mb-4"></div>
+          <p className="text-xs text-gray-500 font-semibold uppercase tracking-wider">Fetching Cards...</p>
+        </div>
+      ) : cartas.length === 0 ? (
+        <div className="py-24 text-center">
+          <Database className="w-8 h-8 text-white/10 mx-auto mb-3" />
+          <p className="text-gray-500 font-medium">No cards found matching your criteria.</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {cartas.map((carta, i) => (
             <motion.div
-              initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
-              className="mb-4 p-3 rounded-md bg-red-500/10 border border-red-500/20 flex items-center gap-3"
+              key={carta._id}
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: i * 0.05, duration: 0.3 }}
+              className="group"
             >
-              <span className="text-sm font-bold text-red-300">{selected.size} seleccionada(s)</span>
-              <button
-                onClick={() => setBulkConfirm(true)}
-                className="ml-auto flex items-center gap-2 px-4 py-2 rounded-lg bg-red-500 text-white text-xs font-bold hover:bg-red-600 transition-colors"
-              >
-                <Trash2 className="w-3.5 h-3.5" /> Eliminar seleccionadas
-              </button>
-              <button onClick={() => setSelected(new Set())} className="p-2 rounded-lg hover:bg-white/10 text-gray-400">
-                <X className="w-4 h-4" />
-              </button>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Table */}
-        <div className="rounded-lg border border-white/[0.06] overflow-hidden" style={{ background: 'rgba(255,255,255,0.02)' }}>
-          {/* Table Header */}
-          <div className="grid grid-cols-[40px_60px_1fr_100px_80px_120px_100px] gap-3 px-4 py-3 border-b border-white/[0.06] bg-white/[0.02] text-[10px] uppercase tracking-widest text-gray-500 font-bold items-center">
-            <button onClick={toggleAll} className="flex items-center justify-center">
-              {selected.size === cartas.length && cartas.length > 0 ? <CheckSquare className="w-4 h-4 text-[#7C4DFF]" /> : <Square className="w-4 h-4" />}
-            </button>
-            <span>Img</span>
-            <span>Nombre</span>
-            <span>Tipo</span>
-            <span>HP</span>
-            <span>Rareza</span>
-            <span className="text-right">Acciones</span>
-          </div>
-
-          {/* Table Body */}
-          {loading ? (
-            <div className="py-20 text-center text-gray-500">Cargando...</div>
-          ) : cartas.length === 0 ? (
-            <div className="py-20 text-center text-gray-500">No se encontraron cartas</div>
-          ) : (
-            cartas.map((carta, i) => (
-              <motion.div
-                key={carta._id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.02 }}
-                className={`grid grid-cols-[40px_60px_1fr_100px_80px_120px_100px] gap-3 px-4 py-3 border-b border-white/[0.03] items-center hover:bg-white/[0.03] transition-colors ${selected.has(carta._id) ? 'bg-[#7C4DFF]/5' : ''}`}
-              >
-                <button onClick={() => toggleSelect(carta._id)} className="flex items-center justify-center">
-                  {selected.has(carta._id) ? <CheckSquare className="w-4 h-4 text-[#7C4DFF]" /> : <Square className="w-4 h-4 text-gray-600" />}
-                </button>
-                <div className="w-10 h-14 rounded-lg overflow-hidden border border-white/10 bg-black/30">
-                  {carta.image ? <img src={carta.image} alt="" className="w-full h-full object-cover" loading="lazy" /> : <div className="w-full h-full bg-white/5" />}
+              <div className="admin-card">
+                {/* Card Image */}
+                <div className="admin-card-image">
+                  {carta.image ? (
+                    <img src={carta.image} alt={carta.name} className="w-32 h-40 object-contain group-hover:scale-110 transition-transform duration-300" loading="lazy" />
+                  ) : (
+                    <div className="w-32 h-40 bg-white/5 rounded flex items-center justify-center">
+                      <Database className="w-8 h-8 text-white/20" />
+                    </div>
+                  )}
                 </div>
-                <div className="min-w-0">
-                  <p className="text-sm font-bold text-white truncate">{carta.name}</p>
-                  <p className="text-[10px] text-gray-500 truncate">{carta.set_name || '—'}</p>
-                </div>
-                <span className="text-xs font-bold text-gray-300">{carta.type || '—'}</span>
-                <span className="text-xs font-mono text-gray-300">{carta.hp || '—'}</span>
-                <span className="text-xs text-gray-400">{carta.rarity || '—'}</span>
-                <div className="flex items-center justify-end gap-1">
-                  <button
-                    onClick={() => setModalCard(carta)}
-                    className="p-2 rounded-lg hover:bg-[#7C4DFF]/20 text-gray-400 hover:text-[#7C4DFF] transition-colors"
-                    title="Editar"
-                  >
-                    <Pencil className="w-4 h-4" />
-                  </button>
+
+                {/* Card Info */}
+                <div className="p-4">
+                  <h3 className="font-black text-white mb-1">{carta.name}</h3>
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="inline-block px-2 py-0.5 bg-gradient-to-r from-purple-600/20 to-blue-600/20 border border-purple-500/30 text-purple-300 rounded text-xs font-bold">
+                      {carta.type || 'Unknown'}
+                    </span>
+                    <span className="text-xs text-gray-400 font-semibold">{carta.rarity || '—'}</span>
+                  </div>
+
+                  {/* Price & Stock */}
+                  <div className="flex justify-between items-center pt-3 border-t border-white/10">
+                    <div>
+                      <p className="text-xs text-gray-400">Stock</p>
+                      <p className="font-black text-white">∞</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs text-gray-400">Price</p>
+                      <p className="font-black text-white">${carta.price?.toFixed(2) || '0.00'}</p>
+                    </div>
+                    <button
+                      onClick={() => setModalCard(carta)}
+                      className="p-2 hover:bg-white/10 rounded-lg transition text-gray-400 hover:text-white"
+                    >
+                      <Pencil className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  {/* Delete Button */}
                   <button
                     onClick={() => setConfirmDelete(carta)}
-                    className="p-2 rounded-lg hover:bg-red-500/20 text-gray-400 hover:text-red-400 transition-colors"
-                    title="Eliminar"
+                    className="w-full mt-3 py-2 px-3 bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white font-bold text-sm rounded-lg transition-colors flex items-center justify-center gap-2"
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <Trash2 className="w-4 h-4" /> Delete
                   </button>
                 </div>
-              </motion.div>
-            ))
-          )}
+              </div>
+            </motion.div>
+          ))}
         </div>
+      )}
 
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="flex items-center justify-center gap-2 mt-6">
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between mt-8">
+          <p className="text-sm text-gray-400">
+            Showing {((filters.page - 1) * LIMIT) + 1}-{Math.min(filters.page * LIMIT, pagination.total || 0)} of {pagination.total || 0} cards
+          </p>
+          <div className="flex gap-2">
             <button
               onClick={() => setFilters(f => ({ ...f, page: Math.max(1, f.page - 1) }))}
               disabled={filters.page <= 1}
-              className="p-2 rounded-md border border-white/10 text-gray-400 hover:bg-white/5 disabled:opacity-30 transition-colors"
+              className="px-3 py-1.5 hover:bg-white/10 rounded-lg transition text-gray-400 hover:text-white text-sm font-semibold disabled:opacity-30"
             >
-              <ChevronLeft className="w-5 h-5" />
+              ← Previous
             </button>
-            <span className="text-sm font-bold text-gray-400 px-4">
-              {filters.page} / {totalPages}
-            </span>
+            <button className="px-3 py-1.5 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg text-sm font-semibold">
+              {filters.page}
+            </button>
             <button
               onClick={() => setFilters(f => ({ ...f, page: Math.min(totalPages, f.page + 1) }))}
               disabled={filters.page >= totalPages}
-              className="p-2 rounded-md border border-white/10 text-gray-400 hover:bg-white/5 disabled:opacity-30 transition-colors"
+              className="px-3 py-1.5 hover:bg-white/10 rounded-lg transition text-gray-400 hover:text-white text-sm font-semibold disabled:opacity-30"
             >
-              <ChevronRight className="w-5 h-5" />
+              Next →
             </button>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
-      {/* Modals */}
+      {/* UI Portals (Modals) */}
       <AnimatePresence>
         {modalCard !== null && (
           <CardModal card={modalCard} onClose={() => setModalCard(null)} onSave={() => { setModalCard(null); fetchCartas(); }} />
         )}
         {confirmDelete && (
-          <ConfirmModal message={`¿Eliminar "${confirmDelete.name}"?`} onConfirm={() => handleDelete(confirmDelete._id)} onCancel={() => setConfirmDelete(null)} />
+          <ConfirmModal message={`Are you sure you want to delete "${confirmDelete.name}"? This action cannot be undone.`} onConfirm={() => handleDelete(confirmDelete._id)} onCancel={() => setConfirmDelete(null)} />
         )}
         {bulkConfirm && (
-          <ConfirmModal message={`¿Eliminar ${selected.size} carta(s)?`} onConfirm={handleBulkDelete} onCancel={() => setBulkConfirm(false)} />
+          <ConfirmModal message={`Are you sure you want to delete the ${selected.size} selected entities? This action cannot be undone.`} onConfirm={handleBulkDelete} onCancel={() => setBulkConfirm(false)} />
         )}
       </AnimatePresence>
     </div>

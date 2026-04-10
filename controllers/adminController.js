@@ -17,11 +17,13 @@ async function getDashboardStats(req, res) {
       cartasPorTipo,
       cartasPorRareza,
       cartasPorSet,
-      ingresosPorMes,
+      ingresosPorMesRaw,
       topWishlist,
       usuariosRecientes,
       comprasRecientes,
-      valorTotal,
+      valorTotalRaw,
+      revenueByTypeRaw,
+      discountSuggestionsRaw
     ] = await Promise.all([
       db.collection('cartas').countDocuments(),
       db.collection('usuarios').countDocuments(),
@@ -106,34 +108,99 @@ async function getDashboardStats(req, res) {
       db.collection('compras').aggregate([
         { $group: { _id: null, total: { $sum: '$totalPrice' } } },
       ]).toArray(),
+
+      // Nuevo: Revenue por tipo (Financial Pulse)
+      db.collection('compras').aggregate([
+        { $unwind: '$items' },
+        {
+          $lookup: {
+            from: 'cartas',
+            localField: 'items.cartaId',
+            foreignField: '_id',
+            as: 'cartaInfo'
+          }
+        },
+        { $unwind: '$cartaInfo' },
+        {
+          $group: {
+            _id: '$cartaInfo.type',
+            totalRevenue: { $sum: { $multiply: ['$items.cantidad', { $ifNull: ['$cartaInfo.price', 10] }] } }
+          }
+        },
+        { $sort: { totalRevenue: -1 } }
+      ]).toArray(),
+
+      // Nuevo: Candidatos para descuentos (Smart Deals)
+      db.collection('cartas').aggregate([
+        {
+          $lookup: {
+            from: 'usuarios',
+            localField: '_id',
+            foreignField: 'wishlist',
+            as: 'wishlists'
+          }
+        },
+        {
+          $addFields: {
+            wishlistCount: { $size: '$wishlists' },
+            ageInDays: {
+              $divide: [
+                { $subtract: [new Date(), '$createdAt'] },
+                1000 * 60 * 60 * 24
+              ]
+            }
+          }
+        },
+        {
+          $match: {
+            $or: [
+              { wishlistCount: { $gt: 5 } },
+              { ageInDays: { $gt: 30 } }
+            ]
+          }
+        },
+        { $sort: { wishlistCount: -1, createdAt: 1 } },
+        { $limit: 6 }
+      ]).toArray(),
     ]);
 
-    // Format ingresos por mes
+    const valorTotalValue = valorTotalRaw[0]?.total || 0;
+    const avgOrderValue = totalCompras > 0 ? valorTotalValue / totalCompras : 0;
+
     const meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
-    const ingresosFormateados = ingresosPorMes.map((m) => ({
-      label: `${meses[m._id.month - 1]} ${m._id.year}`,
-      total: m.total,
-      count: m.count,
-    })).reverse();
+    const ingresosFormateados = ingresosPorMesRaw.map((item) => ({
+      name: meses[item._id - 1] || 'N/A',
+      ingresos: item.total,
+    }));
 
     res.json({
       kpis: {
         totalCartas,
         totalUsuarios,
         totalCompras,
-        valorTotal: valorTotal[0]?.total || 0,
+        valorTotal: valorTotalValue,
+        avgOrderValue,
       },
       cartasPorTipo: cartasPorTipo.map((t) => ({ name: t._id || 'Sin tipo', value: t.count })),
       cartasPorRareza: cartasPorRareza.map((r) => ({ name: r._id || 'Sin rareza', value: r.count })),
       cartasPorSet: cartasPorSet.map((s) => ({ name: s._id || 'Sin set', value: s.count })),
       ingresosPorMes: ingresosFormateados,
+      revenueByType: revenueByTypeRaw.map(r => ({ name: r._id || 'Otros', value: r.totalRevenue })),
+      discountSuggestions: discountSuggestionsRaw.map(d => ({
+        _id: d._id,
+        name: d.name,
+        currentPrice: d.price || 10,
+        suggestedDiscount: d.wishlistCount > 10 ? 0.85 : 0.90,
+        reason: d.wishlistCount > 5 ? 'Alta Demanda' : 'Stock Antiguo',
+        image: d.image
+      })),
       topWishlist,
       usuariosRecientes,
       comprasRecientes,
     });
   } catch (err) {
     console.error('getDashboardStats error:', err);
-    res.status(500).json({ error: 'Error al obtener estadísticas', detail: err.message });
+    res.status(500).json({ error: 'Error al cargar estadísticas', detail: err.message });
   }
 }
 
@@ -144,7 +211,7 @@ async function getDashboardStats(req, res) {
 async function adminCreateCard(req, res) {
   try {
     const db = getDB();
-    const { name, hp, type, rarity, set_name, image, url } = req.body;
+    const { name, hp, type, rarity, set_name, image, url, price } = req.body;
 
     if (!name || !type) {
       return res.status(400).json({ error: 'Los campos name y type son requeridos' });
@@ -158,6 +225,7 @@ async function adminCreateCard(req, res) {
       set_name: set_name || null,
       image: image || null,
       url: url || null,
+      price: price ? parseFloat(price) : 10, // Precio por defecto
       createdAt: new Date(),
     };
 
@@ -178,7 +246,7 @@ async function adminUpdateCard(req, res) {
     }
 
     const updates = {};
-    const allowedFields = ['name', 'hp', 'type', 'rarity', 'set_name', 'image', 'url', 'card_number'];
+    const allowedFields = ['name', 'hp', 'type', 'rarity', 'set_name', 'image', 'url', 'card_number', 'price'];
     for (const field of allowedFields) {
       if (req.body[field] !== undefined) {
         updates[field] = field === 'hp' || field === 'card_number' ? parseInt(req.body[field]) : req.body[field];

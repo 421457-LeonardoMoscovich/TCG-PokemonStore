@@ -147,10 +147,10 @@ export default function AdminDashboard() {
   const { kpis, cartasPorTipo, revenueByType, discountSuggestions, comprasRecientes } = stats;
 
   return (
-    <div className="space-y-10 pb-16 w-full text-white">
+    <div className="w-full text-white" style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem', paddingBottom: '4rem' }}>
 
       {/* KPI Matrix */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4" style={{ gap: '1.25rem' }}>
         <KPICard icon={Database} label="Total Vault Value" value={kpis.valorTotal} prefix="$" delay={0.05} trend="+12.5%" />
         <KPICard icon={Layers} label="Total Cards" value={kpis.totalCartas} delay={0.1} trend="+4.1%" variant="blue" />
         <KPICard icon={Users} label="Active Users" value={kpis.totalUsuarios} delay={0.15} trend="+8.2%" />
@@ -158,7 +158,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* Primary Analytics Matrix */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 lg:grid-cols-3" style={{ gap: '1.25rem' }}>
         
         {/* Sales by Type — Tactical Bar Chart */}
         <HUDSection title="Revenue Analytics" subtitle="Transaction volume across card types" className="lg:col-span-2" delay={0.2}>
@@ -248,7 +248,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* Secondary Data Matrix */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+      <div className="grid grid-cols-1 lg:grid-cols-2" style={{ gap: '1.25rem' }}>
         
         {/* Digital Ledger Trace — Transaction Hub */}
         <HUDSection title="Recent Transactions" subtitle="Latest completed orders" delay={0.4}>

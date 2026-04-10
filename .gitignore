@@ -3,3 +3,9 @@ node_modules
 .DS_Store
 *.log
 .mcp.json
+*.html
+*.zip
+*.py
+PADDING_ANALYSIS_REPORT.md
+frontend/src.zip
+.claude/

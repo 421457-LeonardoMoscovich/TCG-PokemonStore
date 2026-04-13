@@ -5,7 +5,8 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "nodemon server.js"
+    "dev": "nodemon server.js",
+    "db:add-prices": "node scripts/add-prices.js"
   },
   "keywords": [],
   "author": "Leo",

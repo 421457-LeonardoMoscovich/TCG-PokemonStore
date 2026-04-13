@@ -1,111 +1,81 @@
-# 🚀 Guía de Configuración Local - Pokémon TCG Vault
+# 🎮 Pokémon Card Trading App — Setup Local
 
-Esta guía te ayudará a levantar el proyecto completo (Backend y Frontend) en tu computadora local, conectando MongoDB y Redis.
+## 📋 Prerequisites
 
----
-
-## 📋 Prerrequisitos
-
-Asegúrate de tener instalado:
-1.  **Node.js** (v18 o superior)
-2.  **Git**
-3.  **Docker Desktop** (Altamente recomendado para Redis y Mongo) o instalaciones locales de:
-    *   [MongoDB Community Server](https://www.mongodb.com/try/download/community)
-    *   [Redis for Windows](https://github.com/tporadowski/redis/releases) (Si no usas Docker)
+- **Node.js** 14+ (verificar con `node --version`)
+- **MongoDB 8.2.6** en WSL/Ubuntu
+- **Redis** en Docker (o local)
+- **.env** configurado
 
 ---
 
-## 🛠️ Paso 1: Clonar e Instalar
+## 🚀 Instalación Inicial
 
-1.  Clona el repositorio:
-    ```bash
-    git clone <url-del-repo>
-    cd <carpeta-del-proyecto>
-    ```
+### 1. Clonar el repositorio
+\`\`\`bash
+git clone <tu-repo>
+cd TP
+npm install
+\`\`\`
 
-2.  Instala las dependencias del **Backend** (raíz):
-    ```bash
-    npm install
-    ```
+### 2. Verificar servicios
 
-3.  Instala las dependencias del **Frontend**:
-    ```bash
-    cd frontend
-    npm install
-    cd ..
-    ```
+#### MongoDB (WSL/Ubuntu)
+\`\`\`bash
+# En Ubuntu/WSL:
+sudo mongod --dbpath /data/db --fork --logpath /var/log/mongod.log
 
----
+# Verificar que está corriendo:
+mongosh --eval "db.adminCommand('ping')"
+\`\`\`
 
-## 🗄️ Paso 2: Levantar MongoDB y Redis (Método Docker)
+#### Redis (Docker)
+\`\`\`bash
+# Asegurarse que el contenedor está corriendo:
+docker ps | grep redis
 
-La forma más rápida es usar Docker. Ejecuta este comando en la raíz del proyecto:
+# Si no está, iniciar:
+docker run -d -p 6379:6379 redis:latest
+\`\`\`
 
-```bash
-# Levantar Redis
-docker run -d -p 6379:6379 --name redis-pokemon redis:alpine
+### 3. 🔴 CRÍTICO: Agregar precios a las cartas
 
-# Levantar MongoDB
-docker run -d -p 27017:27017 --name mongo-pokemon mongodb/mongodb-community-server:latest
-```
+**Este es el paso que falta en los clones locales y causa que el carrito muestre 0.**
 
-*Si ya tienes MongoDB o Redis instalados localmente, asegúrate de que estén corriendo en los puertos por defecto (27017 y 6379).*
+\`\`\`bash
+npm run db:add-prices
+\`\`\`
 
----
+Este script agrega automáticamente precios a cada carta basado en su rareza:
+- 🔷 **Diamante (◆)**: $50
+- 🌟 **Estrella (☆)**: $35
+- 💠 **Rombo (◊)**: $20
+- 🎵 **Nota (♪)**: $15
+- Default: $10
 
-## 🔑 Paso 3: Configurar Variables de Entorno
+### 4. Iniciar el servidor
+\`\`\`bash
+npm run dev
+\`\`\`
 
-Debes crear dos archivos `.env`.
-
-### 1. Backend (Archivo `.env` en la raíz)
-Crea un archivo llamado `.env` en la carpeta raíz del proyecto:
-```env
-PORT=3000
-MONGODB_URI=mongodb://localhost:27017/pokemon_db
-REDIS_URL=redis://localhost:6379
-JWT_SECRET=tu_secreto_super_seguro
-NODE_ENV=development
-```
-
-### 2. Frontend (Archivo `.env.local` dentro de `/frontend`)
-Crea un archivo llamado `.env.local` dentro de la carpeta `frontend/`:
-```env
-VITE_API_URL=http://localhost:3000/api
-```
+El servidor debe estar en \`http://localhost:3005\`
 
 ---
 
-## 📦 Paso 4: Cargar Datos Iniciales (Migración)
+## ✅ Verificación
 
-Para tener las cartas en tu base de datos local, ejecuta el script de migración (después de que MongoDB esté corriendo):
-
-```bash
-# Asegúrate de estar en la raíz
-node send_data.js
-```
-*Este comando leerá `cards.json` y subirá las más de 2000 cartas a tu MongoDB local.*
+\`\`\`bash
+curl http://localhost:3005/health
+\`\`\`
 
 ---
 
-## 🚀 Paso 5: Ejecución
+## 🐛 Si el carrito sigue mostrando total_items en 0
 
-Ahora puedes levantar ambos servicios:
+Ejecutar:
+\`\`\`bash
+npm run db:add-prices
+\`\`\`
 
-1.  **Backend (Terminal 1):**
-    ```bash
-    npm run dev
-    ```
+Esto agrega precios a TODAS las cartas en MongoDB. El script es idempotente (seguro ejecutar múltiples veces).
 
-2.  **Frontend (Terminal 2):**
-    ```bash
-    cd frontend
-    npm run dev
-    ```
-
-Accede a `http://localhost:5173` para ver la aplicación funcionando.
-
----
-
-## ❓ Solución de Problemas
-*   **Error de Conexión Redis:** Asegúrate de que el contenedor de Docker esté corriendo (`docker ps`).
-*   **Cartas no aparecen:** Verifica que el script `node send_data.js` terminó sin errores y que tu `MONGODB_URI` es correcta.

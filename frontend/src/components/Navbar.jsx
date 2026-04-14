@@ -3,13 +3,10 @@ import { Link, useNavigate, useSearchParams, useLocation } from 'react-router-do
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Search, ShoppingCart, Sparkles, Heart, X,
-  User, ShoppingBag, ChevronRight, Menu, LogOut, Settings, Ticket, BookOpen, Shield, Coins,
+  User, ShoppingBag, ChevronRight, Menu, LogOut, Ticket, BookOpen, Shield, Coins,
 } from 'lucide-react';
 import { useCart } from '../hooks/useCart';
 import { useWishlist } from '../hooks/useWishlist';
-
-
-// ─── Main component ───────────────────────────────────────────────
 
 export default function Navbar() {
   const navigate = useNavigate();
@@ -19,6 +16,7 @@ export default function Navbar() {
   const { wishlist } = useWishlist();
   const wishlistCount = wishlist.length;
   const user = JSON.parse(localStorage.getItem('user') || 'null');
+  const isLoggedIn = Boolean(user);
 
   const [query, setQuery] = useState(searchParams.get('q') || '');
   const [cartOpen, setCartOpen] = useState(false);
@@ -26,10 +24,9 @@ export default function Navbar() {
   const [cartLoading, setCartLoading] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  
+
   const profileRef = useRef(null);
 
-  // Auto-close drawers on route change
   useEffect(() => {
     setCartOpen(false);
     setSearchOpen(false);
@@ -37,7 +34,6 @@ export default function Navbar() {
     setMobileMenuOpen(false);
   }, [location.pathname]);
 
-  // Close profile dropdown on outside click
   useEffect(() => {
     function handleClick(e) {
       if (profileRef.current && !profileRef.current.contains(e.target)) {
@@ -56,11 +52,11 @@ export default function Navbar() {
   }
 
   useEffect(() => {
-    if (cartOpen && user) {
+    if (cartOpen && isLoggedIn) {
       setCartLoading(true);
       refreshCart().finally(() => setCartLoading(false));
     }
-  }, [cartOpen]);
+  }, [cartOpen, isLoggedIn, refreshCart]);
 
   function handleSearch(e) {
     e.preventDefault();
@@ -70,238 +66,489 @@ export default function Navbar() {
   }
 
   const cartItems = cart || [];
-  const cartTotal = cartItems.reduce((sum, item) => sum + (item.quantity || 1) * (item.price || 0), 0);
+  const cartTotal = cartItems.reduce(
+    (sum, item) => sum + (item.quantity || 1) * (item.price || 0),
+    0
+  );
 
   return (
     <>
-      {/* ── Navbar ── */}
-      <nav className="sticky top-0 z-50 glass border-b border-white/5">
-        <div className="w-full px-4 md:px-8 h-16 flex items-center max-w-[1920px] mx-auto relative">
-
-          {/* ── LEFT: Logo ── */}
-          <Link to="/" className="flex items-center gap-2 shrink-0 select-none group">
-            <motion.div
-              whileHover={{ rotate: 20, scale: 1.15 }}
-              transition={{ type: 'spring', stiffness: 500, damping: 15 }}
+      <nav
+        className="sticky top-0 z-50 glass border-b border-white/5"
+        style={{
+          minHeight: '64px',
+          display: 'flex',
+          alignItems: 'center',
+        }}
+      >
+        <div
+          className="w-full max-w-[1920px] mx-auto"
+          style={{
+            paddingLeft: '28px',
+            paddingRight: '28px',
+            paddingTop: '0',
+            paddingBottom: '0',
+          }}
+        >
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr auto 1fr',
+              alignItems: 'center',
+              minHeight: '64px',
+              columnGap: '24px',
+            }}
+          >
+            {/* LEFT */}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'flex-start',
+                minWidth: 0,
+              }}
             >
-              <Sparkles className="w-5 h-5 text-primary" />
-            </motion.div>
-            <span className="font-black text-base tracking-tight">
-              <span className="text-primary">Pokémon</span>
-              <span className="text-white"> TCG</span>
-            </span>
-          </Link>
-
-          {/* ── CENTER: Catálogo + Search ── */}
-          <div className="hidden md:flex items-center gap-2 absolute left-1/2 -translate-x-1/2">
-
-            {/* Catálogo — left of search bar */}
-            <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.96 }}>
               <Link
-                to="/catalogo"
-                className="px-4 py-2 rounded-full text-sm font-semibold transition-all whitespace-nowrap text-gray-400 hover:text-white hover:bg-white/[7%]"
+                to="/"
+                className="group select-none"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  textDecoration: 'none',
+                }}
               >
-                Catálogo
-              </Link>
-            </motion.div>
-
-            {/* Separator */}
-            <div className="h-5 w-px shrink-0 bg-white/10" />
-
-            {/* Search */}
-            <form onSubmit={handleSearch}>
-              <div className="relative group">
-                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none group-focus-within:text-primary transition-colors" />
-                <input
-                  value={query}
-                  onChange={e => setQuery(e.target.value)}
-                  placeholder="Buscar cartas..."
-                  className="w-56 lg:w-72 rounded-full text-sm text-white placeholder-gray-500 outline-none transition-all duration-300 bg-white/5 border border-white/10 focus:border-primary/50 focus:bg-primary/5 focus:ring-4 focus:ring-primary/10"
-                  style={{ paddingLeft: '40px', paddingRight: '16px', paddingTop: '8px', paddingBottom: '8px' }}
-                />
-              </div>
-            </form>
-          </div>
-
-          {/* ── RIGHT: Icons ── */}
-          <div className="flex items-center gap-1 pr-2 ml-auto" style={{ marginLeft: 'auto' }}>
-
-            {/* Mobile search toggle */}
-            <NavIconBtn
-              onClick={() => setSearchOpen(v => !v)}
-              className="md:hidden"
-              title="Buscar"
-            >
-              <Search className="w-[18px] h-[18px]" />
-            </NavIconBtn>
-
-            {/* Desktop icons */}
-            <div className="hidden md:flex items-center gap-1">
-              {/* Wishlist */}
-              <NavIconBtn
-                as={Link}
-                to="/catalogo?favoritos=true"
-                title="Mis favoritos"
-                badge={wishlistCount}
-                badgeColor="#E53935"
-              >
-                <Heart className="w-[18px] h-[18px]" />
-              </NavIconBtn>
-
-              {/* Cart */}
-              <NavIconBtn
-                onClick={() => setCartOpen(true)}
-                title="Mi carrito"
-                badge={cartCount}
-                badgeColor="#E53935"
-                badgeTextColor="#fff"
-              >
-                <ShoppingCart className="w-[18px] h-[18px]" />
-              </NavIconBtn>
-
-              {/* Pokédex */}
-              {user && (
-                <NavIconBtn
-                  as={Link}
-                  to="/pokedex"
-                  title="Mi Pokédex"
-                >
-                  <BookOpen className="w-[18px] h-[18px]" />
-                </NavIconBtn>
-              )}
-
-              {/* Recompensas */}
-              {user && (
-                <NavIconBtn
-                  as={Link}
-                  to="/recompensas"
-                  title="Recompensas"
-                >
-                  <Coins className="w-[18px] h-[18px] text-yellow-400" />
-                </NavIconBtn>
-              )}
-
-              {/* Scratch & Win */}
-              {user && (
-                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="ml-1 mr-2">
-                  <Link
-                    to="/scratch"
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-black uppercase tracking-wider bg-[linear-gradient(135deg,#FFEB3B,#F57C00)] text-[#0a0a0a] shadow-[0_0_15px_rgba(255,235,59,0.3)] hover:shadow-[0_0_20px_rgba(255,235,59,0.5)] transition-all"
-                  >
-                    <Ticket className="w-4 h-4" />
-                    Raspar
-                  </Link>
-                </motion.div>
-              )}
-
-              {/* Profile / Login */}
-              {user ? (
-                <div className="relative ml-1" ref={profileRef}>
-                  <motion.button
-                    whileHover={{ scale: 1.06 }}
-                    whileTap={{ scale: 0.93 }}
-                    onClick={() => setProfileOpen(v => !v)}
-                    title="Mi perfil"
-                    className={`flex items-center justify-center w-8 h-8 rounded-full font-black text-xs uppercase select-none transition-all bg-primary text-black ring-2 ${profileOpen ? 'ring-primary/50 shadow-[0_0_0_2px_rgba(255,235,59,0.4)]' : 'ring-transparent'}`}
-                  >
-                    {user.username?.[0]?.toUpperCase() || '?'}
-                  </motion.button>
-
-                  {/* Dropdown */}
-                  <AnimatePresence>
-                    {profileOpen && (
-                      <motion.div
-                        initial={{ opacity: 0, y: -8, scale: 0.95 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: -8, scale: 0.95 }}
-                        transition={{ type: 'spring', stiffness: 400, damping: 28 }}
-                        className="absolute right-0 top-11 w-52 rounded-lg overflow-hidden z-50 glass-dropdown"
-                      >
-                        {/* User info */}
-                        <div className="px-4 py-3 border-b border-white/10">
-                          <div className="flex items-center gap-2.5">
-                            <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-black shrink-0 bg-primary text-black">
-                              {user.username?.[0]?.toUpperCase() || '?'}
-                            </div>
-                            <div className="min-w-0">
-                              <p className="text-white text-sm font-bold truncate">{user.username || 'Trainer'}</p>
-                              <p className="text-gray-600 text-[10px] truncate">{user.email || ''}</p>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Menu items */}
-                        <div className="py-1.5">
-                          <DropdownItem
-                            icon={<User className="w-3.5 h-3.5" />}
-                            label="Mi Perfil"
-                            onClick={() => { setProfileOpen(false); navigate('/perfil'); }}
-                          />
-                          <DropdownItem
-                            icon={<ShoppingCart className="w-3.5 h-3.5" />}
-                            label="Mi Carrito"
-                            badge={cartCount}
-                            onClick={() => { setProfileOpen(false); setCartOpen(true); }}
-                          />
-                          <DropdownItem
-                            icon={<Coins className="w-3.5 h-3.5" />}
-                            label="Recompensas"
-                            onClick={() => { setProfileOpen(false); navigate('/recompensas'); }}
-                          />
-                        </div>
-
-                        {/* Admin Panel - only for admins */}
-                        {user.role === 'admin' && (
-                          <div className="py-1.5 border-t border-white/5">
-                            <DropdownItem
-                              icon={<Shield className="w-3.5 h-3.5" />}
-                              label="Admin Panel"
-                              onClick={() => { setProfileOpen(false); navigate('/admin'); }}
-                            />
-                          </div>
-                        )}
-
-                        {/* Logout */}
-                        <div className="py-1.5 border-t border-white/5">
-                          <DropdownItem
-                            icon={<LogOut className="w-3.5 h-3.5" />}
-                            label="Cerrar sesión"
-                            danger
-                            onClick={handleLogout}
-                          />
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              ) : (
                 <motion.div
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.97 }}
-                  className="ml-2"
+                  whileHover={{ rotate: 20, scale: 1.15 }}
+                  transition={{ type: 'spring', stiffness: 500, damping: 15 }}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
                 >
-                  <Link
-                    to="/login"
-                    className="flex items-center gap-1.5 px-4 py-2 rounded-md text-sm font-bold bg-primary text-black"
-                  >
-                    <User className="w-3.5 h-3.5" />
-                    Ingresar
-                  </Link>
+                  <Sparkles className="text-primary" style={{ width: '20px', height: '20px' }} />
                 </motion.div>
-              )}
+
+                <span
+                  className="font-black tracking-tight"
+                  style={{
+                    fontSize: '16px',
+                    lineHeight: '1',
+                    display: 'inline-flex',
+                    alignItems: 'baseline',
+                    gap: '3px',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  <span className="text-primary">Pokémon</span>
+                  <span className="text-white">TCG</span>
+                </span>
+              </Link>
             </div>
 
-            {/* Mobile hamburger */}
-            <NavIconBtn
-              onClick={() => setMobileMenuOpen(v => !v)}
-              className="md:hidden ml-1"
-              title="Menú"
+            {/* CENTER DESKTOP */}
+            <div
+              className="hidden md:flex"
+              style={{
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '14px',
+                minWidth: 0,
+              }}
             >
-              {mobileMenuOpen
-                ? <X className="w-[18px] h-[18px]" />
-                : <Menu className="w-[18px] h-[18px]" />
-              }
-            </NavIconBtn>
+              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}>
+                <Link
+                  to="/catalogo"
+                  className="text-gray-400 hover:text-white transition-colors"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    height: '44px',
+                    paddingLeft: '6px',
+                    paddingRight: '6px',
+                    fontSize: '15px',
+                    fontWeight: 700,
+                    whiteSpace: 'nowrap',
+                    textDecoration: 'none',
+                  }}
+                >
+                  Catálogo
+                </Link>
+              </motion.div>
+
+              <div
+                className="bg-white/10"
+                style={{
+                  width: '1px',
+                  height: '24px',
+                  flexShrink: 0,
+                }}
+              />
+
+              <form onSubmit={handleSearch}>
+                <div
+                  className="relative"
+                  style={{
+                    width: '390px',
+                    maxWidth: '40vw',
+                  }}
+                >
+                  <Search
+                    className="absolute text-gray-500 pointer-events-none"
+                    style={{
+                      left: '14px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      width: '18px',
+                      height: '18px',
+                    }}
+                  />
+                  <input
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    placeholder="Buscar cartas..."
+                    className="w-full text-white placeholder-gray-500 outline-none bg-white/5 border border-white/10 focus:border-primary/50 focus:bg-primary/5"
+                    style={{
+                      height: '46px',
+                      borderRadius: '999px',
+                      paddingLeft: '42px',
+                      paddingRight: '18px',
+                      fontSize: '15px',
+                      boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.03)',
+                    }}
+                  />
+                </div>
+              </form>
+            </div>
+
+            {/* RIGHT */}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'flex-end',
+                minWidth: 0,
+                gap: '6px',
+              }}
+            >
+              {/* Mobile search */}
+              <NavIconBtn
+                onClick={() => setSearchOpen((v) => !v)}
+                className="md:hidden"
+                title="Buscar"
+              >
+                <Search style={{ width: '18px', height: '18px' }} />
+              </NavIconBtn>
+
+              {/* Desktop actions */}
+              <div
+                className="hidden md:flex"
+                style={{
+                  alignItems: 'center',
+                  justifyContent: 'flex-end',
+                  gap: '4px',
+                }}
+              >
+                <NavIconBtn
+                  as={Link}
+                  to="/catalogo?favoritos=true"
+                  title="Mis favoritos"
+                  badge={wishlistCount}
+                  badgeColor="#E53935"
+                >
+                  <Heart style={{ width: '18px', height: '18px' }} />
+                </NavIconBtn>
+
+                <NavIconBtn
+                  onClick={() => setCartOpen(true)}
+                  title="Mi carrito"
+                  badge={cartCount}
+                  badgeColor="#E53935"
+                  badgeTextColor="#fff"
+                >
+                  <ShoppingCart style={{ width: '18px', height: '18px' }} />
+                </NavIconBtn>
+
+                {user && (
+  <NavIconBtn as={Link} to="/pokedex" title="Mi Pokédex">
+    <BookOpen
+      style={{
+        width: '18px',
+        height: '18px',
+        position: 'relative',
+        top: '1px',
+      }}
+    />
+  </NavIconBtn>
+)}
+
+{user && (
+  <NavIconBtn as={Link} to="/recompensas" title="Recompensas">
+    <Coins
+      className="text-yellow-400"
+      style={{
+        width: '18px',
+        height: '18px',
+        position: 'relative',
+        top: '1px',
+      }}
+    />
+  </NavIconBtn>
+)}
+
+                {user && (
+                  <motion.div
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.97 }}
+                    style={{
+                      marginLeft: '8px',
+                      marginRight: '6px',
+                      display: 'flex',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <Link
+                      to="/scratch"
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '8px',
+                        minHeight: '40px',
+                        paddingLeft: '14px',
+                        paddingRight: '14px',
+                        borderRadius: '999px',
+                        fontSize: '13px',
+                        fontWeight: 900,
+                        letterSpacing: '0.04em',
+                        textTransform: 'uppercase',
+                        color: '#0a0a0a',
+                        textDecoration: 'none',
+                        background: 'linear-gradient(135deg, #FFEB3B, #F57C00)',
+                        boxShadow: '0 0 15px rgba(255,235,59,0.24)',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      <Ticket style={{ width: '16px', height: '16px' }} />
+                      Raspar
+                    </Link>
+                  </motion.div>
+                )}
+
+                {user ? (
+                  <div
+                    className="relative"
+                    ref={profileRef}
+                    style={{
+                      marginLeft: '4px',
+                      display: 'flex',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <motion.button
+                      whileHover={{ scale: 1.06 }}
+                      whileTap={{ scale: 0.94 }}
+                      onClick={() => setProfileOpen((v) => !v)}
+                      title="Mi perfil"
+                      className={`font-black uppercase transition-all bg-primary text-black ${
+                        profileOpen ? 'ring-primary/50' : 'ring-transparent'
+                      }`}
+                      style={{
+                        width: '42px',
+                        height: '42px',
+                        minWidth: '42px',
+                        borderRadius: '999px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '13px',
+                        lineHeight: '1',
+                        boxShadow: profileOpen
+                          ? '0 0 0 2px rgba(255,235,59,0.4)'
+                          : '0 0 0 2px transparent',
+                      }}
+                    >
+                      {user.username?.[0]?.toUpperCase() || '?'}
+                    </motion.button>
+
+                    <AnimatePresence>
+                      {profileOpen && (
+                        <motion.div
+                          initial={{ opacity: 0, y: -8, scale: 0.96 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: -8, scale: 0.96 }}
+                          transition={{ type: 'spring', stiffness: 400, damping: 28 }}
+                          className="absolute right-0 glass-dropdown overflow-hidden z-50"
+                          style={{
+                            top: '52px',
+                            width: '228px',
+                            borderRadius: '16px',
+                          }}
+                        >
+                          <div
+                            className="border-b border-white/10"
+                            style={{
+                              padding: '14px 16px',
+                            }}
+                          >
+                            <div
+                              style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '10px',
+                              }}
+                            >
+                              <div
+                                className="bg-primary text-black"
+                                style={{
+                                  width: '36px',
+                                  height: '36px',
+                                  minWidth: '36px',
+                                  borderRadius: '999px',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  fontSize: '13px',
+                                  fontWeight: 900,
+                                }}
+                              >
+                                {user.username?.[0]?.toUpperCase() || '?'}
+                              </div>
+
+                              <div style={{ minWidth: 0 }}>
+                                <p
+                                  className="text-white font-bold truncate"
+                                  style={{
+                                    margin: 0,
+                                    fontSize: '14px',
+                                    lineHeight: '1.2',
+                                  }}
+                                >
+                                  {user.username || 'Trainer'}
+                                </p>
+                                <p
+                                  className="text-gray-500 truncate"
+                                  style={{
+                                    margin: '3px 0 0 0',
+                                    fontSize: '11px',
+                                    lineHeight: '1.2',
+                                  }}
+                                >
+                                  {user.email || ''}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div style={{ padding: '8px 0' }}>
+                            <DropdownItem
+                              icon={<User style={{ width: '15px', height: '15px' }} />}
+                              label="Mi Perfil"
+                              onClick={() => {
+                                setProfileOpen(false);
+                                navigate('/perfil');
+                              }}
+                            />
+                            <DropdownItem
+                              icon={<ShoppingCart style={{ width: '15px', height: '15px' }} />}
+                              label="Mi Carrito"
+                              badge={cartCount}
+                              onClick={() => {
+                                setProfileOpen(false);
+                                setCartOpen(true);
+                              }}
+                            />
+                            <DropdownItem
+                              icon={<Coins style={{ width: '15px', height: '15px' }} />}
+                              label="Recompensas"
+                              onClick={() => {
+                                setProfileOpen(false);
+                                navigate('/recompensas');
+                              }}
+                            />
+                          </div>
+
+                          {user.role === 'admin' && (
+                            <div
+                              className="border-t border-white/5"
+                              style={{ padding: '8px 0' }}
+                            >
+                              <DropdownItem
+                                icon={<Shield style={{ width: '15px', height: '15px' }} />}
+                                label="Admin Panel"
+                                onClick={() => {
+                                  setProfileOpen(false);
+                                  navigate('/admin');
+                                }}
+                              />
+                            </div>
+                          )}
+
+                          <div
+                            className="border-t border-white/5"
+                            style={{ padding: '8px 0' }}
+                          >
+                            <DropdownItem
+                              icon={<LogOut style={{ width: '15px', height: '15px' }} />}
+                              label="Cerrar sesión"
+                              danger
+                              onClick={handleLogout}
+                            />
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                ) : (
+                  <motion.div
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.97 }}
+                    style={{
+                      marginLeft: '8px',
+                      display: 'flex',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <Link
+                      to="/login"
+                      className="bg-primary text-black"
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '8px',
+                        minHeight: '40px',
+                        paddingLeft: '14px',
+                        paddingRight: '16px',
+                        borderRadius: '12px',
+                        fontSize: '14px',
+                        fontWeight: 800,
+                        textDecoration: 'none',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      <User style={{ width: '15px', height: '15px' }} />
+                      Ingresar
+                    </Link>
+                  </motion.div>
+                )}
+              </div>
+
+              {/* Mobile hamburger */}
+              <NavIconBtn
+                onClick={() => setMobileMenuOpen((v) => !v)}
+                className="md:hidden"
+                title="Menú"
+              >
+                {mobileMenuOpen ? (
+                  <X style={{ width: '18px', height: '18px' }} />
+                ) : (
+                  <Menu style={{ width: '18px', height: '18px' }} />
+                )}
+              </NavIconBtn>
+            </div>
           </div>
         </div>
 
@@ -314,17 +561,37 @@ export default function Navbar() {
               exit={{ height: 0, opacity: 0 }}
               transition={{ duration: 0.18, ease: 'easeOut' }}
               onSubmit={handleSearch}
-              className="md:hidden overflow-hidden px-4 pb-3"
+              className="md:hidden overflow-hidden"
+              style={{
+                paddingLeft: '18px',
+                paddingRight: '18px',
+                paddingBottom: '14px',
+              }}
             >
               <div className="relative">
-                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" />
+                <Search
+                  className="absolute text-gray-500 pointer-events-none"
+                  style={{
+                    left: '14px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    width: '18px',
+                    height: '18px',
+                  }}
+                />
                 <input
                   value={query}
-                  onChange={e => setQuery(e.target.value)}
+                  onChange={(e) => setQuery(e.target.value)}
                   placeholder="Buscar cartas..."
                   autoFocus
-                  className="w-full rounded-md text-sm text-white placeholder-gray-500 outline-none bg-white/[6%] border border-primary/30"
-                  style={{ paddingLeft: '40px', paddingRight: '16px', paddingTop: '10px', paddingBottom: '10px' }}
+                  className="w-full text-white placeholder-gray-500 outline-none bg-white/[6%] border border-primary/30"
+                  style={{
+                    height: '46px',
+                    borderRadius: '14px',
+                    paddingLeft: '42px',
+                    paddingRight: '16px',
+                    fontSize: '15px',
+                  }}
                 />
               </div>
             </motion.form>
@@ -341,74 +608,134 @@ export default function Navbar() {
               transition={{ duration: 0.2, ease: 'easeOut' }}
               className="md:hidden overflow-hidden border-t border-white/[6%]"
             >
-              <div className="px-4 py-3 space-y-1">
+              <div
+                style={{
+                  paddingLeft: '14px',
+                  paddingRight: '14px',
+                  paddingTop: '12px',
+                  paddingBottom: '14px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '4px',
+                }}
+              >
                 <MobileNavLink
                   to="/catalogo"
-                  icon={<Sparkles className="w-4 h-4" />}
+                  icon={<Sparkles style={{ width: '16px', height: '16px' }} />}
                   label="Catálogo"
                   onClick={() => setMobileMenuOpen(false)}
                 />
                 <MobileNavLink
                   to="/catalogo?favoritos=true"
-                  icon={<Heart className="w-4 h-4" />}
+                  icon={<Heart style={{ width: '16px', height: '16px' }} />}
                   label="Favoritos"
                   badge={wishlistCount}
                   onClick={() => setMobileMenuOpen(false)}
                 />
+
                 <button
-                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 transition-all text-left"
-                  onClick={() => { setMobileMenuOpen(false); setCartOpen(true); }}
+                  className="text-gray-400 hover:text-white hover:bg-white/5 transition-all"
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    setCartOpen(true);
+                  }}
+                  style={{
+                    width: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    padding: '12px 14px',
+                    borderRadius: '12px',
+                    fontSize: '14px',
+                    fontWeight: 600,
+                    textAlign: 'left',
+                  }}
                 >
-                  <ShoppingCart className="w-4 h-4" />
-                  <span className="flex-1">Mi Carrito</span>
+                  <ShoppingCart style={{ width: '16px', height: '16px' }} />
+                  <span style={{ flex: 1 }}>Mi Carrito</span>
                   {cartCount > 0 && (
-                    <span className="text-xs font-black px-1.5 py-0.5 rounded-full"
-                      style={{ background: '#E53935', color: '#fff' }}>
+                    <span
+                      style={{
+                        background: '#E53935',
+                        color: '#fff',
+                        borderRadius: '999px',
+                        padding: '3px 7px',
+                        fontSize: '11px',
+                        fontWeight: 900,
+                        lineHeight: '1',
+                      }}
+                    >
                       {cartCount}
                     </span>
                   )}
                 </button>
+
                 {user ? (
                   <>
                     <MobileNavLink
                       to="/scratch"
-                      icon={<Ticket className="w-4 h-4" />}
+                      icon={<Ticket style={{ width: '16px', height: '16px' }} />}
                       label="Raspa y Gana"
                       onClick={() => setMobileMenuOpen(false)}
                     />
                     <MobileNavLink
                       to="/pokedex"
-                      icon={<BookOpen className="w-4 h-4" />}
+                      icon={<BookOpen style={{ width: '16px', height: '16px' }} />}
                       label="Mi Pokédex"
                       onClick={() => setMobileMenuOpen(false)}
                     />
                     <MobileNavLink
                       to="/recompensas"
-                      icon={<Coins className="w-4 h-4" />}
+                      icon={<Coins style={{ width: '16px', height: '16px' }} />}
                       label="Recompensas"
                       onClick={() => setMobileMenuOpen(false)}
                     />
                     <MobileNavLink
                       to="/perfil"
-                      icon={<User className="w-4 h-4" />}
+                      icon={<User style={{ width: '16px', height: '16px' }} />}
                       label="Mi Perfil"
                       onClick={() => setMobileMenuOpen(false)}
                     />
+
                     <button
-                      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-all text-left text-red-400 hover:bg-red-400/[8%]"
-                      onClick={() => { setMobileMenuOpen(false); handleLogout(); }}
+                      className="text-red-400 hover:bg-red-400/[8%] transition-all"
+                      onClick={() => {
+                        setMobileMenuOpen(false);
+                        handleLogout();
+                      }}
+                      style={{
+                        width: '100%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '12px',
+                        padding: '12px 14px',
+                        borderRadius: '12px',
+                        fontSize: '14px',
+                        fontWeight: 600,
+                        textAlign: 'left',
+                      }}
                     >
-                      <LogOut className="w-4 h-4" />
+                      <LogOut style={{ width: '16px', height: '16px' }} />
                       Cerrar sesión
                     </button>
                   </>
                 ) : (
                   <Link
                     to="/login"
-                    className="flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-bold bg-primary text-black"
+                    className="bg-primary text-black"
                     onClick={() => setMobileMenuOpen(false)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      padding: '12px 14px',
+                      borderRadius: '12px',
+                      fontSize: '14px',
+                      fontWeight: 800,
+                      textDecoration: 'none',
+                    }}
                   >
-                    <User className="w-4 h-4" />
+                    <User style={{ width: '16px', height: '16px' }} />
                     Ingresar
                   </Link>
                 )}
@@ -422,7 +749,6 @@ export default function Navbar() {
       <AnimatePresence>
         {cartOpen && (
           <>
-            {/* Backdrop */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -432,108 +758,235 @@ export default function Navbar() {
               className="fixed inset-0 z-[60] cart-backdrop"
             />
 
-            {/* Panel */}
             <motion.aside
               initial={{ x: '100%' }}
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 28, stiffness: 220 }}
-              className="fixed right-0 top-0 h-full w-full max-w-[400px] z-[61] flex flex-col bg-gradient-to-b from-bg-elevated to-bg-surface border-l border-white/10"
+              className="fixed right-0 top-0 z-[61] flex h-full flex-col border-l border-white/10 bg-gradient-to-b from-bg-elevated to-bg-surface shadow-2xl"
+              style={{
+                width: '100%',
+                maxWidth: '420px',
+              }}
             >
-              {/* Header */}
-              <div className="flex items-center justify-between px-5 py-4 shrink-0 border-b border-white/[7%]">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-md flex items-center justify-center bg-primary/12">
-                    <ShoppingCart className="w-4 h-4 text-primary" />
-                  </div>
-                  <div>
-                    <h2 className="text-white font-bold text-sm leading-tight">Mi Carrito</h2>
-                    {cartCount > 0 && (
-                      <p className="text-gray-500 text-xs leading-tight">
-                        {cartCount} {cartCount === 1 ? 'carta' : 'cartas'}
-                      </p>
-                    )}
-                  </div>
-                </div>
+              <div
+                className="shrink-0 border-b border-white/[7%]"
+                style={{
+                  paddingTop: '18px',
+                  paddingBottom: '18px',
+                  paddingLeft: '24px',
+                  paddingRight: '24px',
+                }}
+              >
+                <div className="flex items-start justify-between" style={{ gap: '16px' }}>
+                  <div className="flex items-center" style={{ gap: '14px' }}>
+                    <div
+                      className="flex items-center justify-center rounded-xl bg-primary/12 ring-1 ring-white/5"
+                      style={{
+                        width: '42px',
+                        height: '42px',
+                        minWidth: '42px',
+                      }}
+                    >
+                      <ShoppingCart
+                        className="text-primary"
+                        style={{ width: '20px', height: '20px' }}
+                      />
+                    </div>
 
-                <motion.button
-                  whileHover={{ scale: 1.1, rotate: 90 }}
-                  whileTap={{ scale: 0.88 }}
-                  transition={{ type: 'spring', stiffness: 500, damping: 18 }}
-                  onClick={() => setCartOpen(false)}
-                  className="w-8 h-8 rounded-md flex items-center justify-center text-gray-500 hover:text-white transition-colors bg-white/5"
-                  title="Cerrar"
-                >
-                  <X className="w-4 h-4" />
-                </motion.button>
+                    <div style={{ minWidth: 0 }}>
+                      <h2
+                        className="font-bold text-white"
+                        style={{
+                          fontSize: '18px',
+                          lineHeight: '1',
+                          margin: 0,
+                        }}
+                      >
+                        Mi Carrito
+                      </h2>
+
+                      {cartCount > 0 && (
+                        <p
+                          className="text-gray-400"
+                          style={{
+                            fontSize: '14px',
+                            lineHeight: '1',
+                            marginTop: '4px',
+                            marginBottom: 0,
+                          }}
+                        >
+                          {cartCount} {cartCount === 1 ? 'carta' : 'cartas'}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  <motion.button
+                    whileHover={{ scale: 1.08, rotate: 90 }}
+                    whileTap={{ scale: 0.92 }}
+                    transition={{ type: 'spring', stiffness: 500, damping: 18 }}
+                    onClick={() => setCartOpen(false)}
+                    className="flex shrink-0 items-center justify-center rounded-xl bg-white/5 text-gray-400 transition-colors hover:bg-white/10 hover:text-white"
+                    title="Cerrar"
+                    style={{
+                      width: '42px',
+                      height: '42px',
+                      minWidth: '42px',
+                    }}
+                  >
+                    <X style={{ width: '20px', height: '20px' }} />
+                  </motion.button>
+                </div>
               </div>
 
-              {/* Body */}
-              <div className="flex-1 overflow-y-auto px-5 py-4 min-h-0">
+              <div
+                className="min-h-0 flex-1 overflow-y-auto"
+                style={{
+                  paddingTop: '20px',
+                  paddingBottom: '20px',
+                  paddingLeft: '24px',
+                  paddingRight: '24px',
+                }}
+              >
                 {cartLoading ? (
-                  <div className="flex flex-col items-center justify-center h-full gap-3">
-                    <div className="w-7 h-7 rounded-full border-2 animate-spin border-primary/25 border-t-primary" />
-                    <p className="text-gray-500 text-sm">Cargando carrito...</p>
+                  <div className="flex h-full flex-col items-center justify-center" style={{ gap: '16px' }}>
+                    <div
+                      className="animate-spin rounded-full border-2 border-primary/25 border-t-primary"
+                      style={{ width: '32px', height: '32px' }}
+                    />
+                    <p className="text-sm text-gray-400">Cargando carrito...</p>
                   </div>
                 ) : !user ? (
-                  <CartEmptyState
-                    icon={<User className="w-9 h-9 text-gray-600" />}
-                    title="Inicia sesión"
-                    subtitle="Para acceder a tu carrito guardado"
-                    actionLabel="Ingresar"
-                    onAction={() => { setCartOpen(false); navigate('/login'); }}
-                  />
+                  <div style={{ paddingTop: '32px', paddingBottom: '32px' }}>
+                    <CartEmptyState
+                      icon={<User className="text-gray-600" style={{ width: '40px', height: '40px' }} />}
+                      title="Inicia sesión"
+                      subtitle="Para acceder a tu carrito guardado"
+                      actionLabel="Ingresar"
+                      onAction={() => {
+                        setCartOpen(false);
+                        navigate('/login');
+                      }}
+                    />
+                  </div>
                 ) : cartItems.length === 0 ? (
-                  <CartEmptyState
-                    icon={<ShoppingBag className="w-9 h-9 text-gray-600" />}
-                    title="Tu carrito está vacío"
-                    subtitle="Agrega cartas del catálogo para comenzar"
-                    actionLabel="Explorar Catálogo"
-                    onAction={() => { setCartOpen(false); navigate('/catalogo'); }}
-                  />
+                  <div style={{ paddingTop: '32px', paddingBottom: '32px' }}>
+                    <CartEmptyState
+                      icon={<ShoppingBag className="text-gray-600" style={{ width: '40px', height: '40px' }} />}
+                      title="Tu carrito está vacío"
+                      subtitle="Agrega cartas del catálogo para comenzar"
+                      actionLabel="Explorar Catálogo"
+                      onAction={() => {
+                        setCartOpen(false);
+                        navigate('/catalogo');
+                      }}
+                    />
+                  </div>
                 ) : (
-                  <div className="space-y-2.5">
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                     {cartItems.map((item, i) => (
                       <motion.div
                         key={item.cardId}
                         initial={{ opacity: 0, x: 16 }}
                         animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: i * 0.05, type: 'spring', stiffness: 320, damping: 26 }}
-                        className="flex gap-3 p-3 rounded-lg bg-white/[4%] border border-white/[6%]"
+                        transition={{
+                          delay: i * 0.05,
+                          type: 'spring',
+                          stiffness: 320,
+                          damping: 26,
+                        }}
+                        className="border border-white/[7%] bg-white/[4%] transition-colors hover:bg-white/[6%]"
+                        style={{
+                          borderRadius: '18px',
+                          padding: '16px',
+                        }}
                       >
-                        {/* Card thumbnail */}
-                        <div className="w-[52px] h-[72px] rounded-md overflow-hidden shrink-0 bg-[#161616]">
-                          {item.image ? (
-                            <img
-                              src={item.image}
-                              alt={item.name}
-                              className="w-full h-full object-cover"
-                              loading="lazy"
-                            />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center">
-                              <Sparkles className="w-5 h-5 text-primary/25" />
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Info */}
-                        <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
-                          <div>
-                            <p className="text-white text-sm font-semibold truncate leading-snug">
-                              {item.name}
-                            </p>
-                            {item.type && (
-                              <span className="inline-block text-[10px] font-bold px-2 py-0.5 rounded-full mt-1 leading-tight bg-primary/10 text-primary">
-                                {item.type}
-                              </span>
+                        <div className="flex items-start" style={{ gap: '16px' }}>
+                          <div
+                            className="shrink-0 overflow-hidden rounded-lg bg-[#161616] ring-1 ring-white/5"
+                            style={{
+                              width: '74px',
+                              height: '104px',
+                              minWidth: '74px',
+                            }}
+                          >
+                            {item.image ? (
+                              <img
+                                src={item.image}
+                                alt={item.name}
+                                className="h-full w-full object-cover"
+                                loading="lazy"
+                              />
+                            ) : (
+                              <div className="flex h-full w-full items-center justify-center">
+                                <Sparkles className="text-primary/25" style={{ width: '20px', height: '20px' }} />
+                              </div>
                             )}
                           </div>
-                          <div className="flex items-center justify-between">
-                            <span className="text-gray-600 text-xs">×{item.quantity || 1}</span>
-                            <span className="text-white text-sm font-bold">
-                              ${(item.quantity || 1) * (item.price || 0)}
-                            </span>
+
+                          <div
+                            className="flex min-w-0 flex-1 flex-col justify-between"
+                            style={{
+                              minHeight: '104px',
+                              paddingTop: '2px',
+                              paddingBottom: '2px',
+                            }}
+                          >
+                            <div>
+                              <p
+                                className="truncate font-semibold text-white"
+                                style={{
+                                  fontSize: '16px',
+                                  lineHeight: '1.2',
+                                  margin: 0,
+                                }}
+                              >
+                                {item.name}
+                              </p>
+
+                              {item.type && (
+                                <span
+                                  className="inline-flex rounded-full bg-primary/10 font-bold text-primary"
+                                  style={{
+                                    marginTop: '10px',
+                                    padding: '5px 10px',
+                                    fontSize: '11px',
+                                    lineHeight: '1',
+                                  }}
+                                >
+                                  {item.type}
+                                </span>
+                              )}
+                            </div>
+
+                            <div
+                              className="flex items-end justify-between"
+                              style={{
+                                marginTop: '16px',
+                                gap: '12px',
+                              }}
+                            >
+                              <span
+                                className="text-gray-500"
+                                style={{
+                                  fontSize: '14px',
+                                  lineHeight: '1',
+                                }}
+                              >
+                                x{item.quantity || 1}
+                              </span>
+
+                              <span
+                                className="font-extrabold text-white"
+                                style={{
+                                  fontSize: '18px',
+                                  lineHeight: '1',
+                                }}
+                              >
+                                ${(item.quantity || 1) * (item.price || 0)}
+                              </span>
+                            </div>
                           </div>
                         </div>
                       </motion.div>
@@ -542,26 +995,68 @@ export default function Navbar() {
                 )}
               </div>
 
-              {/* Footer */}
               {user && cartItems.length > 0 && (
-                <div className="px-5 pt-4 pb-5 shrink-0 border-t border-white/[7%]">
-                  {/* Total row */}
-                  <div className="flex items-center justify-between mb-4">
-                    <span className="text-gray-400 text-sm">Total estimado</span>
-                    <div className="text-right">
-                      <span className="text-white font-black text-xl">${cartTotal}</span>
+                <div
+                  className="shrink-0 border-t border-white/[7%] bg-black/20 backdrop-blur-sm"
+                  style={{
+                    paddingTop: '18px',
+                    paddingBottom: '20px',
+                    paddingLeft: '24px',
+                    paddingRight: '24px',
+                  }}
+                >
+                  <div
+                    className="flex items-end justify-between"
+                    style={{
+                      marginBottom: '16px',
+                      gap: '16px',
+                    }}
+                  >
+                    <div>
+                      <p
+                        className="text-gray-400"
+                        style={{
+                          fontSize: '14px',
+                          margin: 0,
+                        }}
+                      >
+                        Total estimado
+                      </p>
+                    </div>
+
+                    <div style={{ textAlign: 'right' }}>
+                      <span
+                        className="font-black text-white"
+                        style={{
+                          fontSize: '30px',
+                          lineHeight: '1',
+                        }}
+                      >
+                        ${cartTotal}
+                      </span>
                     </div>
                   </div>
 
-                  {/* CTA */}
                   <motion.button
-                    whileHover={{ scale: 1.01, boxShadow: '0 0 28px rgba(255,235,59,0.22)' }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => { setCartOpen(false); navigate('/carrito'); }}
-                    className="w-full py-3.5 rounded-lg font-black text-sm flex items-center justify-center gap-2 bg-primary text-black"
+                    whileHover={{
+                      scale: 1.01,
+                      boxShadow: '0 0 28px rgba(255,235,59,0.22)',
+                    }}
+                    whileTap={{ scale: 0.985 }}
+                    onClick={() => {
+                      setCartOpen(false);
+                      navigate('/carrito');
+                    }}
+                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary font-black text-black"
+                    style={{
+                      minHeight: '52px',
+                      paddingLeft: '16px',
+                      paddingRight: '16px',
+                      fontSize: '16px',
+                    }}
                   >
                     Ver carrito completo
-                    <ChevronRight className="w-4 h-4" />
+                    <ChevronRight style={{ width: '18px', height: '18px' }} />
                   </motion.button>
                 </div>
               )}
@@ -573,8 +1068,6 @@ export default function Navbar() {
   );
 }
 
-// ─── NavIconBtn ───────────────────────────────────────────────────
-
 function NavIconBtn({
   children,
   onClick,
@@ -582,42 +1075,80 @@ function NavIconBtn({
   to,
   title,
   badge,
-  badgeColor = '#E53935',
-  badgeTextColor = '#fff',
   className = '',
 }) {
   const inner = (
-    <>
+  <>
+    <span
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        lineHeight: 1,
+      }}
+    >
       {children}
-      <AnimatePresence>
-        {badge > 0 && (
-          <motion.span
-            key="badge"
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0, opacity: 0 }}
-            transition={{ type: 'spring', stiffness: 500, damping: 20 }}
-            className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 text-[9px] font-black rounded-full flex items-center justify-center px-1 leading-none text-white bg-red-600"
-          >
-            {badge > 99 ? '99+' : badge}
-          </motion.span>
-        )}
-      </AnimatePresence>
-    </>
-  );
+    </span>
+
+    <AnimatePresence>
+      {badge > 0 && (
+        <motion.span
+          key="badge"
+          initial={{ scale: 0, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          exit={{ scale: 0, opacity: 0 }}
+          transition={{ type: 'spring', stiffness: 500, damping: 20 }}
+          className="bg-red-600 text-white"
+          style={{
+            position: 'absolute',
+            top: '-2px',
+            right: '-1px',
+            minWidth: '17px',
+            height: '17px',
+            paddingLeft: '4px',
+            paddingRight: '4px',
+            borderRadius: '999px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '9px',
+            fontWeight: 900,
+            lineHeight: '1',
+          }}
+        >
+          {badge > 99 ? '99+' : badge}
+        </motion.span>
+      )}
+    </AnimatePresence>
+  </>
+);
 
   const motionProps = {
-    whileHover: { scale: 1.12 },
-    whileTap: { scale: 0.86 },
-    transition: { type: 'spring', stiffness: 450, damping: 16 }
+    whileHover: { scale: 1.08 },
+    whileTap: { scale: 0.9 },
+    transition: { type: 'spring', stiffness: 450, damping: 16 },
   };
 
-  const cls = `relative flex items-center justify-center w-10 h-10 rounded-full transition-colors text-gray-400 hover:text-white ${className}`;
+ const sharedStyle = {
+  width: '40px',
+  height: '40px',
+  minWidth: '40px',
+  borderRadius: '999px',
+  verticalAlign: 'middle',
+  color: 'rgb(156 163 175)',
+  position: 'relative',
+  transition: 'all 0.2s ease',
+  textDecoration: 'none',
+  padding: 0,
+  lineHeight: 1,
+  flexShrink: 0,
+};
+ const baseClass = 'inline-flex items-center justify-center';
 
   if (Tag === Link) {
     return (
-      <motion.div {...motionProps}>
-        <Link to={to} title={title} className={cls}>
+      <motion.div {...motionProps} className={className} style={{ display: 'flex', alignItems: 'center' }}>
+        <Link to={to} title={title} className={baseClass} style={sharedStyle}>
           {inner}
         </Link>
       </motion.div>
@@ -629,26 +1160,47 @@ function NavIconBtn({
       {...motionProps}
       onClick={onClick}
       title={title}
-      className={cls}
+      className={`${baseClass} ${className}`}
+      style={sharedStyle}
     >
       {inner}
     </motion.button>
   );
 }
 
-// ─── DropdownItem ─────────────────────────────────────────────────
-
 function DropdownItem({ icon, label, badge, danger, onClick }) {
   return (
     <motion.button
       whileHover={{ x: 2 }}
       onClick={onClick}
-      className={`w-full flex items-center gap-2.5 px-4 py-2 text-sm font-medium transition-colors text-left ${danger ? 'text-red-400 hover:text-red-300 hover:bg-red-500/10' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
+      style={{
+        width: '100%',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '10px',
+        padding: '10px 16px',
+        fontSize: '14px',
+        fontWeight: 600,
+        textAlign: 'left',
+        color: danger ? '#f87171' : '#9ca3af',
+        background: 'transparent',
+        transition: 'all 0.2s ease',
+      }}
     >
-      <span className={danger ? 'text-red-400' : 'text-primary'}>{icon}</span>
-      <span className="flex-1">{label}</span>
+      <span style={{ color: danger ? '#f87171' : 'var(--color-primary, #d6b2ff)' }}>{icon}</span>
+      <span style={{ flex: 1 }}>{label}</span>
       {badge > 0 && (
-        <span className="text-[10px] font-black px-1.5 py-0.5 rounded-full bg-red-600 text-white">
+        <span
+          style={{
+            background: '#dc2626',
+            color: '#fff',
+            borderRadius: '999px',
+            padding: '3px 7px',
+            fontSize: '10px',
+            fontWeight: 900,
+            lineHeight: '1',
+          }}
+        >
           {badge}
         </span>
       )}
@@ -656,20 +1208,37 @@ function DropdownItem({ icon, label, badge, danger, onClick }) {
   );
 }
 
-// ─── MobileNavLink ────────────────────────────────────────────────
-
 function MobileNavLink({ to, icon, label, badge, onClick }) {
   return (
     <Link
       to={to}
       onClick={onClick}
-      className="flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 transition-all"
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '12px',
+        padding: '12px 14px',
+        borderRadius: '12px',
+        fontSize: '14px',
+        fontWeight: 600,
+        color: '#9ca3af',
+        textDecoration: 'none',
+      }}
     >
       <span className="text-primary">{icon}</span>
-      <span className="flex-1">{label}</span>
+      <span style={{ flex: 1 }}>{label}</span>
       {badge > 0 && (
-        <span className="text-[10px] font-black px-1.5 py-0.5 rounded-full"
-          style={{ background: '#E53935', color: '#fff' }}>
+        <span
+          style={{
+            background: '#E53935',
+            color: '#fff',
+            borderRadius: '999px',
+            padding: '3px 7px',
+            fontSize: '10px',
+            fontWeight: 900,
+            lineHeight: '1',
+          }}
+        >
           {badge}
         </span>
       )}
@@ -677,23 +1246,70 @@ function MobileNavLink({ to, icon, label, badge, onClick }) {
   );
 }
 
-// ─── CartEmptyState ───────────────────────────────────────────────
-
 function CartEmptyState({ icon, title, subtitle, actionLabel, onAction }) {
   return (
-    <div className="flex flex-col items-center justify-center h-full text-center gap-4 py-10">
-      <div className="w-16 h-16 rounded-lg flex items-center justify-center bg-white/[4%] border border-white/[7%]">
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        textAlign: 'center',
+        gap: '16px',
+        paddingTop: '40px',
+        paddingBottom: '40px',
+        minHeight: '100%',
+      }}
+    >
+      <div
+        className="bg-white/[4%] border border-white/[7%]"
+        style={{
+          width: '64px',
+          height: '64px',
+          borderRadius: '16px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
         {icon}
       </div>
-      <div className="space-y-1">
-        <p className="text-white font-semibold text-sm">{title}</p>
-        <p className="text-gray-500 text-xs max-w-[200px] mx-auto leading-relaxed">{subtitle}</p>
+
+      <div style={{ maxWidth: '220px' }}>
+        <p
+          className="text-white font-semibold"
+          style={{
+            fontSize: '15px',
+            margin: 0,
+          }}
+        >
+          {title}
+        </p>
+        <p
+          className="text-gray-500"
+          style={{
+            fontSize: '13px',
+            lineHeight: '1.5',
+            marginTop: '6px',
+            marginBottom: 0,
+          }}
+        >
+          {subtitle}
+        </p>
       </div>
+
       <motion.button
         whileHover={{ scale: 1.04 }}
         whileTap={{ scale: 0.96 }}
         onClick={onAction}
-        className="px-6 py-2.5 rounded-full font-bold text-sm mt-1 bg-primary text-black"
+        className="bg-primary text-black"
+        style={{
+          padding: '11px 22px',
+          borderRadius: '999px',
+          fontSize: '14px',
+          fontWeight: 800,
+          marginTop: '4px',
+        }}
       >
         {actionLabel}
       </motion.button>

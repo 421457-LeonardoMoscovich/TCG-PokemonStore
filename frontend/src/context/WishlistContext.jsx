@@ -16,9 +16,9 @@ export function WishlistProvider({ children }) {
 
     try {
       setLoading(true);
-      const { data } = await api.get('/usuarios/perfil');
-      setWishlist(data?.usuario?.wishlist || []);
-    } catch (err) {
+      const { data } = await api.get('/usuarios/wishlist');
+      setWishlist(data?.wishlist || []);
+    } catch {
       // If it's a 401, we just clear the wishlist silently
       setWishlist([]);
     } finally {
@@ -26,20 +26,28 @@ export function WishlistProvider({ children }) {
     }
   }, []);
 
-  const toggleWishlist = async (cardId) => {
+  const toggleWishlist = useCallback(async (cardId) => {
     const token = localStorage.getItem('token');
     if (!token) {
       window.location.href = '/login';
       return;
     }
 
+    const wasInWishlist = wishlist.includes(cardId);
+    setWishlist((current) =>
+      wasInWishlist ? current.filter((id) => id !== cardId) : [...current, cardId]
+    );
+
     try {
-      const { data } = await api.post('/usuarios/wishlist/toggle', { cardId });
+      const { data } = wasInWishlist
+        ? await api.delete(`/usuarios/wishlist/${cardId}`)
+        : await api.post(`/usuarios/wishlist/${cardId}`);
       setWishlist(data.wishlist || []);
     } catch (err) {
       console.error('Wishlist toggle error:', err);
+      refreshWishlist();
     }
-  };
+  }, [refreshWishlist, wishlist]);
 
   const isInWishlist = useCallback((cardId) => wishlist.includes(cardId), [wishlist]);
 

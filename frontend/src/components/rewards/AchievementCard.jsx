@@ -12,37 +12,42 @@ const ACHIEVEMENT_ICONS = {
 };
 
 const RARITY_TIERS = {
-  'común': {
+  común: {
     bg: '#4a5568',
     border: '#718096',
-    glow: 'rgba(113, 128, 150, 0.3)',
+    glow: 'rgba(113, 128, 150, 0.28)',
     icon: '#94a3b8',
-    gradient: 'linear-gradient(135deg, #4a5568, #64748b)'
+    gradient: 'linear-gradient(135deg, #4a5568, #64748b)',
   },
-  'raro': {
+  raro: {
     bg: '#1e40af',
     border: '#3b82f6',
-    glow: 'rgba(59, 130, 246, 0.4)',
+    glow: 'rgba(59, 130, 246, 0.35)',
     icon: '#60a5fa',
-    gradient: 'linear-gradient(135deg, #1e40af, #2563eb)'
+    gradient: 'linear-gradient(135deg, #1e40af, #2563eb)',
   },
-  'épico': {
+  épico: {
     bg: '#6b21a8',
     border: '#a855f7',
-    glow: 'rgba(168, 85, 247, 0.4)',
+    glow: 'rgba(168, 85, 247, 0.38)',
     icon: '#c084fc',
-    gradient: 'linear-gradient(135deg, #6b21a8, #7c3aed)'
+    gradient: 'linear-gradient(135deg, #6b21a8, #7c3aed)',
   },
-  'legendario': {
+  legendario: {
     bg: '#b45309',
     border: '#fbbf24',
-    glow: 'rgba(251, 191, 36, 0.5)',
+    glow: 'rgba(251, 191, 36, 0.45)',
     icon: '#fbbf24',
-    gradient: 'linear-gradient(135deg, #b45309, #d97706)'
+    gradient: 'linear-gradient(135deg, #b45309, #d97706)',
   },
 };
 
-export default function AchievementCard({ logro, index, isNew = false, onClaim, claiming = false }) {
+export default function AchievementCard({
+  logro,
+  index,
+  onClaim,
+  claiming = false,
+}) {
   const getRarity = (title) => {
     if (title.includes('Maestro') || title.includes('Primera')) return 'legendario';
     if (title.includes('Millonario')) return 'épico';
@@ -57,18 +62,22 @@ export default function AchievementCard({ logro, index, isNew = false, onClaim, 
   const isComplete = logro.completado;
 
   const containerVariants = {
-    hidden: { opacity: 0, scale: 0.9, y: 20 },
+    hidden: { opacity: 0, scale: 0.94, y: 18 },
     visible: {
       opacity: 1,
       scale: 1,
       y: 0,
-      transition: { delay: index * 0.08, duration: 0.5, ease: 'easeOut' }
-    }
+      transition: { delay: index * 0.07, duration: 0.45, ease: 'easeOut' },
+    },
   };
 
   const unlockVariants = {
-    hidden: { scale: 0, rotate: -180 },
-    visible: { scale: 1, rotate: 0, transition: { type: 'spring', stiffness: 300 } }
+    hidden: { scale: 0, rotate: -160 },
+    visible: {
+      scale: 1,
+      rotate: 0,
+      transition: { type: 'spring', stiffness: 280, damping: 18 },
+    },
   };
 
   return (
@@ -76,139 +85,194 @@ export default function AchievementCard({ logro, index, isNew = false, onClaim, 
       variants={containerVariants}
       initial="hidden"
       animate="visible"
-      whileHover={isComplete ? { y: -8, transition: { duration: 0.2 } } : {}}
-      className="relative overflow-hidden rounded-lg"
+      whileHover={{ y: -5, transition: { duration: 0.18 } }}
+      className="relative overflow-hidden rounded-xl"
     >
       <div
-        className="bg-[#0e0e0e] p-6 border-l-4 border-t border-r border-b relative overflow-hidden cursor-pointer transition-all"
+        className="relative overflow-hidden transition-all"
         style={{
-          borderColor: tier.border,
-          borderLeftColor: tier.border,
+          padding: '22px',
+          borderTop: `1px solid ${tier.border}`,
+          borderRight: `1px solid ${tier.border}`,
+          borderBottom: `1px solid ${tier.border}`,
+          borderLeft: `4px solid ${tier.border}`,
+          borderRadius: '14px',
           backgroundColor: `${tier.bg}20`,
-          boxShadow: isComplete ? `0 0 20px ${tier.glow}, inset 0 0 20px ${tier.glow}` : 'none'
+          boxShadow: isComplete
+            ? `0 0 18px ${tier.glow}, inset 0 0 12px ${tier.glow}`
+            : 'none',
         }}
       >
-        {/* Background glow */}
         <div
-          className="absolute inset-0 opacity-5 pointer-events-none"
+          className="absolute inset-0 opacity-[0.05] pointer-events-none"
           style={{ background: tier.bg }}
         />
 
-        {/* Ghost number */}
         <motion.div
-          className="absolute top-0 right-0 text-[40px] font-black select-none leading-none -mr-2 -mt-2"
-          style={{ color: `${tier.border}20` }}
-          animate={{ scale: [1, 1.05, 1] }}
+          className="absolute top-0 right-0 text-[38px] font-black select-none leading-none"
+          style={{
+            color: `${tier.border}1f`,
+            marginTop: '-2px',
+            marginRight: '6px',
+          }}
+          animate={{ scale: [1, 1.04, 1] }}
           transition={{ duration: 3, repeat: Infinity }}
         >
           {String(index + 1).padStart(2, '0')}
         </motion.div>
 
-        {/* Content */}
-        <div className="flex justify-between items-start mb-4 relative z-10">
-          <div className="flex-1">
-            <h4 className="text-sm font-black text-[#e5e2e1] uppercase mb-1">{logro.titulo}</h4>
-            <p className="text-xs text-[#cfc2d6]">{logro.desc || logro.descripcion}</p>
-          </div>
-
-          {/* Icon Container */}
+        <div
+          className="relative z-10"
+          style={{ marginBottom: '16px' }}
+        >
           <div
-            className="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 ml-4 border transition-all"
-            style={{
-              backgroundColor: `${tier.border}15`,
-              borderColor: tier.border,
-              boxShadow: `0 0 15px ${tier.glow}`
-            }}
+            className="flex justify-between items-start"
+            style={{ gap: '16px' }}
           >
-            <motion.span
-              className="material-symbols-outlined text-lg"
-              style={{ color: tier.border }}
-              animate={isComplete ? { rotate: 360 } : {}}
-              transition={{ duration: 3, repeat: Infinity }}
-            >
-              {icon}
-            </motion.span>
-          </div>
-
-          {/* Unlock badge */}
-          <AnimatePresence>
-            {isComplete && (
-              <motion.div
-                variants={unlockVariants}
-                initial="hidden"
-                animate="visible"
-                className="absolute -top-4 -right-4 w-16 h-16 flex items-center justify-center rounded-full shadow-lg"
-                style={{ background: tier.gradient }}
+            <div className="flex-1 min-w-0">
+              <h4
+                className="text-sm md:text-base font-black text-[#e5e2e1] uppercase"
+                style={{
+                  marginBottom: '8px',
+                  lineHeight: 1.15,
+                  paddingRight: '10px',
+                }}
               >
-                <motion.span
-                  className="material-symbols-outlined text-white text-2xl"
-                  animate={{ scale: [1, 1.2, 1] }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                  style={{fontVariationSettings: "'FILL' 1"}}
+                {logro.titulo}
+              </h4>
+
+              <p
+                className="text-sm text-[#cfc2d6] leading-relaxed"
+                style={{ paddingRight: '6px' }}
+              >
+                {logro.desc || logro.descripcion}
+              </p>
+            </div>
+
+            <div
+              className="rounded-lg flex items-center justify-center shrink-0 border transition-all"
+              style={{
+                width: '50px',
+                height: '50px',
+                marginTop: '2px',
+                backgroundColor: `${tier.border}15`,
+                borderColor: tier.border,
+                boxShadow: `0 0 14px ${tier.glow}`,
+              }}
+            >
+              <motion.span
+                className="material-symbols-outlined text-lg"
+                style={{ color: tier.border }}
+                animate={isComplete ? { rotate: 360 } : {}}
+                transition={{ duration: 3.2, repeat: Infinity, ease: 'linear' }}
+              >
+                {icon}
+              </motion.span>
+            </div>
+
+            <AnimatePresence>
+              {isComplete && (
+                <motion.div
+                  variants={unlockVariants}
+                  initial="hidden"
+                  animate="visible"
+                  className="absolute flex items-center justify-center shadow-lg"
+                  style={{
+                    top: '-14px',
+                    right: '-14px',
+                    width: '56px',
+                    height: '56px',
+                    borderRadius: '999px',
+                    background: tier.gradient,
+                  }}
                 >
-                  verified
-                </motion.span>
-              </motion.div>
-            )}
-          </AnimatePresence>
+                  <motion.span
+                    className="material-symbols-outlined text-white text-xl"
+                    animate={{ scale: [1, 1.14, 1] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                    style={{ fontVariationSettings: "'FILL' 1" }}
+                  >
+                    verified
+                  </motion.span>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
 
-        {/* Progress bar */}
         <motion.div
-          className="w-full min-h-[4px] md:h-2 bg-[#1a1a1a] rounded-full overflow-hidden"
+          className="w-full rounded-full overflow-hidden"
+          style={{
+            height: '10px',
+            background: '#1a1a1a',
+            border: '1px solid rgba(124, 58, 237, 0.16)',
+          }}
           whileHover={{ height: 12 }}
-          transition={{ duration: 0.2 }}
+          transition={{ duration: 0.18 }}
         >
           <motion.div
             initial={{ width: 0 }}
             animate={{ width: `${progress}%` }}
-            transition={{ duration: 0.8, ease: 'easeOut' }}
-            className="h-full rounded-full transition-all"
+            transition={{ duration: 0.75, ease: 'easeOut' }}
+            className="h-full rounded-full"
             style={{
-              background: `linear-gradient(90deg, ${tier.border}, ${tier.glow})`,
-              boxShadow: `0 0 10px ${tier.glow}`
+              background: `linear-gradient(90deg, ${tier.border}, ${tier.icon})`,
+              boxShadow: `0 0 10px ${tier.glow}`,
             }}
           />
         </motion.div>
 
-        {/* Stats */}
         <motion.div
-          className="flex justify-between mt-3 relative z-10"
+          className="flex justify-between relative z-10"
+          style={{ marginTop: '12px' }}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.3 }}
+          transition={{ delay: 0.22 }}
         >
-          <span className="text-xs font-bold" style={{ color: tier.border }}>
+          <span
+            className="text-xs font-bold"
+            style={{ color: tier.border }}
+          >
             {Math.min(Math.round(progress), 100)}%
           </span>
+
           <span className="text-xs font-bold text-[#cfc2d6]">
             {logro.actual} / {logro.meta}
           </span>
         </motion.div>
 
-        {/* Rarity label */}
         <motion.div
-          className="absolute bottom-2 left-6 text-[9px] font-black uppercase tracking-wider"
-          style={{ color: tier.border }}
+          className="text-[10px] font-black uppercase tracking-[0.14em]"
+          style={{
+            color: tier.border,
+            marginTop: '12px',
+          }}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.4 }}
+          transition={{ delay: 0.3 }}
         >
           {rarity}
         </motion.div>
 
-        {/* Claim Button */}
         <AnimatePresence>
           {isComplete && !logro.reclamado && (
             <motion.button
               onClick={() => onClaim && onClaim(logro.id)}
               disabled={claiming}
-              initial={{ y: 20, opacity: 0 }}
+              initial={{ y: 18, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
-              exit={{ y: 20, opacity: 0 }}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="w-full mt-4 py-3 bg-gradient-to-br from-[#ffe083] via-[#eec200] to-[#b68a00] text-black font-black text-[10px] tracking-widest uppercase rounded flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(255,224,131,0.3)] disabled:grayscale disabled:opacity-50 relative z-20"
+              exit={{ y: 18, opacity: 0 }}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="w-full text-black font-black uppercase rounded flex items-center justify-center gap-2 disabled:grayscale disabled:opacity-50 relative z-20"
+              style={{
+                marginTop: '18px',
+                padding: '13px 16px',
+                fontSize: '11px',
+                letterSpacing: '0.14em',
+                background: 'linear-gradient(135deg, #ffe083, #eec200, #b68a00)',
+                boxShadow: '0 0 20px rgba(255,224,131,0.25)',
+              }}
             >
               <span className="material-symbols-outlined text-sm">stars</span>
               {claiming ? 'Procesando...' : `Reclamar ${logro.premio} Monedas`}
@@ -220,10 +284,16 @@ export default function AchievementCard({ logro, index, isNew = false, onClaim, 
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="w-full mt-4 py-3 border border-[#ddb7ff]/20 bg-[#ddb7ff]/5 text-[#ddb7ff] font-black text-[10px] tracking-widest uppercase rounded flex items-center justify-center gap-2"
+            className="w-full border border-[#ddb7ff]/20 bg-[#ddb7ff]/5 text-[#ddb7ff] font-black uppercase rounded flex items-center justify-center gap-2"
+            style={{
+              marginTop: '18px',
+              padding: '13px 16px',
+              fontSize: '11px',
+              letterSpacing: '0.14em',
+            }}
           >
             <span className="material-symbols-outlined text-sm">check_circle</span>
-            Recompensa Reclamada
+            Recompensa reclamada
           </motion.div>
         )}
       </div>

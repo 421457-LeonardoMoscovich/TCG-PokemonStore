@@ -1,6 +1,7 @@
 const { getDB } = require('../config/db');
 const { getRedis } = require('../config/redis');
 const { ObjectId } = require('mongodb');
+const { RARE_CARD_RARITIES } = require('../utils/cardPricing');
 
 // Configuración de Recompensas
 const RECOMPENSAS_DIARIAS = [50, 100, 150, 200, 250, 300, 500];
@@ -187,7 +188,12 @@ async function obtenerTrivia(req, res) {
     }
 
     const cartas = await db.collection('cartas').aggregate([
-      { $match: { hp: { $exists: true, $ne: null } } },
+      {
+        $match: {
+          hp: { $exists: true, $ne: null },
+          image: { $exists: true, $ne: '' }
+        }
+      },
       { $sample: { size: 4 } }
     ]).toArray();
     
@@ -197,6 +203,16 @@ async function obtenerTrivia(req, res) {
 
     const correcta = cartas[0];
     const opciones = cartas.map(c => ({ id: c._id, name: c.name })).sort(() => Math.random() - 0.5);
+    const nombreNormalizado = correcta.name || '';
+    const letrasNombre = nombreNormalizado.replace(/[^a-zA-Z]/g, '').length || nombreNormalizado.length;
+    const pistas = [
+      { label: 'Tipo', value: correcta.type || 'Desconocido' },
+      { label: 'HP', value: correcta.hp ? `${correcta.hp} HP` : 'Sin dato' },
+      { label: 'Rareza', value: correcta.rarity || 'Sin dato' },
+      { label: 'Inicial', value: nombreNormalizado.charAt(0).toUpperCase() || '?' },
+      { label: 'Letras', value: letrasNombre ? `${letrasNombre}` : '?' },
+      { label: 'Set', value: correcta.set_name || 'Sin dato' }
+    ];
 
     const redis = getRedis();
     await redis.set(`trivia:${req.userId}`, correcta._id.toString(), { EX: 600 });
@@ -204,6 +220,7 @@ async function obtenerTrivia(req, res) {
     res.json({
       imagen: correcta.image,
       opciones: opciones.map(o => o.name),
+      pistas,
       energiaActual: energiaActualizada.energy
     });
 
@@ -302,12 +319,13 @@ async function girarRuleta(req, res) {
     }
 
     const updateData = {
-      $inc: { "stats.girosRuleta": 1 }
+      $inc: { "stats.girosRuleta": 1 },
+      $set: {}
     };
 
     // Solo seteamos la fecha si bajamos del máximo por primera vez
     if (energiaActualizada.energy === ENERGIA_MAXIMA) {
-      updateData.$set = { lastEnergyUpdate: new Date() };
+      updateData.$set.lastEnergyUpdate = new Date();
     }
 
     let responseExtra = {};
@@ -318,15 +336,28 @@ async function girarRuleta(req, res) {
     } else if (premioGanado.tipo === 'energia') {
       energiaRestante = Math.min(ENERGIA_MAXIMA, energiaRestante + premioGanado.valor);
     } else if (premioGanado.tipo === 'carta') {
-      // Obtenemos una carta rara al azar
+      const usuario = await db.collection('usuarios').findOne(
+        { _id: new ObjectId(req.userId) },
+        { projection: { collection: 1 } }
+      );
+      const coleccion = usuario?.collection || [];
+
       const carta = await db.collection('cartas').aggregate([
-        { $match: { rarity: { $regex: /Rare|Ultra|Secret/i } } },
+        {
+          $match: {
+            _id: { $nin: coleccion },
+            rarity: { $in: RARE_CARD_RARITIES }
+          }
+        },
         { $sample: { size: 1 } }
       ]).next();
-      
+
       if (carta) {
-        updateData.$push = { collection: carta._id };
+        updateData.$addToSet = { collection: carta._id };
         responseExtra.carta = { name: carta.name, image: carta.image };
+      } else {
+        premioGanado = { tipo: 'monedas', valor: 150, prob: 0, label: '150 Monedas' };
+        updateData.$inc.balance = (updateData.$inc.balance || 0) + premioGanado.valor;
       }
     } else if (premioGanado.tipo === 'jackpot') {
       updateData.$inc.balance = premioGanado.valor;

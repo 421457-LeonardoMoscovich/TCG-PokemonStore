@@ -1,44 +1,59 @@
 import { useState, useEffect, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { motion, AnimatePresence, useMotionValue, useTransform, animate } from 'framer-motion';
-import { ShieldAlert, Fingerprint, RefreshCcw, ArrowRight, Zap, Target, ArrowUpRight, Battery, Activity } from 'lucide-react';
+import {
+  ShoppingCart,
+  ShieldCheck,
+  Fingerprint,
+  RefreshCcw,
+  ArrowRight,
+  ArrowUpRight,
+  Battery,
+  Activity,
+  Trash2,
+  Minus,
+  Plus,
+  Sparkles,
+  LogIn,
+  Package,
+  X,
+} from 'lucide-react';
 import api from '../services/api';
 
-
 const TYPE_BADGE = {
-  Fire:      { border: '#ef4444', text: '#ef4444', glow: 'rgba(239, 68, 68, 0.4)' },
-  Water:     { border: '#3b82f6', text: '#3b82f6', glow: 'rgba(59, 130, 246, 0.4)' },
-  Grass:     { border: '#22c55e', text: '#22c55e', glow: 'rgba(34, 197, 94, 0.4)' },
-  Lightning: { border: '#eab308', text: '#eab308', glow: 'rgba(234, 179, 8, 0.4)' },
-  Psychic:   { border: '#a855f7', text: '#a855f7', glow: 'rgba(168, 85, 247, 0.4)' },
-  Fighting:  { border: '#f97316', text: '#f97316', glow: 'rgba(249, 115, 22, 0.4)' },
-  Darkness:  { border: '#6b7280', text: '#9ca3af', glow: 'rgba(107, 114, 128, 0.4)' },
-  Metal:     { border: '#94a3b8', text: '#cbd5e1', glow: 'rgba(148, 163, 184, 0.4)' },
-  Dragon:    { border: '#6366f1', text: '#818cf8', glow: 'rgba(99, 102, 241, 0.4)' },
-  Colorless: { border: '#9ca3af', text: '#e5e7eb', glow: 'rgba(156, 163, 175, 0.4)' },
+  Fire: { border: '#ef4444', text: '#ef4444', glow: 'rgba(239, 68, 68, 0.25)' },
+  Water: { border: '#3b82f6', text: '#3b82f6', glow: 'rgba(59, 130, 246, 0.25)' },
+  Grass: { border: '#22c55e', text: '#22c55e', glow: 'rgba(34, 197, 94, 0.25)' },
+  Lightning: { border: '#eab308', text: '#eab308', glow: 'rgba(234, 179, 8, 0.25)' },
+  Psychic: { border: '#a855f7', text: '#a855f7', glow: 'rgba(168, 85, 247, 0.25)' },
+  Fighting: { border: '#f97316', text: '#f97316', glow: 'rgba(249, 115, 22, 0.25)' },
+  Darkness: { border: '#6b7280', text: '#9ca3af', glow: 'rgba(107, 114, 128, 0.25)' },
+  Metal: { border: '#94a3b8', text: '#cbd5e1', glow: 'rgba(148, 163, 184, 0.25)' },
+  Dragon: { border: '#6366f1', text: '#818cf8', glow: 'rgba(99, 102, 241, 0.25)' },
+  Colorless: { border: '#9ca3af', text: '#e5e7eb', glow: 'rgba(156, 163, 175, 0.25)' },
 };
 
-/* ─────────────────────────────── CORE ANIMATED COUNTER ─────────────────────── */
-function AnimatedCounter({ from = 0, to, duration = 0.5, prefix = "", suffix = "" }) {
+function AnimatedCounter({ from = 0, to, duration = 0.5, prefix = '', suffix = '' }) {
   const nodeRef = useRef();
-  
+
   useEffect(() => {
     const node = nodeRef.current;
     if (!node) return;
+
     const controls = animate(from, to, {
       duration,
-      ease: "easeOut",
+      ease: 'easeOut',
       onUpdate(value) {
         node.textContent = `${prefix}${Math.round(value).toLocaleString('es-AR')}${suffix}`;
       },
     });
+
     return () => controls.stop();
   }, [from, to, duration, prefix, suffix]);
 
   return <span ref={nodeRef} />;
 }
 
-/* ─────────────────────────────── BIOMETRIC CHECKOUT MODAL ─────────────────────── */
 function CheckoutModal({ carrito, subtotal, totalItems, onConfirm, onClose, confirming }) {
   return (
     <AnimatePresence>
@@ -48,136 +63,312 @@ function CheckoutModal({ carrito, subtotal, totalItems, onConfirm, onClose, conf
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         className="fixed inset-0 z-50 flex items-center justify-center p-4"
-        style={{ background: 'rgba(0, 0, 0, 0.9)', backdropFilter: 'blur(12px)' }}
+        style={{
+          background: 'rgba(0, 0, 0, 0.78)',
+          backdropFilter: 'blur(10px)',
+        }}
       >
-        {/* Background crosshairs for military feel */}
-        <div className="absolute inset-0 pointer-events-none opacity-20 flex items-center justify-center">
-          <div className="w-[80vw] h-[80vw] max-w-[800px] max-h-[800px] border border-amber-500 rounded-full flex items-center justify-center">
-            <div className="w-[60vw] h-[60vw] max-w-[600px] max-h-[600px] border border-dashed border-amber-500/50 rounded-full animate-spin-slow" style={{ animationDuration: '40s' }} />
-          </div>
-          <div className="absolute w-full h-[1px] bg-amber-500/20" />
-          <div className="absolute h-full w-[1px] bg-amber-500/20" />
-        </div>
-
         <motion.div
           key="modal"
-          initial={{ scale: 0.95, opacity: 0, rotateX: 20 }}
-          animate={{ scale: 1, opacity: 1, rotateX: 0 }}
-          exit={{ scale: 0.95, opacity: 0, rotateX: -20 }}
-          transition={{ type: 'spring', stiffness: 260, damping: 22 }}
-          className="w-full max-w-2xl border-2 border-amber-500 bg-black/80 relative overflow-hidden shadow-[0_0_50px_rgba(245,158,11,0.2)]"
-          style={{ transformStyle: 'preserve-3d', perspective: '1000px' }}
+          initial={{ scale: 0.96, opacity: 0, y: 12 }}
+          animate={{ scale: 1, opacity: 1, y: 0 }}
+          exit={{ scale: 0.96, opacity: 0, y: 10 }}
+          transition={{ type: 'spring', stiffness: 240, damping: 22 }}
+          className="w-full max-w-3xl relative overflow-hidden border border-white/10"
+          style={{
+            borderRadius: '24px',
+            background:
+              'linear-gradient(180deg, rgba(10,10,14,0.96) 0%, rgba(6,6,10,0.98) 100%)',
+            boxShadow: '0 30px 80px rgba(0,0,0,0.55)',
+          }}
         >
-          {/* Tactical cutouts / markings */}
-          <div className="absolute top-0 left-0 w-8 h-8 border-r-2 border-b-2 border-amber-500 bg-amber-500/20" />
-          <div className="absolute top-0 right-0 w-8 h-8 border-l-2 border-b-2 border-amber-500 bg-amber-500/20" />
-          <div className="absolute bottom-0 left-0 w-8 h-8 border-r-2 border-t-2 border-amber-500 bg-amber-500/20" />
-          
-          <div className="p-8">
-            {/* Header */}
-            <div className="flex flex-col items-center text-center mb-8 border-b border-amber-500/30 pb-6 relative z-10">
-              <motion.div 
-                animate={{ scale: [1, 1.1, 1], opacity: [0.8, 1, 0.8] }} 
-                transition={{ repeat: Infinity, duration: 2 }}
-                className="w-16 h-16 bg-amber-500/10 border-2 border-amber-500 flex items-center justify-center mb-4 relative"
-              >
-                {/* Scanner line over icon */}
-                <motion.div 
-                  animate={{ y: ['0%', '100%', '0%'] }} 
-                  transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
-                  className="absolute top-0 left-0 w-full h-1 bg-amber-400 shadow-[0_0_10px_#fbbf24] z-20"
-                />
-                <Fingerprint className="w-8 h-8 text-amber-500 relative z-10" />
-              </motion.div>
-              <h2 className="text-2xl md:text-3xl font-mono font-black text-amber-500 tracking-[0.2em] uppercase drop-shadow-[0_0_10px_rgba(245,158,11,0.8)]">
-                Confirmación_Biométrica
-              </h2>
-              <p className="text-xs font-mono tracking-widest text-amber-500/60 mt-2 uppercase">
-                Se requiere autorización para la transferencia de fondos
-              </p>
-            </div>
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background:
+                'radial-gradient(circle at top right, rgba(168,85,247,0.12) 0%, transparent 38%)',
+            }}
+          />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10">
-              {/* Manifest List */}
-              <div className="border border-white/10 bg-white/[2%] p-4 overflow-hidden flex flex-col h-64 relative">
-                <p className="text-[10px] font-mono font-black text-gray-400 uppercase tracking-widest mb-3 pb-2 border-b border-white/10">{`> MANIFIESTO_A_EXTRAER (${carrito.length})`}</p>
-                <div className="space-y-3 overflow-y-auto pr-2 flex-1" style={{ scrollbarWidth: 'none' }}>
-                  <style>{`.overflow-y-auto::-webkit-scrollbar { display: none; }`}</style>
-                  {carrito.map((item, i) => (
-                    <motion.div 
-                      key={item.cardId}
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.1 + (i * 0.05) }}
-                      className="flex items-center gap-3 w-full p-2 border border-white/5 bg-black hover:bg-white/5 transition-colors"
-                    >
-                      <div className="w-6 h-8 border border-white/20 shrink-0">
-                        {item.image ? <img src={item.image} alt="" className="w-full h-full object-cover grayscale opacity-80" /> : <div className="w-full h-full bg-white/10" />}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-[10px] font-mono font-bold text-gray-300 truncate uppercase">{item.name}</p>
-                        <p className="text-[9px] font-mono text-gray-600 tracking-widest">ID:{item.cardId.slice(0, 6)}</p>
-                      </div>
-                      <div className="text-[11px] font-mono font-black text-white bg-white/10 px-2 py-0.5">
-                        x{item.quantity}
-                      </div>
-                    </motion.div>
-                  ))}
+          <div className="relative z-10" style={{ padding: '28px' }}>
+            <div
+              className="flex items-start justify-between gap-4"
+              style={{
+                marginBottom: '24px',
+                paddingBottom: '18px',
+                borderBottom: '1px solid rgba(255,255,255,0.08)',
+              }}
+            >
+              <div className="flex items-center gap-4">
+                <div
+                  className="flex items-center justify-center border border-purple-500/30 bg-purple-500/10"
+                  style={{
+                    width: '56px',
+                    height: '56px',
+                    borderRadius: '18px',
+                    boxShadow: '0 0 20px rgba(168,85,247,0.12)',
+                  }}
+                >
+                  <Fingerprint className="w-7 h-7 text-purple-400" />
+                </div>
+
+                <div>
+                  <h2
+                    className="text-white font-black"
+                    style={{
+                      margin: 0,
+                      fontSize: '26px',
+                      lineHeight: 1,
+                      letterSpacing: '-0.03em',
+                    }}
+                  >
+                    Confirmar compra
+                  </h2>
+                  <p
+                    className="text-gray-400"
+                    style={{
+                      marginTop: '8px',
+                      marginBottom: 0,
+                      fontSize: '14px',
+                      lineHeight: '1.5',
+                    }}
+                  >
+                    Revisá el resumen antes de autorizar la operación.
+                  </p>
                 </div>
               </div>
 
-              {/* Warning Totals */}
-              <div className="flex flex-col justify-between h-64 border border-amber-500/30 bg-amber-500/5 p-5 relative overflow-hidden group">
-                <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10 mix-blend-overlay pointer-events-none" />
-                <ShieldAlert className="absolute -right-10 -bottom-10 w-48 h-48 text-amber-500/10 pointer-events-none group-hover:scale-110 transition-transform duration-1000" />
-                
-                <div>
-                  <p className="text-[10px] font-mono font-black text-amber-500/80 uppercase tracking-widest mb-4">
-                    {"> DEBITO_REQUERIDO"}
-                  </p>
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-end border-b border-amber-500/20 pb-2">
-                      <span className="text-xs font-mono text-amber-500/60 uppercase tracking-wider">Unidades Totales</span>
-                      <span className="text-xl font-mono font-black text-white">{totalItems}</span>
+              <button
+                onClick={onClose}
+                disabled={confirming}
+                type="button"
+                className="text-gray-500 hover:text-white transition-colors"
+                style={{
+                  width: '40px',
+                  height: '40px',
+                  borderRadius: '12px',
+                  border: '1px solid rgba(255,255,255,0.06)',
+                  background: 'rgba(255,255,255,0.03)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+              <div
+                className="border border-white/8 bg-white/[0.02]"
+                style={{
+                  borderRadius: '18px',
+                  padding: '18px',
+                  minHeight: '290px',
+                }}
+              >
+                <p
+                  className="text-gray-500 uppercase font-black"
+                  style={{
+                    margin: 0,
+                    marginBottom: '14px',
+                    fontSize: '11px',
+                    letterSpacing: '0.2em',
+                  }}
+                >
+                  Productos
+                </p>
+
+                <div
+                  className="space-y-3 overflow-y-auto pr-1"
+                  style={{
+                    maxHeight: '250px',
+                    scrollbarWidth: 'thin',
+                  }}
+                >
+                  {carrito.map((item) => (
+                    <div
+                      key={item.cardId}
+                      className="flex items-center gap-3 border border-white/6 bg-black/20"
+                      style={{
+                        borderRadius: '14px',
+                        padding: '10px',
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: '42px',
+                          height: '58px',
+                          borderRadius: '10px',
+                          overflow: 'hidden',
+                          border: '1px solid rgba(255,255,255,0.12)',
+                          background: 'rgba(255,255,255,0.04)',
+                          flexShrink: 0,
+                        }}
+                      >
+                        {item.image ? (
+                          <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full bg-white/5" />
+                        )}
+                      </div>
+
+                      <div className="min-w-0 flex-1">
+                        <p
+                          className="text-white font-bold truncate"
+                          style={{
+                            margin: 0,
+                            fontSize: '14px',
+                          }}
+                        >
+                          {item.name}
+                        </p>
+                        <p
+                          className="text-gray-500 truncate"
+                          style={{
+                            marginTop: '4px',
+                            marginBottom: 0,
+                            fontSize: '12px',
+                          }}
+                        >
+                          {item.type || 'Colorless'} · x{item.quantity}
+                        </p>
+                      </div>
+
+                      <div
+                        className="text-white font-black"
+                        style={{
+                          fontSize: '14px',
+                          flexShrink: 0,
+                        }}
+                      >
+                        ${((item.price || 0) * parseInt(item.quantity)).toLocaleString('es-AR')}
+                      </div>
                     </div>
-                    <div className="flex justify-between items-end">
-                      <span className="text-xs font-mono text-amber-500/80 uppercase tracking-wider">Monto Total</span>
-                      <span className="text-4xl font-mono font-black text-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.6)]">
+                  ))}
+                </div>
+              </div>
+              <div
+                className="border border-purple-500/20 bg-purple-500/[0.04]"
+                style={{
+                  borderRadius: '18px',
+                  padding: '20px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'space-between',
+                }}
+              >
+                <div>
+                  <p
+                    className="text-purple-300 uppercase font-black"
+                    style={{
+                      margin: 0,
+                      marginBottom: '16px',
+                      fontSize: '11px',
+                      letterSpacing: '0.2em',
+                    }}
+                  >
+                    Resumen final
+                  </p>
+
+                  <div className="space-y-4">
+                    <div
+                      className="flex items-end justify-between"
+                      style={{
+                        paddingBottom: '12px',
+                        borderBottom: '1px solid rgba(255,255,255,0.08)',
+                      }}
+                    >
+                      <span className="text-gray-400" style={{ fontSize: '14px' }}>
+                        Unidades
+                      </span>
+                      <span className="text-white font-black" style={{ fontSize: '20px' }}>
+                        {totalItems}
+                      </span>
+                    </div>
+
+                    <div
+                      className="flex items-end justify-between"
+                      style={{
+                        paddingBottom: '12px',
+                        borderBottom: '1px solid rgba(255,255,255,0.08)',
+                      }}
+                    >
+                      <span className="text-gray-400" style={{ fontSize: '14px' }}>
+                        Productos distintos
+                      </span>
+                      <span className="text-white font-black" style={{ fontSize: '20px' }}>
+                        {carrito.length}
+                      </span>
+                    </div>
+
+                    <div className="flex items-end justify-between">
+                      <span className="text-gray-300 font-semibold" style={{ fontSize: '15px' }}>
+                        Total
+                      </span>
+                      <span
+                        className="text-white font-black"
+                        style={{
+                          fontSize: '40px',
+                          lineHeight: 1,
+                          letterSpacing: '-0.04em',
+                          textShadow: '0 0 16px rgba(168,85,247,0.22)',
+                        }}
+                      >
                         ${subtotal.toLocaleString('es-AR')}
                       </span>
                     </div>
                   </div>
                 </div>
 
-                <div className="mt-6 flex flex-col gap-3">
+                <div style={{ marginTop: '28px' }}>
                   <motion.button
-                    whileHover={{ scale: 1.02, backgroundColor: '#fbbf24', color: '#000' }}
-                    whileTap={{ scale: 0.98 }}
+                    whileHover={{ scale: 1.015 }}
+                    whileTap={{ scale: 0.985 }}
                     onClick={onConfirm}
                     disabled={confirming}
-                    className="w-full py-4 border-2 border-amber-500 bg-amber-500/20 text-amber-400 font-mono font-black text-sm uppercase tracking-[0.2em] transition-colors disabled:opacity-50 disabled:grayscale relative overflow-hidden"
+                    className="w-full text-white font-black transition-all disabled:opacity-60"
+                    style={{
+                      height: '52px',
+                      borderRadius: '16px',
+                      border: '1px solid rgba(168,85,247,0.45)',
+                      background: 'linear-gradient(90deg, #a855f7 0%, #d946ef 100%)',
+                      boxShadow: '0 14px 30px rgba(168,85,247,0.22)',
+                      fontSize: '13px',
+                      letterSpacing: '0.14em',
+                      textTransform: 'uppercase',
+                    }}
                   >
                     {confirming ? (
                       <span className="flex items-center justify-center gap-2">
-                        <RefreshCcw className="w-4 h-4 animate-spin" /> PROCESANDO...
+                        <RefreshCcw className="w-4 h-4 animate-spin" />
+                        Procesando...
                       </span>
                     ) : (
-                      'Autorizar DeducCióN'
+                      'Autorizar compra'
                     )}
-                    {/* Animated Glitch Line */}
-                    <div className="absolute top-0 left-[-100%] w-full h-[2px] bg-white opacity-50 pointer-events-none" style={{ animation: 'glitch-slide 2s infinite linear' }} />
                   </motion.button>
+
                   <button
                     onClick={onClose}
                     disabled={confirming}
-                    className="w-full py-2.5 text-[10px] font-mono font-bold text-gray-500 uppercase tracking-widest hover:text-white transition-colors border border-transparent hover:border-white/20"
+                    type="button"
+                    className="w-full text-gray-400 hover:text-white transition-colors"
+                    style={{
+                      marginTop: '10px',
+                      height: '44px',
+                      borderRadius: '14px',
+                      border: '1px solid rgba(255,255,255,0.08)',
+                      background: 'rgba(255,255,255,0.02)',
+                      fontSize: '12px',
+                      fontWeight: 800,
+                    }}
                   >
-                    Abortar Operación
+                    Cancelar
                   </button>
                 </div>
               </div>
             </div>
-            
           </div>
         </motion.div>
       </motion.div>
@@ -185,150 +376,535 @@ function CheckoutModal({ carrito, subtotal, totalItems, onConfirm, onClose, conf
   );
 }
 
-/* ─────────────────────────────── CARGO ROW (Replaces ItemCard) ──────────────────────────── */
 function CargoRow({ item, idx, onRemove, onChangeQty }) {
   const badge = TYPE_BADGE[item.type] || TYPE_BADGE.Colorless;
   const lineTotal = parseInt(item.quantity) * (item.price || 0);
 
-  // Tiny 3D tilt for the image thumbnail only, to add that premium feel
   const x = useMotionValue(0);
   const y = useMotionValue(0);
-  const rotateX = useTransform(y, [-0.5, 0.5], ["15deg", "-15deg"]);
-  const rotateY = useTransform(x, [-0.5, 0.5], ["-15deg", "15deg"]);
+  const rotateX = useTransform(y, [-0.5, 0.5], ['10deg', '-10deg']);
+  const rotateY = useTransform(x, [-0.5, 0.5], ['-10deg', '10deg']);
 
   function handleMouseMove(e) {
     const rect = e.currentTarget.getBoundingClientRect();
     x.set((e.clientX - rect.left) / rect.width - 0.5);
     y.set((e.clientY - rect.top) / rect.height - 0.5);
   }
+
   function handleMouseLeave() {
-    x.set(0); y.set(0);
+    x.set(0);
+    y.set(0);
   }
 
   return (
     <motion.div
       layout
-      initial={{ opacity: 0, x: -20 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.2 } }}
-      transition={{ delay: idx * 0.05, type: 'spring', stiffness: 220, damping: 20 }}
-      className="w-full flex flex-col md:flex-row bg-white/[1%] border border-white/10 hover:border-white/20 transition-all duration-300 relative group overflow-hidden"
+      initial={{ opacity: 0, y: 14 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.98 }}
+      transition={{ delay: idx * 0.035, type: 'spring', stiffness: 220, damping: 22 }}
+      className="relative overflow-hidden border border-white/8 bg-white/[0.02] group"
+      style={{
+        borderRadius: '22px',
+        boxShadow: '0 12px 28px rgba(0,0,0,0.22)',
+      }}
     >
-      {/* Decorative vertical line matching the Card Type */}
-      <div className="absolute left-0 top-0 bottom-0 w-1 transition-all duration-500 group-hover:w-1.5" style={{ backgroundColor: badge.border }} />
-      <div className="absolute inset-0 opacity-0 group-hover:opacity-10 pointer-events-none transition-opacity duration-300" style={{ backgroundImage: `linear-gradient(90deg, ${badge.glow}, transparent)`, right: '20%' }} />
-
-      <div className="p-4 flex items-center justify-between w-full h-full gap-4 md:gap-6 ml-2 relative z-10">
-        
-        {/* LEFT: Image & Core Info */}
-        <div className="flex items-center gap-5 flex-1 min-w-0">
-          <motion.div 
+      <div
+        className="absolute inset-y-0 left-0"
+        style={{
+          width: '3px',
+          background: badge.border,
+        }}
+      />
+      <div
+        className="absolute inset-0 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-300"
+        style={{
+          background: `linear-gradient(90deg, ${badge.glow}, transparent 30%)`,
+        }}
+      />
+      <div
+        className="flex flex-col lg:flex-row lg:items-center"
+        style={{
+          gap: '16px',
+          padding: '18px',
+          paddingLeft: '22px',
+        }}
+      >
+        <div className="flex items-center gap-4 min-w-0 flex-1">
+          <motion.div
             onMouseMove={handleMouseMove}
             onMouseLeave={handleMouseLeave}
-            style={{ rotateX, rotateY, transformStyle: "preserve-3d", perspective: 600 }}
-            className="w-16 h-24 md:w-20 md:h-28 shrink-0 border border-white/20 bg-bg-elevated flex items-center justify-center relative shadow-[4px_4px_0_rgba(0,0,0,0.5)] cursor-crosshair overflow-hidden"
+            style={{
+              rotateX,
+              rotateY,
+              transformStyle: 'preserve-3d',
+              perspective: 600,
+            }}
+            className="shrink-0 overflow-hidden border border-white/12"
+            style={{
+              width: '82px',
+              height: '112px',
+              borderRadius: '16px',
+              background: 'rgba(255,255,255,0.04)',
+            }}
           >
-            {/* Holographic foil on image hover */}
-            <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/40 to-white/0 opacity-0 group-hover:opacity-100 mix-blend-overlay transition-opacity duration-500 z-20 pointer-events-none" style={{ transform: 'translateZ(20px)' }} />
             {item.image ? (
-              <img src={item.image} alt={item.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+              <img
+                src={item.image}
+                alt={item.name}
+                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.06]"
+              />
             ) : (
-              <div className="text-xl opacity-20 font-mono">?</div>
+              <div className="w-full h-full flex items-center justify-center text-white/20 text-xl">?</div>
             )}
           </motion.div>
 
-          <div className="flex flex-col min-w-0">
-            <h3 className="text-lg md:text-xl font-mono font-black text-white leading-tight uppercase truncate drop-shadow-md">
+          <div className="min-w-0 flex-1">
+            <h3
+              className="text-white font-black truncate"
+              style={{
+                margin: 0,
+                fontSize: '20px',
+                lineHeight: '1.1',
+                letterSpacing: '-0.02em',
+              }}
+            >
               {item.name}
             </h3>
-            <div className="flex items-center gap-2 mt-2">
-              <span className="px-2 py-0.5 text-[9px] font-mono font-black uppercase tracking-widest border" style={{ borderColor: badge.border, color: badge.text, backgroundColor: `${badge.border}15` }}>
+
+            <div
+              className="flex items-center gap-2 flex-wrap"
+              style={{ marginTop: '10px' }}
+            >
+              <span
+                style={{
+                  padding: '6px 10px',
+                  borderRadius: '999px',
+                  fontSize: '11px',
+                  fontWeight: 900,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.08em',
+                  border: `1px solid ${badge.border}`,
+                  color: badge.text,
+                  background: `${badge.border}15`,
+                }}
+              >
                 {item.type}
               </span>
-              <span className="text-[10px] font-mono text-gray-400">ID: {item.cardId.slice(0, 8)}</span>
+
+              <span
+                className="text-gray-500"
+                style={{
+                  fontSize: '12px',
+                  fontWeight: 600,
+                }}
+              >
+                ID: {item.cardId.slice(0, 8)}
+              </span>
+            </div>
+
+            <div
+              className="text-gray-400"
+              style={{
+                marginTop: '12px',
+                fontSize: '13px',
+                fontWeight: 600,
+              }}
+            >
+              Precio unitario: ${(item.price || 0).toLocaleString('es-AR')}
             </div>
           </div>
         </div>
 
-        {/* MID: Tactical Quantity Controls */}
-        <div className="flex items-center gap-3 shrink-0">
-          <div className="flex items-center border border-white/20 bg-black shadow-inner">
+        <div
+          className="flex items-center justify-between lg:justify-end gap-4 lg:gap-6"
+          style={{
+            minWidth: 'fit-content',
+          }}
+        >
+          <div
+            className="flex items-center border border-white/10 bg-black/25"
+            style={{
+              height: '46px',
+              borderRadius: '14px',
+              overflow: 'hidden',
+            }}
+          >
             <motion.button
-              whileTap={{ scale: 0.9, backgroundColor: 'rgba(255,255,255,0.1)' }}
+              whileTap={{ scale: 0.92 }}
               onClick={() => onChangeQty(item.cardId, -1)}
-              className="w-10 h-10 flex items-center justify-center text-lg font-mono text-gray-500 hover:text-white transition-colors border-r border-white/10"
+              className="flex items-center justify-center text-gray-400 hover:text-white transition-colors"
+              style={{
+                width: '46px',
+                height: '46px',
+                borderRight: '1px solid rgba(255,255,255,0.08)',
+              }}
             >
-              −
+              <Minus className="w-4 h-4" />
             </motion.button>
-            <div className="w-12 h-10 flex items-center justify-center relative overflow-hidden">
-              <span className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 pointer-events-none mix-blend-overlay" />
+
+            <div
+              className="flex items-center justify-center"
+              style={{
+                width: '52px',
+                height: '46px',
+              }}
+            >
               <motion.span
                 key={item.quantity}
-                initial={{ y: -10, opacity: 0 }}
+                initial={{ y: -6, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
-                className="text-sm font-mono font-black text-purple-400 relative z-10"
+                className="text-white font-black"
+                style={{ fontSize: '15px' }}
               >
                 {item.quantity}
               </motion.span>
             </div>
+
             <motion.button
-              whileTap={{ scale: 0.9, backgroundColor: 'rgba(168,85,247,0.2)' }}
+              whileTap={{ scale: 0.92 }}
               onClick={() => onChangeQty(item.cardId, 1)}
-              className="w-10 h-10 flex items-center justify-center text-lg font-mono text-purple-400 border-l border-white/10 transition-colors"
+              className="flex items-center justify-center text-purple-400 hover:text-white transition-colors"
+              style={{
+                width: '46px',
+                height: '46px',
+                borderLeft: '1px solid rgba(255,255,255,0.08)',
+              }}
             >
-              +
+              <Plus className="w-4 h-4" />
             </motion.button>
           </div>
-        </div>
 
-        {/* RIGHT: Price & Delete */}
-        <div className="flex items-center gap-6 shrink-0 justify-end w-32 md:w-40" style={{ marginRight: '32px' }}>
-          <div className="text-right">
-            <span className="block text-[9px] font-mono text-gray-500 uppercase tracking-widest mb-1">Costo Total</span>
-            <div className="text-xl md:text-2xl font-mono font-black text-white">
+          <div
+            className="text-right"
+            style={{
+              minWidth: '108px',
+            }}
+          >
+            <span
+              className="text-gray-500 uppercase"
+              style={{
+                display: 'block',
+                fontSize: '10px',
+                letterSpacing: '0.12em',
+                marginBottom: '4px',
+                fontWeight: 800,
+              }}
+            >
+              Total
+            </span>
+
+            <div
+              className="text-white font-black"
+              style={{
+                fontSize: '22px',
+                lineHeight: 1,
+                letterSpacing: '-0.03em',
+              }}
+            >
               <AnimatedCounter prefix="$" to={lineTotal} duration={0.3} />
             </div>
           </div>
-          
-          {/* Delete execution button */}
+
           <motion.button
-            whileHover={{ scale: 1.1, rotate: 90 }}
-            whileTap={{ scale: 0.8 }}
+            whileHover={{ scale: 1.06 }}
+            whileTap={{ scale: 0.9 }}
             onClick={() => onRemove(item.cardId)}
-            className="w-8 h-8 rounded-full border border-red-500/50 flex flex-col items-center justify-center bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-colors group/del"
-            title="Purgar"
+            type="button"
+            className="text-red-400 hover:text-white transition-colors"
+            style={{
+              width: '42px',
+              height: '42px',
+              borderRadius: '14px',
+              border: '1px solid rgba(239,68,68,0.35)',
+              background: 'rgba(239,68,68,0.08)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+            }}
+            title="Eliminar"
           >
-            <div className="w-3 h-0.5 bg-current rotate-45 absolute" />
-            <div className="w-3 h-0.5 bg-current -rotate-45 absolute" />
+            <Trash2 className="w-4 h-4" />
           </motion.button>
         </div>
-
       </div>
     </motion.div>
   );
 }
 
-/* ─────────────────────────────── MAIN TERMINAL COMPONENT ──────────────────────────── */
+function EmptyCartState({ successMsg }) {
+  return (
+    <div className="min-h-screen bg-bg-base relative overflow-hidden flex items-center justify-center">
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background:
+            'radial-gradient(circle at top right, rgba(168,85,247,0.12) 0%, transparent 35%), radial-gradient(circle at bottom left, rgba(217,70,239,0.08) 0%, transparent 32%)',
+        }}
+      />
+      <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03] mix-blend-overlay pointer-events-none" />
+
+      <motion.div
+        initial={{ opacity: 0, scale: 0.98, y: 12 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        className="relative z-10 w-full max-w-[620px] px-6"
+      >
+        <div
+          className="border border-white/8 bg-white/[0.02] text-center"
+          style={{
+            borderRadius: '28px',
+            padding: '40px 28px',
+            boxShadow: '0 24px 60px rgba(0,0,0,0.3)',
+          }}
+        >
+          <div
+            className="mx-auto flex items-center justify-center border border-purple-500/20 bg-purple-500/8"
+            style={{
+              width: '92px',
+              height: '92px',
+              borderRadius: '26px',
+              marginBottom: '24px',
+              boxShadow: '0 0 30px rgba(168,85,247,0.10)',
+            }}
+          >
+            <ShoppingCart className="w-10 h-10 text-purple-400" />
+          </div>
+
+          <h2
+            className="text-white font-black"
+            style={{
+              margin: 0,
+              fontSize: '38px',
+              lineHeight: 1,
+              letterSpacing: '-0.04em',
+            }}
+          >
+            Tu carrito está vacío
+          </h2>
+
+          <p
+            className="text-gray-400"
+            style={{
+              marginTop: '14px',
+              marginBottom: 0,
+              fontSize: '16px',
+              lineHeight: '1.6',
+              maxWidth: '460px',
+              marginInline: 'auto',
+            }}
+          >
+            Todavía no agregaste cartas. Explorá el catálogo y empezá a armar tu selección.
+          </p>
+
+          {successMsg && (
+            <motion.div
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              style={{
+                marginTop: '22px',
+                marginInline: 'auto',
+                maxWidth: '500px',
+                borderRadius: '16px',
+                padding: '14px 16px',
+                border: successMsg.includes('ERROR')
+                  ? '1px solid rgba(239,68,68,0.30)'
+                  : '1px solid rgba(34,197,94,0.30)',
+                background: successMsg.includes('ERROR')
+                  ? 'rgba(239,68,68,0.08)'
+                  : 'rgba(34,197,94,0.08)',
+                color: successMsg.includes('ERROR') ? '#f87171' : '#4ade80',
+                fontSize: '13px',
+                fontWeight: 700,
+              }}
+            >
+              {successMsg}
+            </motion.div>
+          )}
+
+          <div
+            className="flex flex-col sm:flex-row justify-center"
+            style={{
+              gap: '12px',
+              marginTop: '28px',
+            }}
+          >
+            <Link
+              to="/cartas"
+              className="inline-flex items-center justify-center gap-2 text-white font-black"
+              style={{
+                height: '50px',
+                paddingInline: '22px',
+                borderRadius: '16px',
+                background: 'linear-gradient(90deg, #a855f7 0%, #d946ef 100%)',
+                boxShadow: '0 16px 32px rgba(168,85,247,0.20)',
+                fontSize: '13px',
+                letterSpacing: '0.12em',
+                textTransform: 'uppercase',
+              }}
+            >
+              <Sparkles className="w-4 h-4" />
+              Ir al catálogo
+            </Link>
+
+            <Link
+              to="/"
+              className="inline-flex items-center justify-center text-gray-300 hover:text-white"
+              style={{
+                height: '50px',
+                paddingInline: '22px',
+                borderRadius: '16px',
+                border: '1px solid rgba(255,255,255,0.10)',
+                background: 'rgba(255,255,255,0.03)',
+                fontSize: '13px',
+                fontWeight: 800,
+              }}
+            >
+              Volver al inicio
+            </Link>
+          </div>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
+function LoginRequiredState() {
+  return (
+    <div className="min-h-screen bg-bg-base relative overflow-hidden flex items-center justify-center">
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background:
+            'radial-gradient(circle at top right, rgba(168,85,247,0.12) 0%, transparent 35%), radial-gradient(circle at bottom left, rgba(217,70,239,0.08) 0%, transparent 30%)',
+        }}
+      />
+      <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03] mix-blend-overlay pointer-events-none" />
+
+      <motion.div
+        initial={{ opacity: 0, y: 10, scale: 0.98 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        className="relative z-10 w-full max-w-[520px] px-6"
+      >
+        <div
+          className="border border-white/8 bg-white/[0.02] text-center"
+          style={{
+            borderRadius: '28px',
+            padding: '36px 28px',
+            boxShadow: '0 24px 60px rgba(0,0,0,0.28)',
+          }}
+        >
+          <div
+            className="mx-auto flex items-center justify-center border border-purple-500/20 bg-purple-500/8"
+            style={{
+              width: '84px',
+              height: '84px',
+              borderRadius: '24px',
+              marginBottom: '22px',
+            }}
+          >
+            <LogIn className="w-9 h-9 text-purple-300" />
+          </div>
+
+          <h2
+            className="text-white font-black"
+            style={{
+              margin: 0,
+              fontSize: '34px',
+              lineHeight: 1,
+              letterSpacing: '-0.04em',
+            }}
+          >
+            Iniciá sesión
+          </h2>
+
+          <p
+            className="text-gray-400"
+            style={{
+              marginTop: '12px',
+              marginBottom: 0,
+              fontSize: '16px',
+              lineHeight: '1.6',
+              maxWidth: '360px',
+              marginInline: 'auto',
+            }}
+          >
+            Para acceder a tu carrito guardado y continuar con la compra.
+          </p>
+
+          <div
+            className="flex flex-col sm:flex-row justify-center"
+            style={{
+              gap: '12px',
+              marginTop: '26px',
+            }}
+          >
+            <Link
+              to="/login"
+              className="inline-flex items-center justify-center gap-2 text-white font-black"
+              style={{
+                height: '48px',
+                paddingInline: '22px',
+                borderRadius: '16px',
+                background: 'linear-gradient(90deg, #d8b4fe 0%, #c084fc 100%)',
+                color: '#14091d',
+                fontSize: '13px',
+                letterSpacing: '0.10em',
+                textTransform: 'uppercase',
+                boxShadow: '0 14px 28px rgba(192,132,252,0.18)',
+              }}
+            >
+              <LogIn className="w-4 h-4" />
+              Ingresar
+            </Link>
+
+            <Link
+              to="/cartas"
+              className="inline-flex items-center justify-center text-gray-300 hover:text-white"
+              style={{
+                height: '48px',
+                paddingInline: '20px',
+                borderRadius: '16px',
+                border: '1px solid rgba(255,255,255,0.10)',
+                background: 'rgba(255,255,255,0.03)',
+                fontSize: '13px',
+                fontWeight: 800,
+              }}
+            >
+              Seguir explorando
+            </Link>
+          </div>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
 export default function Carrito() {
-  const navigate = useNavigate();
-  const [carrito, setCarrito]       = useState([]);
-  const [loading, setLoading]       = useState(true);
-  const [showModal, setShowModal]   = useState(false);
+  const [carrito, setCarrito] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showModal, setShowModal] = useState(false);
   const [completing, setCompleting] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
-  
-  // Previous subtotal state specifically for Counter interpolation
+  const [authError, setAuthError] = useState(false);
   const [prevSubtotal, setPrevSubtotal] = useState(0);
 
-  useEffect(() => { fetchCarrito(); }, []);
+  useEffect(() => {
+    fetchCarrito();
+  }, []);
 
   async function fetchCarrito() {
     setLoading(true);
+    setAuthError(false);
+
     try {
       const { data } = await api.get('/compras/carrito');
       setCarrito(data.carrito || []);
     } catch (err) {
       console.error(err);
+      if (err?.response?.status === 401) {
+        setAuthError(true);
+      }
     } finally {
       setLoading(false);
     }
@@ -337,29 +913,50 @@ export default function Carrito() {
   async function removeItem(cardId) {
     setCarrito((c) => c.filter((i) => i.cardId !== cardId));
     try {
-      await api.post('/compras/carrito', { cardId, quantity: 0 });
-    } catch { fetchCarrito(); }
+      await api.delete(`/compras/carrito/${cardId}`);
+      window.dispatchEvent(new CustomEvent('cart-updated'));
+    } catch {
+      fetchCarrito();
+    }
   }
 
   async function changeQty(cardId, delta) {
     const item = carrito.find((i) => i.cardId === cardId);
     if (!item) return;
+
     const next = parseInt(item.quantity) + delta;
-    if (next <= 0) { removeItem(cardId); return; }
-    
-    // Store previous total for animation
-    const currentSub = carrito.reduce((s, i) => s + (parseInt(i.quantity) * (i.price || 0)), 0);
+    if (next <= 0) {
+      removeItem(cardId);
+      return;
+    }
+
+    const currentSub = carrito.reduce(
+      (sum, i) => sum + parseInt(i.quantity) * (i.price || 0),
+      0
+    );
     setPrevSubtotal(currentSub);
 
-    setCarrito((c) => c.map((i) => i.cardId === cardId ? { ...i, quantity: next } : i));
+    setCarrito((c) =>
+      c.map((i) => (i.cardId === cardId ? { ...i, quantity: next } : i))
+    );
+
     try {
       await api.post('/compras/carrito', { cardId, quantity: next });
-    } catch { fetchCarrito(); }
+      window.dispatchEvent(new CustomEvent('cart-updated'));
+    } catch {
+      fetchCarrito();
+    }
   }
 
   async function vaciarCarrito() {
-    await api.delete('/compras/carrito');
-    setCarrito([]);
+    try {
+      await api.delete('/compras/carrito');
+      setCarrito([]);
+      window.dispatchEvent(new CustomEvent('cart-updated'));
+    } catch (err) {
+      console.error(err);
+      fetchCarrito();
+    }
   }
 
   async function confirmarCompra() {
@@ -368,175 +965,76 @@ export default function Carrito() {
       const { data } = await api.post('/compras/completar');
       setCarrito([]);
       setShowModal(false);
-      setSuccessMsg(`TRANSFERENCIA COMPLETADA. TOTAL DEDUCIDO: $${data.totalPrice}`);
+      setSuccessMsg(`Compra completada. Total: $${data.totalPrice}`);
       window.dispatchEvent(new CustomEvent('cart-updated'));
     } catch (err) {
       setShowModal(false);
-      setSuccessMsg(err.response?.data?.error || 'ERROR CRÍTICO AL CONTACTAR EL SERVIDOR DE FONDOS');
+      setSuccessMsg(err.response?.data?.error || 'No se pudo completar la compra.');
     } finally {
       setCompleting(false);
     }
   }
 
-  const totalItems = carrito.reduce((s, i) => s + parseInt(i.quantity), 0);
-  const subtotal   = carrito.reduce((s, i) => s + (parseInt(i.quantity) * (i.price || 0)), 0);
-
-  /* ── 1. LOADING STATE ── */
-  if (loading) return (
-    <div className="min-h-screen bg-bg-base flex items-center justify-center">
-      <div className="flex flex-col items-center">
-        <div className="w-16 h-16 border-2 border-primary border-t-transparent border-b-transparent animate-spin rounded-full mb-4" />
-        <p className="font-mono text-primary tracking-widest text-xs uppercase animate-pulse">ESTABLECIENDO ENLACE CON MANIFIESTO...</p>
-      </div>
-    </div>
+  const totalItems = carrito.reduce((sum, i) => sum + parseInt(i.quantity), 0);
+  const subtotal = carrito.reduce(
+    (sum, i) => sum + parseInt(i.quantity) * (i.price || 0),
+    0
   );
 
-  /* ── 2. EMPTY STATE (Military radar feel) ── */
-  if (carrito.length === 0) return (
-    <div className="min-h-screen bg-bg-base relative overflow-hidden flex items-center justify-center">
-      {/* Background Grid */}
-      <div className="absolute inset-0 opacity-[0.03] bg-[linear-gradient(rgba(255,255,255,0.5)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.5)_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none" />
-      <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.05] mix-blend-overlay pointer-events-none" />
-
-      <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="max-w-[800px] w-full px-6 flex flex-col items-center text-center relative z-10"
-      >
-        <div className="relative w-48 h-48 flex items-center justify-center mb-8">
-          <div className="absolute inset-0 border-2 border-dashed border-primary/30 rounded-full animate-spin-slow" />
-          <div className="absolute inset-4 border border-primary/20 rounded-full" />
-          <Target className="w-12 h-12 text-primary/40 absolute" strokeWidth={1} />
-          <motion.div 
-            animate={{ height: ['0%', '100%', '0%'] }} 
-            transition={{ duration: 4, repeat: Infinity, ease: 'linear' }}
-            className="absolute w-full bg-primary/20 mix-blend-screen overflow-hidden" 
-          />
-        </div>
-
-        <h2 className="text-3xl md:text-5xl font-mono font-black text-white uppercase tracking-[0.2em] drop-shadow-lg mb-2">
-          Manifiesto_Vacío
-        </h2>
-        <p className="text-gray-500 font-mono tracking-widest text-sm uppercase max-w-lg mb-12">
-          No hay componentes detectados en la plataforma de transferencia. Proceda al catálogo para iniciar la adquisición.
-        </p>
-
-        {successMsg && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className={`flex items-center gap-3 px-6 py-4 border font-mono font-black uppercase text-xs tracking-widest mb-8 shadow-[4px_4px_0_rgba(0,0,0,0.5)] ${successMsg.includes('ERROR') ? 'bg-red-500/10 border-red-500/40 text-red-400' : 'bg-green-500/10 border-green-500/40 text-green-400'}`}
-          >
-            {successMsg.includes('ERROR') ? <ShieldAlert className="w-5 h-5" /> : <Activity className="w-5 h-5" />}
-            {successMsg}
-          </motion.div>
-        )}
-
-        <div className="flex gap-4">
-          <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-            <Link to="/cartas" className="px-8 py-4 border-2 border-primary bg-primary/10 text-primary font-mono font-black uppercase tracking-[0.2em] text-sm hover:bg-primary hover:text-black transition-colors flex items-center gap-2 shadow-[0_0_20px_rgba(255,235,59,0.2)]">
-              <Zap className="w-4 h-4" /> Iniciar Inserción
-            </Link>
-          </motion.button>
-          <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-            <Link to="/" className="px-8 py-4 border border-white/20 text-gray-400 font-mono font-bold uppercase tracking-widest text-sm hover:text-white hover:bg-white/5 transition-colors">
-              Abortar
-            </Link>
-          </motion.button>
-        </div>
-      </motion.div>
-    </div>
-  );
-
-  /* ── Compute type distribution for visual breakdown ── */
   const typeBreakdown = carrito.reduce((acc, item) => {
     const t = item.type || 'Colorless';
     acc[t] = (acc[t] || 0) + parseInt(item.quantity);
     return acc;
   }, {});
-  const dominantType = Object.entries(typeBreakdown).sort((a, b) => b[1] - a[1])[0]?.[0] || 'Colorless';
-  const dominantBadge = TYPE_BADGE[dominantType] || TYPE_BADGE.Colorless;
 
-  /* ── 3. MAIN TERMINAL VIEW ── */
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-bg-base flex items-center justify-center">
+        <div className="flex flex-col items-center">
+          <div
+            className="rounded-full border-2 border-purple-400 border-t-transparent"
+            style={{
+              width: '58px',
+              height: '58px',
+              animation: 'spin 1s linear infinite',
+            }}
+          />
+          <p
+            className="text-purple-300"
+            style={{
+              marginTop: '18px',
+              fontSize: '12px',
+              fontWeight: 800,
+              letterSpacing: '0.18em',
+              textTransform: 'uppercase',
+            }}
+          >
+            Cargando carrito...
+          </p>
+          <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+        </div>
+      </div>
+    );
+  }
+
+  if (authError) {
+    return <LoginRequiredState />;
+  }
+
+  if (carrito.length === 0) {
+    return <EmptyCartState successMsg={successMsg} />;
+  }
+
   return (
-    <div className="min-h-screen bg-bg-base relative overflow-hidden flex flex-col pt-16 pb-32">
-      <style>
-        {`
-          @keyframes spin-slow { 100% { transform: rotate(360deg); } }
-          .animate-spin-slow { animation: spin-slow 20s linear infinite; }
-          @keyframes glitch-slide { 0% { left: -100%; opacity: 0; } 50% { opacity: 1; } 100% { left: 100%; opacity: 0; } }
-          @keyframes scanline { 0% { transform: translateY(-100%); } 100% { transform: translateY(100vh); } }
-        `}
-      </style>
-      
-      {/* ═══ RICH AMBIENT BACKGROUND ═══ */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-        {/* Structural grid lines */}
-        <div className="absolute inset-0 opacity-[0.02] bg-[linear-gradient(rgba(255,255,255,0.5)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.5)_1px,transparent_1px)] bg-[size:60px_60px]" />
-        
-        {/* Primary glow - top right, psychic purple */}
-        <motion.div
-          animate={{ opacity: [0.15, 0.3, 0.15], scale: [1, 1.1, 1] }}
-          transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
-          className="absolute -top-[15%] -right-[5%] w-[50vw] h-[50vw] blur-[150px] mix-blend-screen"
-          style={{ background: 'radial-gradient(circle, rgba(168,85,247,0.4) 0%, transparent 60%)' }}
-        />
-        {/* Secondary glow - bottom left, deep violet */}
-        <motion.div
-          animate={{ opacity: [0.1, 0.25, 0.1] }}
-          transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut', delay: 2 }}
-          className="absolute -bottom-[20%] -left-[10%] w-[45vw] h-[45vw] blur-[140px] mix-blend-screen"
-          style={{ background: 'radial-gradient(circle, rgba(124,77,255,0.35) 0%, transparent 60%)' }}
-        />
-        {/* Tertiary glow - center, pink accent */}
-        <motion.div
-          animate={{ opacity: [0.05, 0.15, 0.05] }}
-          transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut', delay: 4 }}
-          className="absolute top-[30%] left-[40%] w-[30vw] h-[30vw] blur-[120px] mix-blend-color-dodge"
-          style={{ background: 'radial-gradient(circle, rgba(233,30,99,0.2) 0%, transparent 60%)' }}
-        />
-        {/* Noise texture */}
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.04] mix-blend-overlay" />
-        
-        {/* Slow scanline effect - purple */}
-        <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-purple-500/30 to-transparent opacity-40" style={{ animation: 'scanline 8s linear infinite' }} />
-      </div>
-
-      {/* ═══ PIXEL ART SPRITES ═══ */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0 top-16">
-        {/* Eevee trotting across the bottom */}
-        <motion.div
-          initial={{ x: '-10vw' }}
-          animate={{ x: '110vw' }}
-          transition={{ duration: 22, repeat: Infinity, ease: 'linear', delay: 1 }}
-          className="absolute bottom-[3%] left-0 opacity-15 mix-blend-screen"
-          style={{ transform: 'scale(1.4)' }}
-        >
-          <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/133.gif" alt="" style={{ imageRendering: 'pixelated' }} />
-        </motion.div>
-        
-        {/* Dragonite flying high */}
-        <motion.div
-          initial={{ x: '110vw', y: 0 }}
-          animate={{ x: '-15vw', y: [-10, 10, -10] }}
-          transition={{ x: { duration: 30, repeat: Infinity, ease: 'linear', delay: 3 }, y: { duration: 3, repeat: Infinity, ease: 'easeInOut' } }}
-          className="absolute top-[8%] right-0 opacity-10 mix-blend-screen"
-          style={{ transform: 'scaleX(-1) scale(1.6)' }}
-        >
-          <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/149.gif" alt="" style={{ imageRendering: 'pixelated' }} />
-        </motion.div>
-        
-        {/* Jigglypuff bouncing slowly across middle */}
-        <motion.div
-          initial={{ x: '-15vw', y: 0 }}
-          animate={{ x: '110vw', y: [0, -15, 0] }}
-          transition={{ x: { duration: 45, repeat: Infinity, ease: 'linear', delay: 8 }, y: { duration: 2, repeat: Infinity, ease: 'easeInOut' } }}
-          className="absolute top-[55%] left-0 opacity-[0.08] mix-blend-screen"
-          style={{ transform: 'scale(1.3)' }}
-        >
-          <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/39.gif" alt="" style={{ imageRendering: 'pixelated' }} />
-        </motion.div>
-      </div>
+    <div className="min-h-screen bg-bg-base relative overflow-hidden">
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background:
+            'radial-gradient(circle at top right, rgba(168,85,247,0.14) 0%, transparent 34%), radial-gradient(circle at bottom left, rgba(217,70,239,0.08) 0%, transparent 28%)',
+        }}
+      />
+      <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03] mix-blend-overlay pointer-events-none" />
 
       {showModal && (
         <CheckoutModal
@@ -549,298 +1047,445 @@ export default function Carrito() {
         />
       )}
 
-      <div className="w-full relative z-10 flex flex-col md:flex-row min-h-[calc(100vh-80px)]">
-        
-        {/* LEFT COLUMN: The rows (scrollable, with padding) */}
-        <div className="flex-1 flex flex-col min-w-0 px-4 md:px-8 lg:px-12 pt-6 pb-32" style={{ marginRight: '440px' }}>
-          
-          <header className="mb-8 border-b-2 border-purple-500/20 pb-6 flex items-end justify-between">
-            <div>
-              <div className="flex items-center gap-3 mb-2">
-                <div className="w-3 h-3 bg-purple-500 animate-pulse shadow-[0_0_10px_rgba(168,85,247,0.8)]" />
-                <h1 className="text-sm font-mono font-black text-purple-400 tracking-[0.4em] uppercase">Transfer_Terminal</h1>
-              </div>
-              <h2 className="text-3xl md:text-5xl font-mono font-black text-white uppercase tracking-tight drop-shadow-md">
-                Manifiesto de <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-500">Carga</span>
-              </h2>
-              <p className="text-gray-500 font-mono text-xs mt-2 tracking-wider uppercase">
-                {carrito.length} variante{carrito.length !== 1 ? 's' : ''} registrada{carrito.length !== 1 ? 's' : ''} &middot; {totalItems} unidad{totalItems !== 1 ? 'es' : ''} en plataforma
-              </p>
-            </div>
-            
-            <button
-              onClick={vaciarCarrito}
-              className="px-4 py-2 border border-red-500/30 text-[10px] font-mono font-black uppercase text-red-500 hover:bg-red-500/10 hover:border-red-500 transition-colors tracking-widest hidden md:block"
-            >
-              Purgar Plataforma
-            </button>
-          </header>
-
-          <AnimatePresence mode="popLayout">
-            <div className="flex flex-col gap-3">
-              {carrito.map((item, idx) => (
-                <CargoRow
-                  key={item.cardId}
-                  item={item}
-                  idx={idx}
-                  onRemove={removeItem}
-                  onChangeQty={changeQty}
-                />
-              ))}
-            </div>
-          </AnimatePresence>
-
-          {/* Suggestion / Upsell below items */}
-          <motion.div 
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-            className="mt-6 border border-dashed border-purple-500/30 bg-purple-500/[0.03] px-6 py-5 flex items-center gap-4"
-          >
-            <div className="w-10 h-10 border border-purple-500/40 bg-purple-500/10 flex items-center justify-center shrink-0">
-              <Zap className="w-5 h-5 text-purple-400" />
-            </div>
-            <div className="flex-1">
-              <p className="text-xs font-mono font-bold text-purple-400 uppercase tracking-widest">{"¿Necesitás más cartas?"}</p>
-              <p className="text-[10px] font-mono text-gray-500 mt-1">Sumá más unidades al manifiesto antes de autorizar la transferencia.</p>
-            </div>
-            <Link to="/cartas" className="px-4 py-2 border border-purple-500/50 text-[10px] font-mono font-black text-purple-400 uppercase tracking-widest hover:bg-purple-500 hover:text-white transition-colors shrink-0">
-              Catálogo
-            </Link>
-          </motion.div>
-
-          <button
-            onClick={vaciarCarrito}
-            className="mt-6 py-3 border border-red-500/30 text-xs font-mono font-black uppercase text-red-500 hover:bg-red-500/10 w-full md:hidden transition-colors tracking-widest"
-          >
-            Purgar Plataforma
-          </button>
-        </div>
-
-        {/* RIGHT COLUMN: Fixed Panel hugging right + bottom edge */}
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="hidden md:flex fixed top-[76px] right-0 bottom-0 w-[360px] lg:w-[440px] border-l-2 border-white/10 bg-bg-surface/95 backdrop-blur-xl flex-col shadow-[-8px_0_30px_rgba(0,0,0,0.6)] z-20 overflow-hidden"
+      <div
+        className="relative z-10 w-full mx-auto"
+        style={{
+          maxWidth: '1680px',
+          paddingLeft: '24px',
+          paddingRight: '24px',
+          paddingTop: '38px',
+          paddingBottom: '90px',
+        }}
+      >
+        <div
+          className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_390px]"
+          style={{
+            gap: '28px',
+            alignItems: 'start',
+          }}
         >
-          {/* Corner decals */}
-          <div className="absolute top-0 left-0 w-4 h-4 border-r-2 border-b-2 border-purple-500/40" />
-          <div className="absolute bottom-0 left-0 w-4 h-4 border-r-2 border-t-2 border-purple-500/40" />
-          
-          {/* Side accent bar */}
-          <div className="absolute left-0 top-8 w-1 h-20 bg-purple-500/60" />
-          
-          {/* Background inner glow */}
-          <div className="absolute -top-20 -right-20 w-48 h-48 blur-[60px] opacity-25 pointer-events-none" style={{ background: 'rgba(168,85,247,0.5)' }} />
-          <div className="absolute -bottom-20 -right-10 w-36 h-36 blur-[50px] opacity-15 pointer-events-none" style={{ background: 'rgba(233,30,99,0.4)' }} />
+          <div className="min-w-0">
+            <header
+              className="border-b border-white/8"
+              style={{
+                paddingBottom: '22px',
+                marginBottom: '24px',
+              }}
+            >
+              <div
+                className="flex flex-col md:flex-row md:items-end md:justify-between"
+                style={{ gap: '18px' }}
+              >
+                <div>
+                  <div
+                    className="flex items-center gap-3"
+                    style={{ marginBottom: '10px' }}
+                  >
+                    <div
+                      className="flex items-center justify-center border border-purple-500/20 bg-purple-500/10"
+                      style={{
+                        width: '42px',
+                        height: '42px',
+                        borderRadius: '14px',
+                      }}
+                    >
+                      <ShoppingCart className="w-5 h-5 text-purple-300" />
+                    </div>
 
-          {/* ═══════════════════════════════════════════════
-              TOP: ALAKAZAM PSYCHIC SHOWCASE
-          ═══════════════════════════════════════════════ */}
-          <div className="relative flex-1 flex flex-col items-center justify-center overflow-hidden min-h-[240px]">
-            {/* Psychic energy field behind Alakazam */}
-            <motion.div
-              animate={{ scale: [1, 1.3, 1], opacity: [0.15, 0.35, 0.15] }}
-              transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-              className="absolute w-48 h-48 rounded-full blur-[50px]"
-              style={{ background: 'radial-gradient(circle, rgba(168,85,247,0.6) 0%, rgba(233,30,99,0.3) 50%, transparent 70%)' }}
-            />
-            {/* Secondary psychic ripple */}
-            <motion.div
-              animate={{ scale: [0.8, 1.5, 0.8], opacity: [0.1, 0.25, 0.1] }}
-              transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
-              className="absolute w-36 h-36 rounded-full blur-[40px]"
-              style={{ background: 'radial-gradient(circle, rgba(255,235,59,0.3) 0%, transparent 60%)' }}
-            />
-            
-            {/* Rotating psychic ring */}
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ duration: 12, repeat: Infinity, ease: 'linear' }}
-              className="absolute w-40 h-40 border border-dashed border-purple-500/20 rounded-full"
-            />
-            <motion.div
-              animate={{ rotate: -360 }}
-              transition={{ duration: 18, repeat: Infinity, ease: 'linear' }}
-              className="absolute w-56 h-56 border border-dotted border-pink-500/10 rounded-full"
-            />
+                    <span
+                      className="text-purple-300 uppercase font-black"
+                      style={{
+                        fontSize: '12px',
+                        letterSpacing: '0.18em',
+                      }}
+                    >
+                      Mi carrito
+                    </span>
+                  </div>
 
-            {/* Floating spoon particles */}
-            {[0, 1, 2, 3].map((i) => (
-              <motion.div
-                key={i}
-                animate={{ 
-                  y: [0, -12, 0, 8, 0], 
-                  x: [0, 6, -4, 2, 0],
-                  rotate: [0, 15, -10, 5, 0],
-                  opacity: [0.4, 0.8, 0.4]
-                }}
-                transition={{ 
-                  duration: 3 + i * 0.5, 
-                  repeat: Infinity, 
-                  ease: 'easeInOut', 
-                  delay: i * 0.7 
-                }}
-                className="absolute text-lg select-none"
-                style={{ 
-                  top: `${15 + i * 15}%`, 
-                  left: `${10 + (i % 2 === 0 ? 65 : 15)}%`,
-                  filter: 'drop-shadow(0 0 4px rgba(168,85,247,0.6))',
-                  fontSize: '20px'
+                  <h1
+                    className="text-white font-black"
+                    style={{
+                      margin: 0,
+                      fontSize: 'clamp(34px, 5vw, 58px)',
+                      lineHeight: '0.95',
+                      letterSpacing: '-0.05em',
+                    }}
+                  >
+                    Resumen de compra
+                  </h1>
+
+                  <p
+                    className="text-gray-400"
+                    style={{
+                      marginTop: '12px',
+                      marginBottom: 0,
+                      fontSize: '16px',
+                      lineHeight: '1.6',
+                      maxWidth: '760px',
+                    }}
+                  >
+                    Revisá tus cartas, ajustá cantidades y completá la operación cuando
+                    estés listo.
+                  </p>
+                </div>
+
+                <div
+                  className="flex flex-wrap"
+                  style={{ gap: '10px' }}
+                >
+                  <Link
+                    to="/cartas"
+                    className="inline-flex items-center justify-center gap-2 text-gray-200 hover:text-white"
+                    style={{
+                      height: '46px',
+                      paddingInline: '18px',
+                      borderRadius: '15px',
+                      border: '1px solid rgba(255,255,255,0.10)',
+                      background: 'rgba(255,255,255,0.03)',
+                      fontSize: '12px',
+                      fontWeight: 800,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.10em',
+                    }}
+                  >
+                    <Package className="w-4 h-4" />
+                    Seguir comprando
+                  </Link>
+
+                  <button
+                    onClick={vaciarCarrito}
+                    type="button"
+                    className="inline-flex items-center justify-center gap-2 text-red-400 hover:text-white"
+                    style={{
+                      height: '46px',
+                      paddingInline: '18px',
+                      borderRadius: '15px',
+                      border: '1px solid rgba(239,68,68,0.30)',
+                      background: 'rgba(239,68,68,0.08)',
+                      fontSize: '12px',
+                      fontWeight: 800,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.10em',
+                    }}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    Vaciar carrito
+                  </button>
+                </div>
+              </div>
+            </header>
+
+            <div className="space-y-4">
+              <AnimatePresence mode="popLayout">
+                {carrito.map((item, idx) => (
+                  <CargoRow
+                    key={item.cardId}
+                    item={item}
+                    idx={idx}
+                    onRemove={removeItem}
+                    onChangeQty={changeQty}
+                  />
+                ))}
+              </AnimatePresence>
+            </div>
+          </div>
+
+          <div className="xl:sticky xl:top-[92px]">
+            <motion.aside
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="border border-white/8 bg-white/[0.03] overflow-hidden"
+              style={{
+                borderRadius: '24px',
+                boxShadow: '0 20px 50px rgba(0,0,0,0.28)',
+              }}
+            >
+              <div
+                className="relative"
+                style={{
+                  padding: '22px',
+                  borderBottom: '1px solid rgba(255,255,255,0.08)',
+                  background:
+                    'radial-gradient(circle at top right, rgba(168,85,247,0.12) 0%, transparent 46%)',
                 }}
               >
-                🥄
-              </motion.div>
-            ))}
+                <div
+                  className="flex items-center gap-3"
+                  style={{ marginBottom: '14px' }}
+                >
+                  <div
+                    className="flex items-center justify-center border border-purple-500/25 bg-purple-500/10"
+                    style={{
+                      width: '44px',
+                      height: '44px',
+                      borderRadius: '14px',
+                    }}
+                  >
+                    <Battery className="w-5 h-5 text-purple-300" />
+                  </div>
 
-            {/* ALAKAZAM - The star of the show */}
-            <motion.div
-              animate={{ y: [0, -8, 0, -4, 0] }}
-              transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-              className="relative z-10"
-            >
-              {/* Glow under Alakazam */}
-              <motion.div
-                animate={{ scale: [0.9, 1.1, 0.9], opacity: [0.3, 0.6, 0.3] }}
-                transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-                className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-24 h-6 rounded-full blur-md bg-purple-500/40"
-              />
-              <img 
-                src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/65.gif" 
-                alt="Alakazam" 
-                className="relative z-10 drop-shadow-[0_0_15px_rgba(168,85,247,0.5)]"
-                style={{ imageRendering: 'pixelated', transform: 'scale(3)', transformOrigin: 'center' }}
-              />
-            </motion.div>
+                  <div>
+                    <p
+                      className="text-gray-400 uppercase font-black"
+                      style={{
+                        margin: 0,
+                        fontSize: '11px',
+                        letterSpacing: '0.16em',
+                      }}
+                    >
+                      Resumen
+                    </p>
+                    <p
+                      className="text-white font-black"
+                      style={{
+                        marginTop: '4px',
+                        marginBottom: 0,
+                        fontSize: '22px',
+                        lineHeight: 1,
+                      }}
+                    >
+                      Total actual
+                    </p>
+                  </div>
+                </div>
 
-            {/* Label */}
-            <motion.p 
-              animate={{ opacity: [0.4, 0.8, 0.4] }}
-              transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-              className="text-[9px] font-mono font-black text-purple-400 uppercase tracking-[0.5em] mt-16 relative z-10"
-            >
-              Psi_Guardian
-            </motion.p>
-          </div>
-
-          {/* ═══════════════════════════════════════════════
-              BOTTOM: ALL DATA + CTA (pushed down)
-          ═══════════════════════════════════════════════ */}
-          <div className="p-6 lg:p-8 border-t border-white/10 bg-black/30 relative z-10 shrink-0">
-
-            <div className="flex items-center gap-2 mb-4 text-gray-400">
-              <Battery className="w-4 h-4 text-purple-400" />
-              <h3 className="text-[10px] font-mono font-black uppercase tracking-[0.3em]">Logística_Resumen</h3>
-            </div>
-
-            {/* Compact Stats Row */}
-            <div className="grid grid-cols-2 gap-2 mb-4">
-              <div className="bg-black/40 px-3 py-2 border border-white/5 text-center">
-                <span className="text-[8px] font-mono text-gray-500 uppercase tracking-widest block">Variantes</span>
-                <span className="text-xl font-mono font-black text-white">{carrito.length}</span>
+                <div
+                  className="text-white font-black"
+                  style={{
+                    fontSize: '48px',
+                    lineHeight: 1,
+                    letterSpacing: '-0.05em',
+                    textShadow: '0 0 18px rgba(168,85,247,0.16)',
+                  }}
+                >
+                  <AnimatedCounter prefix="$" from={prevSubtotal} to={subtotal} duration={0.55} />
+                </div>
               </div>
-              <div className="bg-black/40 px-3 py-2 border border-white/5 text-center">
-                <span className="text-[8px] font-mono text-purple-400 uppercase tracking-widest block">Unidades</span>
-                <span className="text-xl font-mono font-black text-purple-400">{totalItems}</span>
-              </div>
-            </div>
 
-            {/* Type Breakdown Bar (compact) */}
-            <div className="mb-4">
-              <div className="w-full h-2 bg-black/60 border border-white/10 flex overflow-hidden">
-                {Object.entries(typeBreakdown).map(([type, count]) => {
-                  const b = TYPE_BADGE[type] || TYPE_BADGE.Colorless;
-                  const pct = (count / totalItems) * 100;
-                  return (
-                    <motion.div
-                      key={type}
-                      initial={{ width: 0 }}
-                      animate={{ width: `${pct}%` }}
-                      transition={{ duration: 0.8, ease: 'easeOut' }}
-                      style={{ backgroundColor: b.border }}
-                      className="h-full"
-                      title={`${type}: ${count}`}
-                    />
-                  );
-                })}
-              </div>
-              <div className="flex flex-wrap gap-x-2 gap-y-0.5 mt-1.5">
-                {Object.entries(typeBreakdown).map(([type, count]) => {
-                  const b = TYPE_BADGE[type] || TYPE_BADGE.Colorless;
-                  return (
-                    <span key={type} className="text-[8px] font-mono font-bold uppercase tracking-wider flex items-center gap-1">
-                      <span className="inline-block w-1.5 h-1.5" style={{ backgroundColor: b.border }} />
-                      <span style={{ color: b.text }}>{type}</span>
-                      <span className="text-gray-600">({count})</span>
+              <div style={{ padding: '22px' }}>
+                <div
+                  className="grid grid-cols-2"
+                  style={{
+                    gap: '10px',
+                    marginBottom: '18px',
+                  }}
+                >
+                  <div
+                    className="border border-white/6 bg-black/20"
+                    style={{
+                      borderRadius: '16px',
+                      padding: '14px',
+                    }}
+                  >
+                    <span
+                      className="text-gray-500 uppercase"
+                      style={{
+                        display: 'block',
+                        fontSize: '10px',
+                        letterSpacing: '0.14em',
+                        marginBottom: '6px',
+                        fontWeight: 800,
+                      }}
+                    >
+                      Productos
                     </span>
-                  );
-                })}
+                    <span className="text-white font-black" style={{ fontSize: '28px', lineHeight: 1 }}>
+                      {carrito.length}
+                    </span>
+                  </div>
+
+                  <div
+                    className="border border-white/6 bg-black/20"
+                    style={{
+                      borderRadius: '16px',
+                      padding: '14px',
+                    }}
+                  >
+                    <span
+                      className="text-gray-500 uppercase"
+                      style={{
+                        display: 'block',
+                        fontSize: '10px',
+                        letterSpacing: '0.14em',
+                        marginBottom: '6px',
+                        fontWeight: 800,
+                      }}
+                    >
+                      Unidades
+                    </span>
+                    <span className="text-purple-300 font-black" style={{ fontSize: '28px', lineHeight: 1 }}>
+                      {totalItems}
+                    </span>
+                  </div>
+                </div>
+
+                <div style={{ marginBottom: '20px' }}>
+                  <div
+                    className="flex justify-between text-[11px] font-semibold text-gray-400"
+                    style={{ marginBottom: '8px' }}
+                  >
+                    <span>Composición por tipo</span>
+                    <span>{Object.keys(typeBreakdown).length} tipo(s)</span>
+                  </div>
+
+                  <div
+                    className="flex overflow-hidden border border-white/8 bg-black/25"
+                    style={{
+                      height: '10px',
+                      borderRadius: '999px',
+                    }}
+                  >
+                    {Object.entries(typeBreakdown).map(([type, count]) => {
+                      const badge = TYPE_BADGE[type] || TYPE_BADGE.Colorless;
+                      const pct = (count / totalItems) * 100;
+                      return (
+                        <motion.div
+                          key={type}
+                          initial={{ width: 0 }}
+                          animate={{ width: `${pct}%` }}
+                          transition={{ duration: 0.65, ease: 'easeOut' }}
+                          style={{ background: badge.border }}
+                          title={`${type}: ${count}`}
+                        />
+                      );
+                    })}
+                  </div>
+
+                  <div
+                    className="flex flex-wrap"
+                    style={{
+                      gap: '8px',
+                      marginTop: '12px',
+                    }}
+                  >
+                    {Object.entries(typeBreakdown).map(([type, count]) => {
+                      const badge = TYPE_BADGE[type] || TYPE_BADGE.Colorless;
+                      return (
+                        <span
+                          key={type}
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            padding: '7px 10px',
+                            borderRadius: '999px',
+                            fontSize: '11px',
+                            fontWeight: 800,
+                            background: 'rgba(255,255,255,0.03)',
+                            border: '1px solid rgba(255,255,255,0.06)',
+                            color: badge.text,
+                          }}
+                        >
+                          <span
+                            style={{
+                              width: '7px',
+                              height: '7px',
+                              borderRadius: '999px',
+                              background: badge.border,
+                              boxShadow: `0 0 8px ${badge.border}`,
+                            }}
+                          />
+                          {type}
+                          <span className="text-gray-500">({count})</span>
+                        </span>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div
+                  className="border border-white/6 bg-black/20"
+                  style={{
+                    borderRadius: '18px',
+                    padding: '16px',
+                    marginBottom: '18px',
+                  }}
+                >
+                  <div
+                    className="flex items-center justify-between"
+                    style={{ marginBottom: '10px' }}
+                  >
+                    <span className="text-gray-400" style={{ fontSize: '13px', fontWeight: 600 }}>
+                      Subtotal
+                    </span>
+                    <span className="text-white font-bold" style={{ fontSize: '16px' }}>
+                      ${subtotal.toLocaleString('es-AR')}
+                    </span>
+                  </div>
+
+                  <div
+                    className="flex items-center justify-between"
+                    style={{ marginBottom: '10px' }}
+                  >
+                    <span className="text-gray-400" style={{ fontSize: '13px', fontWeight: 600 }}>
+                      Envío
+                    </span>
+                    <span className="text-gray-500 font-semibold" style={{ fontSize: '14px' }}>
+                      A calcular
+                    </span>
+                  </div>
+
+                  <div
+                    className="flex items-center justify-between"
+                    style={{
+                      paddingTop: '10px',
+                      borderTop: '1px solid rgba(255,255,255,0.08)',
+                    }}
+                  >
+                    <span className="text-white font-semibold" style={{ fontSize: '14px' }}>
+                      Total estimado
+                    </span>
+                    <span className="text-white font-black" style={{ fontSize: '22px' }}>
+                      ${subtotal.toLocaleString('es-AR')}
+                    </span>
+                  </div>
+                </div>
+
+                <motion.button
+                  whileHover={{ scale: 1.015 }}
+                  whileTap={{ scale: 0.985 }}
+                  onClick={() => setShowModal(true)}
+                  className="w-full text-white font-black"
+                  style={{
+                    height: '54px',
+                    borderRadius: '17px',
+                    border: '1px solid rgba(168,85,247,0.40)',
+                    background: 'linear-gradient(90deg, #a855f7 0%, #d946ef 100%)',
+                    boxShadow: '0 16px 32px rgba(168,85,247,0.18)',
+                    fontSize: '13px',
+                    letterSpacing: '0.12em',
+                    textTransform: 'uppercase',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                  }}
+                >
+                  Finalizar compra
+                  <ArrowUpRight className="w-4 h-4" strokeWidth={2.5} />
+                </motion.button>
+
+                <Link
+                  to="/cartas"
+                  className="w-full flex items-center justify-center gap-2 text-gray-300 hover:text-white"
+                  style={{
+                    marginTop: '10px',
+                    height: '46px',
+                    borderRadius: '15px',
+                    border: '1px solid rgba(255,255,255,0.08)',
+                    background: 'rgba(255,255,255,0.02)',
+                    fontSize: '12px',
+                    fontWeight: 800,
+                  }}
+                >
+                  Seguir explorando
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
               </div>
-            </div>
-
-            {/* Total Price */}
-            <div className="mb-4 flex items-baseline justify-between">
-              <p className="text-[9px] font-mono text-gray-500 uppercase tracking-widest">Total</p>
-              <div className="text-4xl font-mono font-black text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.15)] tracking-tighter">
-                <AnimatedCounter prefix="$" from={prevSubtotal} to={subtotal} duration={0.6} />
-              </div>
-            </div>
-
-            {/* Capacity bar */}
-            <div className="mb-5">
-              <div className="flex justify-between text-[8px] font-mono text-gray-500 uppercase tracking-widest mb-1">
-                <span>Carga</span>
-                <span className="text-purple-400">{Math.min(totalItems, 50)}/50</span>
-              </div>
-              <div className="w-full h-1.5 bg-black/60 border border-white/10 overflow-hidden">
-                <motion.div
-                  initial={{ width: 0 }}
-                  animate={{ width: `${Math.min((totalItems / 50) * 100, 100)}%` }}
-                  transition={{ duration: 0.8, ease: 'easeOut' }}
-                  className="h-full bg-gradient-to-r from-purple-500 to-pink-500"
-                />
-              </div>
-            </div>
-
-            {/* CTA Buttons */}
-            <motion.button
-              whileHover={{ scale: 1.02, backgroundColor: '#c084fc' }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => setShowModal(true)}
-              className="w-full py-3.5 bg-purple-500 text-white font-mono font-black text-sm uppercase tracking-[0.2em] shadow-[4px_4px_0_rgba(168,85,247,0.3)] border border-transparent flex items-center justify-center gap-2 transition-all hover:shadow-[6px_6px_0_rgba(168,85,247,0.5)]"
-            >
-              Iniciar Checkout <ArrowUpRight strokeWidth={3} className="w-5 h-5" />
-            </motion.button>
-            
-            <Link to="/cartas" className="mt-3 w-full py-2.5 border border-purple-500/20 text-gray-400 hover:text-purple-300 hover:border-purple-500/40 text-[10px] font-mono font-bold uppercase tracking-widest text-center transition-colors block">
-              Continuar Selección
-            </Link>
-
-          </div>
-
-        </motion.div>
-
-        {/* MOBILE SUMMARY (shown below on small screens) */}
-        <div className="md:hidden px-4 pb-8">
-          <div className="border-2 border-white/10 bg-bg-surface/90 backdrop-blur-xl p-6 flex flex-col relative overflow-hidden mt-6">
-            <div className="flex items-center gap-2 mb-4 text-gray-400">
-              <Battery className="w-5 h-5 text-primary" />
-              <h3 className="text-xs font-mono font-black uppercase tracking-[0.3em]">Resumen</h3>
-            </div>
-            <div className="text-4xl font-mono font-black text-white mb-4">
-              <AnimatedCounter prefix="$" from={prevSubtotal} to={subtotal} duration={0.6} />
-            </div>
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => setShowModal(true)}
-              className="w-full py-4 bg-primary text-black font-mono font-black text-sm uppercase tracking-[0.2em]"
-            >
-              Iniciar Checkout <ArrowUpRight strokeWidth={3} className="w-4 h-4 inline" />
-            </motion.button>
+            </motion.aside>
           </div>
         </div>
-
       </div>
     </div>
   );

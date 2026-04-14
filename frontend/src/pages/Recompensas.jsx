@@ -14,9 +14,11 @@ import {
 
 function AnimCounter({ to, prefix = '', suffix = '' }) {
   const ref = useRef();
+
   useEffect(() => {
     const node = ref.current;
     if (!node) return;
+
     const ctrl = animate(0, to, {
       duration: 1.8,
       ease: 'easeOut',
@@ -24,13 +26,16 @@ function AnimCounter({ to, prefix = '', suffix = '' }) {
         node.textContent = `${prefix}${Math.round(v).toLocaleString('es-AR')}${suffix}`;
       },
     });
+
     return () => ctrl.stop();
   }, [to, prefix, suffix]);
+
   return <span ref={ref}>0</span>;
 }
 
 export default function Recompensas() {
   const prefersReducedMotion = useMotionPreference();
+
   const [estado, setEstado] = useState(null);
   const [loading, setLoading] = useState(true);
   const [claimingDaily, setClaimingDaily] = useState(false);
@@ -38,17 +43,14 @@ export default function Recompensas() {
   const [logros, setLogros] = useState([]);
   const [logrosLoading, setLogrosLoading] = useState(true);
 
-  // Trivia state
   const [trivia, setTrivia] = useState(null);
   const [triviaLoading, setTriviaLoading] = useState(false);
   const [selectedOption, setSelectedOption] = useState(null);
   const [triviaResult, setTriviaResult] = useState(null);
 
-  // Roulette state
   const [spinning, setSpinning] = useState(false);
   const [rouletteResult, setRouletteResult] = useState(null);
 
-  // Energy timer state
   const [timeLeft, setTimeLeft] = useState(null);
 
   useEffect(() => {
@@ -60,8 +62,10 @@ export default function Recompensas() {
     try {
       const res = await api.get('/recompensas/estado');
       setEstado(res.data);
+      return res.data;
     } catch (err) {
       console.error('Error fetching rewards state:', err);
+      return null;
     } finally {
       setLoading(false);
     }
@@ -78,7 +82,6 @@ export default function Recompensas() {
     }
   };
 
-  // Timer Effect
   useEffect(() => {
     if (estado?.energy >= 5) {
       setTimeLeft(null);
@@ -112,6 +115,7 @@ export default function Recompensas() {
   const reclamarDiario = async () => {
     if (claimingDaily || !estado?.bonusDisponible) return;
     setClaimingDaily(true);
+
     try {
       const res = await api.post('/recompensas/diaria');
       setEstado((prev) => ({
@@ -119,7 +123,7 @@ export default function Recompensas() {
         balance: res.data.nuevoBalance,
         streak: res.data.streak,
         bonusDisponible: false,
-        mensajeBonus: `¡Bono reclamado! Vuelve mañana para continuar.`,
+        mensajeBonus: '¡Bono reclamado! Vuelve mañana para continuar.',
       }));
     } catch (err) {
       alert(err.response?.data?.error || 'Error al reclamar');
@@ -130,14 +134,15 @@ export default function Recompensas() {
 
   const girarRuleta = async () => {
     if (spinning || (estado?.energy || 0) < 2) return;
+
     setSpinning(true);
     setRouletteResult(null);
 
     try {
       const res = await api.post('/recompensas/ruleta/girar');
+      setRouletteResult(res.data);
 
       setTimeout(() => {
-        setRouletteResult(res.data);
         setSpinning(false);
         setEstado((prev) => ({
           ...prev,
@@ -145,7 +150,7 @@ export default function Recompensas() {
           balance: res.data.nuevoBalance,
         }));
         fetchLogros();
-      }, 3000);
+      }, 3200);
     } catch (err) {
       alert(err.response?.data?.error || 'Error en la ruleta');
       setSpinning(false);
@@ -154,13 +159,14 @@ export default function Recompensas() {
 
   const iniciarTrivia = async () => {
     if ((estado?.energy || 0) <= 0) {
-      await fetchEstado();
-      if ((estado?.energy || 0) <= 0) return;
+      const estadoActualizado = await fetchEstado();
+      if ((estadoActualizado?.energy || 0) <= 0) return;
     }
 
     setTriviaLoading(true);
     setTriviaResult(null);
     setSelectedOption(null);
+
     try {
       const res = await api.get('/recompensas/trivia');
       setTrivia(res.data);
@@ -173,9 +179,12 @@ export default function Recompensas() {
 
   const responderTrivia = async (nombre) => {
     if (selectedOption || triviaResult) return;
+
     setSelectedOption(nombre);
+
     try {
       const res = await api.post('/recompensas/trivia/verificar', { respuesta: nombre });
+
       setTriviaResult(res.data);
 
       setEstado((prev) => ({
@@ -198,13 +207,18 @@ export default function Recompensas() {
 
   const reclamarLogro = async (logroId) => {
     setClaimingLogro(true);
+
     try {
       const res = await api.post('/recompensas/logros/reclamar', { logroId });
+
       setEstado((prev) => ({
         ...prev,
         balance: res.data.nuevoBalance,
       }));
-      setLogros((prev) => prev.map((l) => (l.id === logroId ? { ...l, reclamado: true } : l)));
+
+      setLogros((prev) =>
+        prev.map((l) => (l.id === logroId ? { ...l, reclamado: true } : l))
+      );
     } catch (err) {
       alert(err.response?.data?.error || 'Error al reclamar logro');
     } finally {
@@ -250,38 +264,55 @@ export default function Recompensas() {
 
   return (
     <div className="min-h-screen bg-[#020202] text-[#e5e2e1] font-['Space_Grotesk'] selection:bg-[#ddb7ff] selection:text-black flex flex-col">
-      {/* Grid Background */}
+      {/* Background */}
       <div className="fixed inset-0 pointer-events-none z-0 bg-[radial-gradient(circle_at_50%_50%,rgba(168,85,247,0.03),transparent_70%)]" />
 
-      {/* Top Bar - Stats */}
+      {/* Top Bar */}
       <motion.nav
         className="sticky top-0 w-full z-40 bg-[#141313] bg-gradient-to-b from-[#1c1b1b] to-transparent shadow-[0_0_15px_rgba(221,183,255,0.05)]"
         initial={{ y: -100 }}
         animate={{ y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <div className="flex justify-between items-center px-6 md:px-12 h-24 max-w-[1600px] mx-auto">
+        <div
+          className="flex justify-between items-center max-w-[1500px] mx-auto"
+          style={{
+            paddingLeft: '32px',
+            paddingRight: '32px',
+            minHeight: '96px',
+            gap: '24px',
+          }}
+        >
           <motion.div
             className="text-2xl font-black text-[#ffe083] tracking-widest uppercase"
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
+            style={{ paddingTop: '4px', paddingBottom: '4px' }}
           >
             Pokémon TCG
           </motion.div>
 
           <motion.div
-            className="hidden md:flex gap-6 items-center"
+            className="hidden md:flex items-center"
+            style={{ gap: '18px' }}
             variants={mainVariants}
             initial="hidden"
             animate="visible"
           >
-            {/* Balance Card */}
-            <motion.div variants={statsCardVariants} className="vault-panel px-6 py-3 rounded-lg border-l-2 border-[#ffe083]">
+            <motion.div
+              variants={statsCardVariants}
+              className="vault-panel rounded-lg border-l-2 border-[#ffe083]"
+              style={{ padding: '14px 20px' }}
+            >
               <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-[#ffe083] text-sm">account_balance_wallet</span>
+                <span className="material-symbols-outlined text-[#ffe083] text-sm">
+                  account_balance_wallet
+                </span>
                 <div className="text-right">
-                  <p className="text-[10px] text-[#cfc2d6] font-black uppercase tracking-widest">Balance</p>
+                  <p className="text-[10px] text-[#cfc2d6] font-black uppercase tracking-widest">
+                    Balance
+                  </p>
                   <p className="text-white font-black tabular-nums">
                     <AnimCounter to={estado?.balance || 0} />
                   </p>
@@ -289,16 +320,25 @@ export default function Recompensas() {
               </div>
             </motion.div>
 
-            {/* Energy Card */}
-            <motion.div variants={statsCardVariants} className="vault-panel px-6 py-3 rounded-lg border-l-2 border-[#ddb7ff]">
+            <motion.div
+              variants={statsCardVariants}
+              className="vault-panel rounded-lg border-l-2 border-[#ddb7ff]"
+              style={{ padding: '14px 20px' }}
+            >
               <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-[#ddb7ff] text-sm animate-pulse">bolt</span>
+                <span className="material-symbols-outlined text-[#ddb7ff] text-sm animate-pulse">
+                  bolt
+                </span>
                 <div className="text-right">
                   <div className="flex items-center justify-end gap-2">
                     {estado?.energy < 5 && (
-                      <span className="text-[9px] text-[#ddb7ff]/60 font-mono">{formatTime(timeLeft)}</span>
+                      <span className="text-[9px] text-[#ddb7ff]/60 font-mono">
+                        {formatTime(timeLeft)}
+                      </span>
                     )}
-                    <p className="text-[10px] text-[#cfc2d6] font-black uppercase tracking-widest">Energía</p>
+                    <p className="text-[10px] text-[#cfc2d6] font-black uppercase tracking-widest">
+                      Energía
+                    </p>
                   </div>
                   <p className="text-white font-black tabular-nums">
                     <AnimCounter to={estado?.energy || 0} suffix={'/5'} />
@@ -307,14 +347,22 @@ export default function Recompensas() {
               </div>
             </motion.div>
 
-            {/* Streak Card */}
-            <motion.div variants={statsCardVariants} className="vault-panel px-6 py-3 rounded-lg border-l-2 border-[#a78bfa]">
+            <motion.div
+              variants={statsCardVariants}
+              className="vault-panel rounded-lg border-l-2 border-[#a78bfa]"
+              style={{ padding: '14px 20px' }}
+            >
               <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-[#a78bfa] text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>
+                <span
+                  className="material-symbols-outlined text-[#a78bfa] text-sm"
+                  style={{ fontVariationSettings: "'FILL' 1" }}
+                >
                   local_fire_department
                 </span>
                 <div className="text-right">
-                  <p className="text-[10px] text-[#cfc2d6] font-black uppercase tracking-widest">Racha</p>
+                  <p className="text-[10px] text-[#cfc2d6] font-black uppercase tracking-widest">
+                    Racha
+                  </p>
                   <p className="text-white font-black tabular-nums">
                     <AnimCounter to={estado?.streak || 0} suffix={' días'} />
                   </p>
@@ -325,50 +373,79 @@ export default function Recompensas() {
         </div>
       </motion.nav>
 
-      {/* Main Content */}
+      {/* Main */}
       <motion.main
-        className="flex-1 pt-16 pb-28 px-6 md:px-12 relative z-10 max-w-[1600px] mx-auto w-full"
+        className="flex-1 relative z-10 w-full max-w-[1500px] mx-auto"
+        style={{
+          paddingLeft: '32px',
+          paddingRight: '32px',
+          paddingTop: '44px',
+          paddingBottom: '120px',
+        }}
         variants={mainVariants}
         initial="hidden"
         animate="visible"
       >
-        {/* 1. Hero Banner */}
-        <motion.div className="mb-24" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1 }}>
+        {/* Hero */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.1 }}
+          style={{ marginBottom: '56px' }}
+        >
           <HeroBanner estado={estado} onClaim={reclamarDiario} claiming={claimingDaily} />
         </motion.div>
 
-        {/* Section Divider */}
+        {/* Divider */}
         <motion.div
-          className="h-px bg-gradient-to-r from-transparent via-[#7c3aed]/20 to-transparent mb-24"
+          className="h-px bg-gradient-to-r from-transparent via-[#7c3aed]/20 to-transparent"
+          style={{ marginBottom: '52px' }}
           initial={{ scaleX: 0 }}
           animate={{ scaleX: 1 }}
           transition={{ delay: 0.2, duration: 0.8 }}
         />
 
-        {/* 2. Battle Pass */}
-        <motion.div className="mb-24" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}>
+        {/* Battle Pass */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.2 }}
+          style={{ marginBottom: '56px' }}
+        >
           <BattlePass />
         </motion.div>
 
-        {/* Section Divider */}
+        {/* Divider */}
         <motion.div
-          className="h-px bg-gradient-to-r from-transparent via-[#7c3aed]/20 to-transparent mb-24"
+          className="h-px bg-gradient-to-r from-transparent via-[#7c3aed]/20 to-transparent"
+          style={{ marginBottom: '52px' }}
           initial={{ scaleX: 0 }}
           animate={{ scaleX: 1 }}
           transition={{ delay: 0.3, duration: 0.8 }}
         />
 
-        {/* 3. Games Grid (2 col) */}
+        {/* Games */}
         <motion.div
-          className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-24"
+          className="grid grid-cols-1 lg:grid-cols-3"
+          style={{
+            gap: '24px',
+            marginBottom: '56px',
+            alignItems: 'start',
+          }}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3 }}
         >
-          <div className="lg:col-span-2">
-            <RouletteWheel estado={estado} onSpin={girarRuleta} spinning={spinning} result={rouletteResult} />
+          <div className="lg:col-span-2" style={{ minWidth: 0 }}>
+            <RouletteWheel
+              estado={estado}
+              onSpin={girarRuleta}
+              spinning={spinning}
+              result={rouletteResult}
+            />
           </div>
-          <div className="lg:col-span-1">
+
+          <div className="lg:col-span-1" style={{ minWidth: 0 }}>
             <TriviaGame
               estado={estado}
               trivia={trivia}
@@ -381,45 +458,80 @@ export default function Recompensas() {
           </div>
         </motion.div>
 
-        {/* Section Divider */}
+        {/* Divider */}
         <motion.div
-          className="h-px bg-gradient-to-r from-transparent via-[#7c3aed]/20 to-transparent mb-24"
+          className="h-px bg-gradient-to-r from-transparent via-[#7c3aed]/20 to-transparent"
+          style={{ marginBottom: '52px' }}
           initial={{ scaleX: 0 }}
           animate={{ scaleX: 1 }}
           transition={{ delay: 0.4, duration: 0.8 }}
         />
 
-        {/* 4. Missions */}
-        <motion.div className="mb-24" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }}>
+        {/* Missions */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.4 }}
+          style={{ marginBottom: '56px' }}
+        >
           <Missions />
         </motion.div>
 
-        {/* Section Divider */}
+        {/* Divider */}
         <motion.div
-          className="h-px bg-gradient-to-r from-transparent via-[#7c3aed]/20 to-transparent mb-24"
+          className="h-px bg-gradient-to-r from-transparent via-[#7c3aed]/20 to-transparent"
+          style={{ marginBottom: '52px' }}
           initial={{ scaleX: 0 }}
           animate={{ scaleX: 1 }}
           transition={{ delay: 0.5, duration: 0.8 }}
         />
 
-        {/* 5. Achievements */}
-        <motion.section className="mb-24" initial={{ opacity: 0, filter: 'blur(10px)' }} animate={{ opacity: 1, filter: 'blur(0px)' }} transition={{ duration: 0.6, delay: 0.5 }}>
-          <div className="mb-10 relative">
-            <div className="absolute -left-8 top-0 text-[60px] font-black text-[#ddb7ff]/5 select-none leading-none">
+        {/* Achievements */}
+        <motion.section
+          initial={{ opacity: 0, filter: 'blur(10px)' }}
+          animate={{ opacity: 1, filter: 'blur(0px)' }}
+          transition={{ duration: 0.6, delay: 0.5 }}
+          style={{ marginBottom: '64px' }}
+        >
+          <div
+            className="relative"
+            style={{
+              marginBottom: '28px',
+              paddingLeft: '2px',
+            }}
+          >
+            <div
+              className="absolute -left-8 top-0 text-[60px] font-black text-[#ddb7ff]/5 select-none leading-none"
+            >
               🎯
             </div>
-            <h2 className="text-3xl font-black text-white tracking-tighter uppercase">Mis Logros</h2>
+
+            <h2 className="text-3xl font-black text-white tracking-tighter uppercase">
+              Mis Logros
+            </h2>
           </div>
 
           {logrosLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div
+              className="grid grid-cols-1 md:grid-cols-3"
+              style={{ gap: '20px' }}
+            >
               {[1, 2, 3].map((i) => (
-                <motion.div key={i} className="h-48 bg-white/5 border border-white/5 rounded-lg animate-pulse" initial={{ opacity: 0 }} animate={{ opacity: 1 }} />
+                <motion.div
+                  key={i}
+                  className="h-48 bg-white/5 border border-white/5 rounded-lg animate-pulse"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                />
               ))}
             </div>
           ) : (
             <motion.div
-              className="grid grid-cols-1 md:grid-cols-3 gap-6"
+              className="grid grid-cols-1 md:grid-cols-3"
+              style={{
+                gap: '20px',
+                alignItems: 'start',
+              }}
               variants={mainVariants}
               initial="hidden"
               animate="visible"
@@ -437,30 +549,33 @@ export default function Recompensas() {
           )}
         </motion.section>
 
-        {/* Section Divider */}
+        {/* Divider */}
         <motion.div
-          className="h-px bg-gradient-to-r from-transparent via-[#7c3aed]/20 to-transparent my-24"
+          className="h-px bg-gradient-to-r from-transparent via-[#7c3aed]/20 to-transparent"
+          style={{
+            marginTop: '20px',
+            marginBottom: '52px',
+          }}
           initial={{ scaleX: 0 }}
           animate={{ scaleX: 1 }}
           transition={{ delay: 0.6, duration: 0.8 }}
         />
 
-        {/* 6. Leaderboard */}
-        <motion.div className="mb-24" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }}>
+        {/* Leaderboard */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.6 }}
+          style={{ marginBottom: '40px' }}
+        >
           <Leaderboard />
         </motion.div>
-
-        {/* Footer */}
-        <motion.footer className="text-center py-16 border-t border-[#1c1b1b] opacity-40 mt-20" initial={{ opacity: 0 }} animate={{ opacity: 0.4 }} transition={{ duration: 0.8, delay: 0.7 }}>
-          <p className="text-[#e5e2e1]/20 font-black tracking-widest uppercase text-[9px] mb-4">
-            Rewards System v3.0 — Premium Edition
-          </p>
-        </motion.footer>
       </motion.main>
 
       {/* Mobile Bottom Nav */}
       <motion.nav
-        className="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center h-20 bg-[#141313]/90 backdrop-blur-xl border-t border-[#353434] lg:hidden px-4 shadow-[0_-10px_30px_rgba(221,183,255,0.1)]"
+        className="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center bg-[#141313]/90 backdrop-blur-xl border-t border-[#353434] lg:hidden px-4 shadow-[0_-10px_30px_rgba(221,183,255,0.1)]"
+        style={{ minHeight: '80px' }}
         initial={{ y: 100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.6, delay: 0.3 }}
@@ -481,6 +596,7 @@ export default function Recompensas() {
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.4 + idx * 0.1 }}
+            style={{ minWidth: '72px' }}
           >
             <motion.span
               className="material-symbols-outlined text-lg"
@@ -490,6 +606,7 @@ export default function Recompensas() {
             >
               {item.icon}
             </motion.span>
+
             <span className="mt-1 text-[10px]">{item.label}</span>
           </motion.a>
         ))}

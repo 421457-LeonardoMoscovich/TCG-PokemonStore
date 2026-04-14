@@ -21,7 +21,7 @@ export function CartProvider({ children }) {
       const { data } = await api.get('/compras/carrito');
       setCartCount(data?.total_items || 0);
       setCart(data?.carrito || []);
-    } catch (err) {
+    } catch {
       // If it's a 401, we just clear the cart silently
       setCartCount(0);
       setCart([]);

@@ -18,44 +18,70 @@ const getRankMedal = (rank) => {
 };
 
 export default function Leaderboard() {
-  const [activeTab, setActiveTab] = useState('global');
-  const data = LEADERBOARD_DATA[activeTab.toLowerCase()];
+  const [activeTab, setActiveTab] = useState('Global');
+  const data = LEADERBOARD_DATA[activeTab.toLowerCase()] || [];
 
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
-      transition: { staggerChildren: 0.05, delayChildren: 0.2 },
+      transition: { staggerChildren: 0.045, delayChildren: 0.12 },
     },
   };
 
   const rowVariants = {
-    hidden: { opacity: 0, x: -20 },
-    visible: { opacity: 1, x: 0, transition: { duration: 0.4 } },
-    exit: { opacity: 0, x: 20, transition: { duration: 0.2 } },
+    hidden: { opacity: 0, x: -18 },
+    visible: { opacity: 1, x: 0, transition: { duration: 0.35 } },
+    exit: { opacity: 0, x: 18, transition: { duration: 0.18 } },
   };
 
   return (
-    <motion.section className="mb-12" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.6, delay: 0.4 }}>
-      <div className="mb-12">
-        <h2 className="text-2xl font-black text-white mb-6">Tabla de clasificación</h2>
+    <motion.section
+      className="w-full"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.55, delay: 0.35 }}
+    >
+      <div
+        style={{
+          marginBottom: '22px',
+          paddingLeft: '2px',
+        }}
+      >
+        <h2
+          className="text-2xl md:text-3xl font-black text-white"
+          style={{ marginBottom: '12px' }}
+        >
+          Tabla de clasificación
+        </h2>
 
-        {/* Tabs */}
-        <div className="flex gap-2 border-b border-[#7c3aed]/20">
+        <div
+          className="flex items-center border-b border-[#7c3aed]/20"
+          style={{
+            gap: '6px',
+            paddingBottom: '2px',
+          }}
+        >
           {TABS.map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`px-4 py-3 font-black text-sm uppercase tracking-widest transition-all relative ${
-                activeTab === tab ? 'text-[#e8b800]' : 'text-[#999] hover:text-[#cfc2d6]'
+              className={`relative font-black text-xs md:text-sm uppercase tracking-[0.14em] transition-all rounded-t-md ${
+                activeTab === tab
+                  ? 'text-[#e8b800]'
+                  : 'text-[#999] hover:text-[#cfc2d6]'
               }`}
+              style={{
+                padding: '12px 14px',
+              }}
             >
               {tab}
+
               {activeTab === tab && (
                 <motion.div
                   className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#e8b800]"
                   layoutId="activeTab"
-                  transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                  transition={{ type: 'spring', stiffness: 280, damping: 28 }}
                 />
               )}
             </button>
@@ -63,53 +89,80 @@ export default function Leaderboard() {
         </div>
       </div>
 
-      {/* Leaderboard Rows */}
-      <div className="space-y-4">
+      <div
+        className="flex flex-col"
+        style={{ gap: '12px' }}
+      >
         <AnimatePresence mode="wait">
           <motion.div
             key={activeTab}
             variants={containerVariants}
             initial="hidden"
             animate="visible"
-            exit="exit"
+            exit="hidden"
+            className="flex flex-col"
+            style={{ gap: '12px' }}
           >
             {data.map((player, idx) => (
               <motion.div
                 key={`${activeTab}-${idx}`}
-                className={`flex items-center gap-4 px-5 py-4 rounded-lg border transition-all ${
+                variants={rowVariants}
+                className={`border rounded-xl transition-all ${
                   player.isCurrent
                     ? 'border-[#7c3aed] bg-[#7c3aed]/10'
                     : 'border-[#7c3aed]/10 bg-[#1c1b1b]/70 backdrop-blur-[20px] hover:bg-[#1c1b1b]/90'
                 }`}
-                variants={rowVariants}
+                style={{
+                  padding: '16px 18px',
+                }}
               >
-                {/* Rank */}
-                <div className="w-10 text-center">
-                  <span className="text-lg font-black">
-                    {typeof getRankMedal(player.rank) === 'string' && getRankMedal(player.rank).length === 1
-                      ? getRankMedal(player.rank)
-                      : getRankMedal(player.rank).startsWith('#')
-                        ? getRankMedal(player.rank)
-                        : getRankMedal(player.rank)}
-                  </span>
-                </div>
-
-                {/* Avatar */}
                 <div
-                  className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-black text-sm bg-gradient-to-br ${player.color}`}
+                  className="flex items-center"
+                  style={{ gap: '14px' }}
                 >
-                  {player.avatar}
-                </div>
+                  <div
+                    className="text-center shrink-0"
+                    style={{ width: '52px' }}
+                  >
+                    <span className="text-lg md:text-xl font-black text-white">
+                      {getRankMedal(player.rank)}
+                    </span>
+                  </div>
 
-                {/* Name */}
-                <div className="flex-1">
-                  <p className={`font-black text-sm ${player.isCurrent ? 'text-[#e8b800]' : 'text-white'}`}>{player.name}</p>
-                </div>
+                  <div
+                    className={`rounded-full flex items-center justify-center text-white font-black text-sm shrink-0 bg-gradient-to-br ${player.color}`}
+                    style={{
+                      width: '44px',
+                      height: '44px',
+                    }}
+                  >
+                    {player.avatar}
+                  </div>
 
-                {/* XP */}
-                <div className="text-right">
-                  <p className="font-black text-white">{player.xp.toLocaleString()}</p>
-                  <p className="text-[10px] text-[#999] uppercase tracking-widest">XP</p>
+                  <div className="flex-1 min-w-0">
+                    <p
+                      className={`font-black text-sm md:text-base truncate ${
+                        player.isCurrent ? 'text-[#e8b800]' : 'text-white'
+                      }`}
+                    >
+                      {player.name}
+                    </p>
+                  </div>
+
+                  <div
+                    className="text-right shrink-0"
+                    style={{ minWidth: '92px' }}
+                  >
+                    <p className="font-black text-white text-lg leading-none">
+                      {player.xp.toLocaleString()}
+                    </p>
+                    <p
+                      className="text-[10px] text-[#999] uppercase tracking-[0.16em]"
+                      style={{ marginTop: '6px' }}
+                    >
+                      XP
+                    </p>
+                  </div>
                 </div>
               </motion.div>
             ))}

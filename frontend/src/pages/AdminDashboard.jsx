@@ -1,47 +1,111 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { Link } from 'react-router-dom';
 import { motion, animate } from 'framer-motion';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, CartesianGrid
 } from 'recharts';
 import {
-  LayoutDashboard, Users, ShoppingCart, 
+  Users, ShoppingCart,
   TrendingUp, Activity, Database,
   Layers, Hexagon, Shield
 } from 'lucide-react';
 import api from '../services/api';
 
-/* ── Color Palette (matches TYPE_STYLES) ── */
-const CHART_COLORS = ['#A855F7', '#1E88E5', '#43A047', '#FFEB3B', '#F57C00', '#607D8B', '#90A4AE', '#9E9E9E', '#00ACC1', '#C0CA33', '#8D6E63', '#EC4899'];
+/* ── Color Palette ── */
+const CHART_COLORS = [
+  '#A855F7', '#1E88E5', '#43A047', '#FFEB3B',
+  '#F57C00', '#607D8B', '#90A4AE', '#9E9E9E',
+  '#00ACC1', '#C0CA33', '#8D6E63', '#EC4899'
+];
 
 /* ── Animated Counter ── */
 function AnimCounter({ to, prefix = '', suffix = '' }) {
   const ref = useRef();
+
   useEffect(() => {
     const node = ref.current;
     if (!node) return;
+
     const ctrl = animate(0, to, {
-      duration: 1.5, ease: 'easeOut',
-      onUpdate(v) { node.textContent = `${prefix}${Math.round(v).toLocaleString('es-AR')}${suffix}`; },
+      duration: 1.5,
+      ease: 'easeOut',
+      onUpdate(v) {
+        node.textContent = `${prefix}${Math.round(v).toLocaleString('es-AR')}${suffix}`;
+      },
     });
+
     return () => ctrl.stop();
   }, [to, prefix, suffix]);
+
   return <span ref={ref} />;
 }
 
-/* ── Custom HUD Tooltip ── */
+/* ── Custom Tooltip ── */
 function CustomTooltip({ active, payload, label }) {
   if (!active || !payload?.length) return null;
+
+  const title = label || payload[0]?.payload?.name || payload[0]?.name || 'Detalle';
+
   return (
-    <div className="bg-[#121214]/90 px-4 py-3 shadow-[0_10px_40px_rgba(0,0,0,0.5)] border border-white/[0.08] backdrop-blur-3xl min-w-[140px] rounded-xl">
-      <div className="flex items-center gap-2 mb-2 pb-1">
-        <p className="text-xs text-gray-400 font-semibold">{label}</p>
+    <div
+      className="backdrop-blur-3xl"
+      style={{
+        background: 'rgba(12, 14, 20, 0.92)',
+        padding: '14px 16px',
+        minWidth: '160px',
+        borderRadius: '16px',
+        border: '1px solid rgba(255,255,255,0.09)',
+        boxShadow: '0 18px 48px rgba(0,0,0,0.55), 0 0 20px rgba(168,85,247,0.10)',
+        position: 'relative',
+        zIndex: 50,
+      }}
+    >
+      <div
+        className="flex items-center gap-2"
+        style={{
+          marginBottom: '10px',
+          paddingBottom: '8px',
+          borderBottom: '1px solid rgba(255,255,255,0.06)',
+        }}
+      >
+        <p
+          style={{
+            fontSize: '12px',
+            color: 'rgba(255,255,255,0.55)',
+            fontWeight: 700,
+            margin: 0,
+          }}
+        >
+          {title}
+        </p>
       </div>
+
       {payload.map((p, i) => (
-        <div key={i} className="flex justify-between items-center gap-4">
-          <span className="text-[11px] text-gray-500 font-medium capitalize">{p.name}:</span>
-          <span className="text-sm font-bold font-mono tracking-tight" style={{ color: p.color || '#fff' }}>
+        <div
+          key={i}
+          className="flex justify-between items-center"
+          style={{ gap: '18px', marginTop: i === 0 ? 0 : '6px' }}
+        >
+          <span
+            style={{
+              fontSize: '11px',
+              color: 'rgba(255,255,255,0.45)',
+              fontWeight: 600,
+              textTransform: 'capitalize',
+            }}
+          >
+            {p.name === 'value' ? 'Cantidad' : p.name}:
+          </span>
+
+          <span
+            style={{
+              fontSize: '14px',
+              fontWeight: 800,
+              fontFamily: 'monospace',
+              letterSpacing: '-0.02em',
+              color: p.color || '#fff',
+            }}
+          >
             {typeof p.value === 'number' ? p.value.toLocaleString('es-AR') : p.value}
           </span>
         </div>
@@ -50,66 +114,224 @@ function CustomTooltip({ active, payload, label }) {
   );
 }
 
-/* ── Glass-Tech KPI Card ── */
-function KPICard({ icon: Icon, label, value, prefix = '', suffix = '', delay = 0, trend = '+0.0%', variant = 'purple' }) {
+/* ── Gaming KPI Card ── */
+function KPICard({
+  icon: Icon,
+  label,
+  value,
+  prefix = '',
+  suffix = '',
+  delay = 0,
+  trend = '+0.0%',
+  variant = 'purple',
+}) {
   const isBlue = variant === 'blue';
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay, duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-      className={isBlue ? 'admin-kpi-blue group' : 'admin-kpi group'}
+      className="group relative overflow-hidden"
+      style={{
+        borderRadius: '24px',
+        padding: '24px 24px 22px 24px',
+        minHeight: '188px',
+        background: isBlue
+          ? 'linear-gradient(180deg, rgba(10,22,40,0.94) 0%, rgba(8,12,20,0.98) 100%)'
+          : 'linear-gradient(180deg, rgba(24,12,40,0.94) 0%, rgba(10,10,18,0.98) 100%)',
+        border: isBlue
+          ? '1px solid rgba(30,136,229,0.26)'
+          : '1px solid rgba(168,85,247,0.26)',
+        boxShadow: isBlue
+          ? '0 12px 36px rgba(0,0,0,0.38), inset 0 1px 0 rgba(255,255,255,0.04), 0 0 26px rgba(30,136,229,0.10)'
+          : '0 12px 36px rgba(0,0,0,0.38), inset 0 1px 0 rgba(255,255,255,0.04), 0 0 26px rgba(168,85,247,0.10)',
+      }}
     >
-      <div className="flex justify-between items-start mb-5">
-        <div className={`p-3 rounded-xl ${isBlue
-          ? 'bg-blue-500/10 border border-blue-500/20'
-          : 'bg-purple-500/10 border border-purple-500/20'}`}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background: isBlue
+            ? 'radial-gradient(circle at top right, rgba(30,136,229,0.12), transparent 35%)'
+            : 'radial-gradient(circle at top right, rgba(168,85,247,0.14), transparent 35%)',
+        }}
+      />
+
+      <div
+        className="absolute top-0 left-0 right-0 pointer-events-none"
+        style={{
+          height: '1px',
+          background: isBlue
+            ? 'linear-gradient(90deg, transparent, rgba(30,136,229,0.55), transparent)'
+            : 'linear-gradient(90deg, transparent, rgba(168,85,247,0.55), transparent)',
+        }}
+      />
+
+      <div className="relative z-10">
+        <div
+          className="flex justify-between items-start"
+          style={{ marginBottom: '22px' }}
         >
-          <Icon className={`w-5 h-5 ${isBlue ? 'text-blue-400' : 'text-purple-400'}`} />
+          <div
+            className="flex items-center justify-center"
+            style={{
+              width: '48px',
+              height: '48px',
+              borderRadius: '16px',
+              background: isBlue
+                ? 'linear-gradient(135deg, rgba(30,136,229,0.18), rgba(30,136,229,0.06))'
+                : 'linear-gradient(135deg, rgba(168,85,247,0.18), rgba(168,85,247,0.06))',
+              border: isBlue
+                ? '1px solid rgba(30,136,229,0.20)'
+                : '1px solid rgba(168,85,247,0.20)',
+              boxShadow: isBlue
+                ? '0 0 18px rgba(30,136,229,0.14)'
+                : '0 0 18px rgba(168,85,247,0.14)',
+            }}
+          >
+            <Icon
+              style={{
+                width: '22px',
+                height: '22px',
+                color: isBlue ? '#4EA7FF' : '#C084FC',
+              }}
+            />
+          </div>
+
+          <span
+            className="flex items-center gap-1"
+            style={{
+              fontSize: '11px',
+              fontWeight: 800,
+              letterSpacing: '0.06em',
+              color: '#34D399',
+              background: 'rgba(16,185,129,0.10)',
+              padding: '6px 10px',
+              borderRadius: '999px',
+              border: '1px solid rgba(16,185,129,0.18)',
+              boxShadow: '0 0 14px rgba(16,185,129,0.10)',
+            }}
+          >
+            <TrendingUp style={{ width: '12px', height: '12px' }} />
+            {trend}
+          </span>
         </div>
-        <span className="flex items-center gap-1 text-emerald-400 text-[10px] font-bold tracking-widest bg-emerald-500/10 px-2.5 py-1 rounded-lg border border-emerald-500/20">
-          <TrendingUp className="w-2.5 h-2.5" /> {trend}
-        </span>
+
+        <p
+          style={{
+            fontSize: '12px',
+            fontWeight: 800,
+            textTransform: 'uppercase',
+            letterSpacing: '0.16em',
+            marginBottom: '12px',
+            color: 'rgba(255,255,255,0.34)',
+          }}
+        >
+          {label}
+        </p>
+
+        <h3
+          style={{
+            fontSize: 'clamp(3rem, 3.8vw, 4rem)',
+            fontWeight: 900,
+            lineHeight: 1,
+            color: '#fff',
+            fontFamily: 'monospace',
+            letterSpacing: '-0.05em',
+            textShadow: isBlue
+              ? '0 0 16px rgba(30,136,229,0.10)'
+              : '0 0 16px rgba(168,85,247,0.10)',
+          }}
+        >
+          <AnimCounter to={value || 0} prefix={prefix} suffix={suffix} />
+        </h3>
       </div>
-      <p className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: 'rgba(255,255,255,0.35)' }}>{label}</p>
-      <h3 className="text-5xl font-black text-white font-mono tracking-tight leading-none">
-        <AnimCounter to={value || 0} prefix={prefix} suffix={suffix} />
-      </h3>
     </motion.div>
   );
 }
 
-/* ── HUD Section ── */
+/* ── Gaming Section ── */
 function HUDSection({ title, subtitle, children, className = '', delay = 0 }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay, duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-      className={`admin-section flex flex-col ${className}`}
+      className={`relative overflow-hidden flex flex-col ${className}`}
+      style={{
+        borderRadius: '28px',
+        padding: '26px 26px 24px 26px',
+        background: 'linear-gradient(180deg, rgba(10,12,20,0.96) 0%, rgba(7,8,14,0.98) 100%)',
+        border: '1px solid rgba(255,255,255,0.07)',
+        boxShadow: '0 16px 40px rgba(0,0,0,0.36), inset 0 1px 0 rgba(255,255,255,0.03)',
+        minHeight: '100%',
+      }}
     >
-      <div className="mb-7 shrink-0 flex justify-between items-start">
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background:
+            'radial-gradient(circle at top right, rgba(168,85,247,0.05), transparent 28%), radial-gradient(circle at left bottom, rgba(30,136,229,0.04), transparent 30%)',
+        }}
+      />
+
+      <div
+        className="absolute top-0 left-0 right-0 pointer-events-none"
+        style={{
+          height: '1px',
+          background: 'linear-gradient(90deg, transparent, rgba(168,85,247,0.25), transparent)',
+        }}
+      />
+
+      <div
+        className="relative z-10 shrink-0 flex justify-between items-start"
+        style={{
+          marginBottom: '24px',
+          paddingBottom: '16px',
+          borderBottom: '1px solid rgba(255,255,255,0.05)',
+        }}
+      >
         <div>
-          <h3 className="text-lg font-black text-white tracking-tight">{title}</h3>
-          {subtitle && <p className="text-xs mt-1.5 font-medium" style={{ color: 'rgba(255,255,255,0.35)' }}>{subtitle}</p>}
+          <h3
+            style={{
+              fontSize: '20px',
+              fontWeight: 900,
+              color: '#fff',
+              letterSpacing: '-0.03em',
+              margin: 0,
+            }}
+          >
+            {title}
+          </h3>
+
+          {subtitle && (
+            <p
+              style={{
+                fontSize: '13px',
+                marginTop: '8px',
+                fontWeight: 600,
+                color: 'rgba(255,255,255,0.34)',
+                marginBottom: 0,
+              }}
+            >
+              {subtitle}
+            </p>
+          )}
         </div>
       </div>
-      <div className="flex-1 flex flex-col min-h-0 relative">
+
+      <div className="relative z-10 flex-1 flex flex-col min-h-0">
         {children}
       </div>
     </motion.div>
   );
 }
 
-/* ═══════════════════════════════════════════
-    MAIN COMPONENT
-/* ═══════════════════════════════════════════ */
-
 export default function AdminDashboard() {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
-  
   const [hiddenTypes, setHiddenTypes] = useState(new Set());
+
   const toggleHidden = (set, setter, item) => {
     const next = new Set(set);
     if (next.has(item)) next.delete(item);
@@ -117,7 +339,10 @@ export default function AdminDashboard() {
     setter(next);
   };
 
-  const filteredTypes = useMemo(() => stats?.cartasPorTipo?.filter(t => !hiddenTypes.has(t.name)) || [], [stats, hiddenTypes]);
+  const filteredTypes = useMemo(
+    () => stats?.cartasPorTipo?.filter((t) => !hiddenTypes.has(t.name)) || [],
+    [stats, hiddenTypes]
+  );
 
   useEffect(() => {
     async function load() {
@@ -133,65 +358,170 @@ export default function AdminDashboard() {
     load();
   }, []);
 
-  if (loading) return (
-    <div className="h-full flex flex-col items-center justify-center gap-6">
-      <div className="w-12 h-12 relative animate-spin">
-          <Hexagon className="w-full h-full text-primary" />
+  if (loading) {
+    return (
+      <div
+        className="h-full flex flex-col items-center justify-center"
+        style={{ gap: '22px', minHeight: '60vh' }}
+      >
+        <div
+          className="relative animate-spin"
+          style={{
+            width: '52px',
+            height: '52px',
+            color: '#A855F7',
+            filter: 'drop-shadow(0 0 12px rgba(168,85,247,0.35))',
+          }}
+        >
+          <Hexagon className="w-full h-full" />
+        </div>
+        <p
+          className="uppercase animate-pulse"
+          style={{
+            fontSize: '12px',
+            fontWeight: 800,
+            letterSpacing: '0.18em',
+            color: 'rgba(255,255,255,0.40)',
+          }}
+        >
+          Initializing Data...
+        </p>
       </div>
-      <p className="text-xs font-semibold text-gray-500 uppercase tracking-widest animate-pulse">Initializing Data...</p>
-    </div>
-  );
+    );
+  }
 
-  if (!stats) return <div className="text-red-500 min-h-full flex items-center justify-center font-semibold text-xl">Critical: Dashboard Initialization Failed</div>;
+  if (!stats) {
+    return (
+      <div
+        className="min-h-full flex items-center justify-center"
+        style={{
+          color: '#ef4444',
+          fontWeight: 700,
+          fontSize: '22px',
+        }}
+      >
+        Critical: Dashboard Initialization Failed
+      </div>
+    );
+  }
 
   const { kpis, cartasPorTipo, revenueByType, discountSuggestions, comprasRecientes } = stats;
 
   return (
-    <div className="w-full text-white" style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem', paddingBottom: '4rem' }}>
-
+    <div
+      className="w-full text-white"
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '30px',
+        paddingTop: '4px',
+        paddingBottom: '54px',
+      }}
+    >
       {/* KPI Matrix */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4" style={{ gap: '1.25rem' }}>
-        <KPICard icon={Database} label="Total Vault Value" value={kpis.valorTotal} prefix="$" delay={0.05} trend="+12.5%" />
-        <KPICard icon={Layers} label="Total Cards" value={kpis.totalCartas} delay={0.1} trend="+4.1%" variant="blue" />
-        <KPICard icon={Users} label="Active Users" value={kpis.totalUsuarios} delay={0.15} trend="+8.2%" />
-        <KPICard icon={ShoppingCart} label="Net Orders" value={kpis.totalCompras} delay={0.2} trend="+2.4%" variant="blue" />
+      <div
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4"
+        style={{
+          gap: '18px',
+          marginBottom: '4px',
+        }}
+      >
+        <KPICard
+          icon={Database}
+          label="Total Vault Value"
+          value={kpis.valorTotal}
+          prefix="$"
+          delay={0.05}
+          trend="+12.5%"
+        />
+        <KPICard
+          icon={Layers}
+          label="Total Cards"
+          value={kpis.totalCartas}
+          delay={0.1}
+          trend="+4.1%"
+          variant="blue"
+        />
+        <KPICard
+          icon={Users}
+          label="Active Users"
+          value={kpis.totalUsuarios}
+          delay={0.15}
+          trend="+8.2%"
+        />
+        <KPICard
+          icon={ShoppingCart}
+          label="Net Orders"
+          value={kpis.totalCompras}
+          delay={0.2}
+          trend="+2.4%"
+          variant="blue"
+        />
       </div>
 
       {/* Primary Analytics Matrix */}
-      <div className="grid grid-cols-1 lg:grid-cols-3" style={{ gap: '1.25rem' }}>
-        
-        {/* Sales by Type — Tactical Bar Chart */}
-        <HUDSection title="Revenue Analytics" subtitle="Transaction volume across card types" className="lg:col-span-2" delay={0.2}>
-          <div className="w-full h-72">
+      <div
+        className="grid grid-cols-1 lg:grid-cols-3"
+        style={{
+          gap: '22px',
+          alignItems: 'stretch',
+        }}
+      >
+        <HUDSection
+          title="Revenue Analytics"
+          subtitle="Transaction volume across card types"
+          className="lg:col-span-2"
+          delay={0.2}
+        >
+          <div
+            className="w-full"
+            style={{
+              height: '360px',
+              paddingTop: '4px',
+              paddingBottom: '2px',
+            }}
+          >
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={revenueByType} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+              <BarChart data={revenueByType} margin={{ top: 12, right: 12, left: -16, bottom: 4 }}>
                 <defs>
                   <linearGradient id="barGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#A855F7" stopOpacity={0.9} />
-                    <stop offset="100%" stopColor="#A855F7" stopOpacity={0.4} />
+                    <stop offset="0%" stopColor="#A855F7" stopOpacity={0.95} />
+                    <stop offset="100%" stopColor="#1E88E5" stopOpacity={0.45} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
+
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  vertical={false}
+                  stroke="rgba(255,255,255,0.05)"
+                />
+
                 <XAxis
                   dataKey="name"
                   axisLine={false}
                   tickLine={false}
-                  tick={{ fill: '#9ca3af', fontSize: 11, fontWeight: 500 }}
+                  tick={{ fill: '#9ca3af', fontSize: 11, fontWeight: 600 }}
                   dy={10}
                 />
+
                 <YAxis
                   axisLine={false}
                   tickLine={false}
                   tick={{ fill: '#9ca3af', fontSize: 11 }}
-                  tickFormatter={val => `$${val}`}
+                  tickFormatter={(val) => `$${val}`}
                 />
-                <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.03)' }} />
+
+                <Tooltip
+                  content={<CustomTooltip />}
+                  cursor={{ fill: 'rgba(255,255,255,0.03)' }}
+                />
+
                 <Bar
                   dataKey="value"
                   name="Revenue"
-                  radius={[8, 8, 0, 0]}
+                  radius={[10, 10, 0, 0]}
                   fill="url(#barGrad)"
-                  maxBarSize={40}
+                  maxBarSize={42}
                   animationDuration={1500}
                 />
               </BarChart>
@@ -199,125 +529,489 @@ export default function AdminDashboard() {
           </div>
         </HUDSection>
 
-        {/* Distribución por Tipo — Modernized Donut */}
-        <HUDSection title="Entity Distribution" subtitle="By element type" delay={0.3}>
-          <div className="flex-1 relative flex items-center justify-center min-h-[240px]">
+        <HUDSection
+          title="Entity Distribution"
+          subtitle="By element type"
+          delay={0.3}
+        >
+          <div
+            className="flex-1 relative flex items-center justify-center"
+            style={{
+              minHeight: '280px',
+              paddingTop: '8px',
+            }}
+          >
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
                   data={filteredTypes}
-                  cx="50%" cy="50%"
-                  innerRadius="65%" outerRadius="85%"
+                  cx="50%"
+                  cy="50%"
+                  innerRadius="62%"
+                  outerRadius="84%"
                   paddingAngle={3}
                   dataKey="value"
-                  stroke="rgba(30, 30, 35, 0.8)"
-                  strokeWidth={2}
+                  stroke="rgba(20, 20, 26, 0.95)"
+                  strokeWidth={3}
                   animationDuration={1000}
                 >
                   {filteredTypes.map((entry, i) => (
                     <Cell
                       key={i}
-                      fill={CHART_COLORS[cartasPorTipo.findIndex(t => t.name === entry.name) % CHART_COLORS.length]}
-                      className="hover:opacity-80 transition-opacity cursor-pointer"
+                      fill={
+                        CHART_COLORS[
+                          cartasPorTipo.findIndex((t) => t.name === entry.name) % CHART_COLORS.length
+                        ]
+                      }
+                      className="cursor-pointer"
                     />
                   ))}
                 </Pie>
-                <Tooltip content={<CustomTooltip />} />
+                <Tooltip
+                  content={<CustomTooltip />}
+                  allowEscapeViewBox={{ x: true, y: true }}
+                  position={{ x: 12, y: 12 }}
+                  wrapperStyle={{
+                    zIndex: 60,
+                    pointerEvents: 'none',
+                    outline: 'none',
+                  }}
+                />
               </PieChart>
             </ResponsiveContainer>
-            {/* Center Info HUD */}
-            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-              <span className="text-[10px] uppercase font-semibold text-gray-500 tracking-wider">Types</span>
-              <span className="text-2xl font-black text-white font-mono">{cartasPorTipo.length}</span>
+
+            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none" style={{ zIndex: 1 }}>
+              <div
+                style={{
+                  width: '112px',
+                  height: '112px',
+                  borderRadius: '999px',
+                  background: 'rgba(8,10,16,0.88)',
+                  border: '1px solid rgba(255,255,255,0.06)',
+                  boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.04), 0 0 18px rgba(168,85,247,0.05)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <span
+                  style={{
+                    fontSize: '10px',
+                    textTransform: 'uppercase',
+                    fontWeight: 700,
+                    color: 'rgba(255,255,255,0.38)',
+                    letterSpacing: '0.12em',
+                  }}
+                >
+                  Types
+                </span>
+                <span
+                  style={{
+                    fontSize: '42px',
+                    fontWeight: 900,
+                    lineHeight: 1,
+                    color: '#fff',
+                    fontFamily: 'monospace',
+                    letterSpacing: '-0.04em',
+                    marginTop: '6px',
+                  }}
+                >
+                  {cartasPorTipo.length}
+                </span>
+              </div>
             </div>
           </div>
-          <div className="flex flex-wrap gap-2 mt-4 justify-center">
-            {cartasPorTipo.map((t, i) => (
-              <button
-                key={i}
-                onClick={() => toggleHidden(hiddenTypes, setHiddenTypes, t.name)}
-                className={`flex items-center gap-1.5 text-[10px] font-semibold px-2.5 py-1 rounded-lg transition-all ${hiddenTypes.has(t.name) ? 'opacity-30 bg-white/[0.02]' : 'text-gray-300 bg-white/[0.08] hover:bg-white/[0.12]'}`}
-              >
-                <span className="w-2 h-2 rounded-full" style={{ background: CHART_COLORS[i % CHART_COLORS.length] }} />
-                {t.name}
-              </button>
-            ))}
+
+          <div
+            className="flex flex-wrap justify-center"
+            style={{
+              gap: '8px',
+              marginTop: '14px',
+              paddingTop: '6px',
+            }}
+          >
+            {cartasPorTipo.map((t, i) => {
+              const hidden = hiddenTypes.has(t.name);
+
+              return (
+                <button
+                  key={i}
+                  onClick={() => toggleHidden(hiddenTypes, setHiddenTypes, t.name)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '7px',
+                    fontSize: '11px',
+                    fontWeight: 700,
+                    padding: '7px 11px',
+                    borderRadius: '999px',
+                    transition: 'all 150ms ease',
+                    color: hidden ? 'rgba(255,255,255,0.30)' : 'rgba(255,255,255,0.78)',
+                    background: hidden ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.07)',
+                    border: hidden
+                      ? '1px solid rgba(255,255,255,0.04)'
+                      : '1px solid rgba(255,255,255,0.08)',
+                    boxShadow: hidden ? 'none' : '0 0 10px rgba(255,255,255,0.02)',
+                  }}
+                >
+                  <span
+                    style={{
+                      width: '9px',
+                      height: '9px',
+                      borderRadius: '999px',
+                      background: CHART_COLORS[i % CHART_COLORS.length],
+                      boxShadow: `0 0 8px ${CHART_COLORS[i % CHART_COLORS.length]}55`,
+                    }}
+                  />
+                  {t.name}
+                </button>
+              );
+            })}
           </div>
         </HUDSection>
-
       </div>
 
       {/* Secondary Data Matrix */}
-      <div className="grid grid-cols-1 lg:grid-cols-2" style={{ gap: '1.25rem' }}>
-        
-        {/* Digital Ledger Trace — Transaction Hub */}
-        <HUDSection title="Recent Transactions" subtitle="Latest completed orders" delay={0.4}>
-          <div className="w-full h-full overflow-y-auto pr-2" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,255,255,0.1) transparent' }}>
-            <div className="space-y-3 pb-4">
-            {comprasRecientes.map((c) => (
-              <div key={c._id} className="flex items-center justify-between p-4 bg-gradient-to-r from-white/5 to-transparent rounded-xl border border-white/5 hover:border-purple-500/30 transition-all cursor-pointer">
-                  <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-blue-600 rounded-lg flex items-center justify-center shrink-0">
-                          <Activity className="w-5 h-5 text-white" />
-                      </div>
-                      <div className="min-w-0">
-                          <p className="font-semibold text-white truncate">{c.userId?.email || 'Anonymous Transact'}</p>
-                          <p className="text-xs text-gray-500 font-mono mt-0.5">#{c._id.slice(-8).toUpperCase()} • {Array.isArray(c.items) ? c.items.length : Object.values(c.items || {}).reduce((a, b) => a + b, 0)} Items</p>
-                      </div>
+      <div
+        className="grid grid-cols-1 lg:grid-cols-2"
+        style={{
+          gap: '22px',
+          alignItems: 'stretch',
+        }}
+      >
+        <HUDSection
+          title="Recent Transactions"
+          subtitle="Latest completed orders"
+          delay={0.4}
+        >
+          <div
+            className="w-full h-full overflow-y-auto"
+            style={{
+              paddingRight: '4px',
+              scrollbarWidth: 'thin',
+              scrollbarColor: 'rgba(255,255,255,0.12) transparent',
+              minHeight: '420px',
+              maxHeight: '520px',
+            }}
+          >
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '10px',
+                paddingBottom: '6px',
+              }}
+            >
+              {comprasRecientes.map((c) => (
+                <div
+                  key={c._id}
+                  className="group flex items-center justify-between"
+                  style={{
+                    padding: '14px 16px',
+                    borderRadius: '18px',
+                    background: 'linear-gradient(90deg, rgba(255,255,255,0.05), rgba(255,255,255,0.015))',
+                    border: '1px solid rgba(255,255,255,0.06)',
+                    transition: 'all 160ms ease',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <div className="flex items-center" style={{ gap: '14px', minWidth: 0 }}>
+                    <div
+                      className="shrink-0 flex items-center justify-center"
+                      style={{
+                        width: '52px',
+                        height: '52px',
+                        borderRadius: '16px',
+                        background: 'linear-gradient(135deg, #7C3AED 0%, #2563EB 100%)',
+                        boxShadow: '0 0 18px rgba(124,58,237,0.24)',
+                      }}
+                    >
+                      <Activity className="w-5 h-5 text-white" />
+                    </div>
+
+                    <div className="min-w-0">
+                      <p
+                        className="truncate"
+                        style={{
+                          fontWeight: 700,
+                          color: '#fff',
+                          fontSize: '16px',
+                          margin: 0,
+                        }}
+                      >
+                        {c.userId?.email || 'Anonymous Transact'}
+                      </p>
+
+                      <p
+                        style={{
+                          fontSize: '12px',
+                          color: 'rgba(255,255,255,0.42)',
+                          fontFamily: 'monospace',
+                          marginTop: '5px',
+                          marginBottom: 0,
+                        }}
+                      >
+                        #{c._id.slice(-8).toUpperCase()} •{' '}
+                        {Array.isArray(c.items)
+                          ? c.items.length
+                          : Object.values(c.items || {}).reduce((a, b) => a + b, 0)}{' '}
+                        Items
+                      </p>
+                    </div>
                   </div>
-                  <div className="text-right shrink-0">
-                      <p className="font-black text-white font-mono">${c.totalPrice?.toFixed(2)}</p>
-                      <span className="inline-block mt-1 text-[9px] font-bold uppercase tracking-wider text-emerald-400 bg-emerald-500/20 border border-emerald-500/30 px-2 py-0.5 rounded">Completed</span>
+
+                  <div className="text-right shrink-0" style={{ marginLeft: '14px' }}>
+                    <p
+                      style={{
+                        fontWeight: 900,
+                        color: '#fff',
+                        fontFamily: 'monospace',
+                        fontSize: '17px',
+                        margin: 0,
+                        letterSpacing: '-0.03em',
+                      }}
+                    >
+                      ${c.totalPrice?.toFixed(2)}
+                    </p>
+
+                    <span
+                      style={{
+                        display: 'inline-block',
+                        marginTop: '8px',
+                        fontSize: '10px',
+                        fontWeight: 800,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.08em',
+                        color: '#34D399',
+                        background: 'rgba(16,185,129,0.12)',
+                        border: '1px solid rgba(16,185,129,0.22)',
+                        padding: '4px 8px',
+                        borderRadius: '999px',
+                        boxShadow: '0 0 12px rgba(16,185,129,0.10)',
+                      }}
+                    >
+                      Completed
+                    </span>
                   </div>
-              </div>
-            ))}
+                </div>
+              ))}
             </div>
           </div>
         </HUDSection>
 
-        {/* Smart Deals — High Tech Advisory */}
-        <HUDSection title="AI Advisory: Smart Deals" subtitle="Discounts suggested by data patterns" delay={0.5}>
-            <div className="absolute inset-0 w-full h-full overflow-y-auto pr-2" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,255,255,0.1) transparent' }}>
-              <div className="space-y-3 pb-4">
-              {discountSuggestions?.map((sugg, i) => (
-                <div key={sugg._id} className="p-3 bg-white/[0.02] border border-white/[0.06] rounded-xl flex flex-col xl:flex-row gap-4 items-start xl:items-center group">
-                  <div className="w-12 h-16 shrink-0 bg-[#050505] rounded-[4px] border border-white/[0.06] overflow-hidden relative shadow-inner">
-                    <img src={sugg.image} alt="" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-white truncate">{sugg.name}</p>
-                      <div className="flex flex-wrap items-center gap-2 mt-1">
-                        <span className="text-[11px] font-mono line-through text-gray-500">${sugg.currentPrice}</span>
-                        <span className="text-sm font-bold font-mono text-emerald-400">${(sugg.currentPrice * sugg.suggestedDiscount).toFixed(2)}</span>
-                        <div className="px-1.5 py-0.5 rounded-[4px] bg-primary/10 border border-primary/20 text-primary text-[10px] font-bold">-{Math.round((1 - sugg.suggestedDiscount) * 100)}%</div>
-                      </div>
-                      <p className="text-xs text-gray-500 mt-2 italic flex items-center gap-1.5">
-                        <TrendingUp className="w-3 h-3" /> {sugg.reason}
-                      </p>
-                  </div>
-                  <button 
-                    onClick={async () => {
-                      const newPrice = Math.max(5, sugg.currentPrice * sugg.suggestedDiscount);
-                      await api.put(`/admin/cartas/${sugg._id}`, { price: newPrice });
-                      window.location.reload();
-                    }}
-                    className="w-full xl:w-auto px-4 py-2 text-sm font-semibold rounded-lg bg-primary/10 border border-primary/20 text-primary hover:bg-primary hover:text-black transition-all text-center"
+        <HUDSection
+          title="AI Advisory: Smart Deals"
+          subtitle="Discounts suggested by data patterns"
+          delay={0.5}
+        >
+          <div
+            className="w-full h-full overflow-y-auto"
+            style={{
+              paddingRight: '4px',
+              scrollbarWidth: 'thin',
+              scrollbarColor: 'rgba(255,255,255,0.12) transparent',
+              minHeight: '420px',
+              maxHeight: '520px',
+            }}
+          >
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '12px',
+                paddingBottom: '6px',
+              }}
+            >
+              {discountSuggestions?.map((sugg) => (
+                <div
+                  key={sugg._id}
+                  className="group"
+                  style={{
+                    padding: '14px',
+                    borderRadius: '18px',
+                    background: 'linear-gradient(180deg, rgba(255,255,255,0.035), rgba(255,255,255,0.015))',
+                    border: '1px solid rgba(255,255,255,0.07)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '14px',
+                  }}
+                >
+                  <div
+                    className="flex flex-col xl:flex-row items-start xl:items-center"
+                    style={{ gap: '14px' }}
                   >
-                    Apply
-                  </button>
+                    <div
+                      className="shrink-0 relative overflow-hidden"
+                      style={{
+                        width: '56px',
+                        height: '76px',
+                        borderRadius: '8px',
+                        background: '#050505',
+                        border: '1px solid rgba(255,255,255,0.08)',
+                        boxShadow: '0 6px 16px rgba(0,0,0,0.35)',
+                      }}
+                    >
+                      <img
+                        src={sugg.image}
+                        alt=""
+                        className="w-full h-full object-cover"
+                        style={{
+                          transition: 'transform 500ms ease',
+                        }}
+                      />
+                    </div>
+
+                    <div className="flex-1 min-w-0">
+                      <p
+                        className="truncate"
+                        style={{
+                          fontSize: '15px',
+                          fontWeight: 700,
+                          color: '#fff',
+                          margin: 0,
+                        }}
+                      >
+                        {sugg.name}
+                      </p>
+
+                      <div
+                        className="flex flex-wrap items-center"
+                        style={{
+                          gap: '8px',
+                          marginTop: '8px',
+                        }}
+                      >
+                        <span
+                          style={{
+                            fontSize: '11px',
+                            fontFamily: 'monospace',
+                            textDecoration: 'line-through',
+                            color: 'rgba(255,255,255,0.35)',
+                          }}
+                        >
+                          ${sugg.currentPrice}
+                        </span>
+
+                        <span
+                          style={{
+                            fontSize: '18px',
+                            fontWeight: 800,
+                            fontFamily: 'monospace',
+                            color: '#34D399',
+                            letterSpacing: '-0.02em',
+                          }}
+                        >
+                          ${(sugg.currentPrice * sugg.suggestedDiscount).toFixed(2)}
+                        </span>
+
+                        <div
+                          style={{
+                            padding: '4px 8px',
+                            borderRadius: '999px',
+                            background: 'rgba(168,85,247,0.12)',
+                            border: '1px solid rgba(168,85,247,0.24)',
+                            color: '#C084FC',
+                            fontSize: '10px',
+                            fontWeight: 800,
+                          }}
+                        >
+                          -{Math.round((1 - sugg.suggestedDiscount) * 100)}%
+                        </div>
+                      </div>
+
+                      <p
+                        className="flex items-center"
+                        style={{
+                          gap: '6px',
+                          fontSize: '12px',
+                          color: 'rgba(255,255,255,0.40)',
+                          marginTop: '10px',
+                          marginBottom: 0,
+                          fontStyle: 'italic',
+                        }}
+                      >
+                        <TrendingUp style={{ width: '13px', height: '13px' }} />
+                        {sugg.reason}
+                      </p>
+                    </div>
+
+                    <button
+                      onClick={async () => {
+                        const newPrice = Math.max(5, sugg.currentPrice * sugg.suggestedDiscount);
+                        await api.put(`/admin/cartas/${sugg._id}`, { price: newPrice });
+                        window.location.reload();
+                      }}
+                      style={{
+                        width: '100%',
+                        maxWidth: '150px',
+                        padding: '11px 14px',
+                        borderRadius: '14px',
+                        background: 'linear-gradient(135deg, rgba(168,85,247,0.18), rgba(30,136,229,0.14))',
+                        border: '1px solid rgba(168,85,247,0.22)',
+                        color: '#D8B4FE',
+                        fontSize: '13px',
+                        fontWeight: 800,
+                        transition: 'all 150ms ease',
+                        boxShadow: '0 0 16px rgba(168,85,247,0.08)',
+                      }}
+                    >
+                      Apply Boost
+                    </button>
+                  </div>
                 </div>
               ))}
+
               {(!discountSuggestions || discountSuggestions.length === 0) && (
-                <div className="h-full flex flex-col items-center justify-center p-6 text-center">
-                  <Shield className="w-8 h-8 text-white/10 mb-3" />
-                  <p className="text-sm font-medium text-gray-500">Market equilibrium achieved.</p>
-                  <p className="text-xs text-gray-600 mt-1">No AI advisories at this time.</p>
+                <div
+                  className="h-full flex flex-col items-center justify-center text-center"
+                  style={{
+                    minHeight: '320px',
+                    padding: '24px',
+                  }}
+                >
+                  <div
+                    style={{
+                      width: '72px',
+                      height: '72px',
+                      borderRadius: '999px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      background: 'rgba(255,255,255,0.03)',
+                      border: '1px solid rgba(255,255,255,0.05)',
+                      marginBottom: '14px',
+                    }}
+                  >
+                    <Shield className="w-8 h-8 text-white/10" />
+                  </div>
+
+                  <p
+                    style={{
+                      fontSize: '17px',
+                      fontWeight: 700,
+                      color: 'rgba(255,255,255,0.62)',
+                      margin: 0,
+                    }}
+                  >
+                    Market equilibrium achieved.
+                  </p>
+
+                  <p
+                    style={{
+                      fontSize: '13px',
+                      color: 'rgba(255,255,255,0.28)',
+                      marginTop: '8px',
+                      marginBottom: 0,
+                    }}
+                  >
+                    No AI advisories at this time.
+                  </p>
                 </div>
               )}
-              </div>
             </div>
+          </div>
         </HUDSection>
-
       </div>
     </div>
   );

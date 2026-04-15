@@ -6,10 +6,9 @@ export default function DailyStreakGrid({ estado, onClaim, claiming }) {
   const prefersReducedMotion = useMotionPreference();
   const [particles, setParticles] = useState([]);
 
-  const handleClaim = async (e) => {
+  const handleClaim = async () => {
     // Trigger particle burst (only if user doesn't prefer reduced motion)
     if (!prefersReducedMotion) {
-      const rect = e.currentTarget.getBoundingClientRect();
       const newParticles = Array.from({ length: 8 }, (_, i) => ({
         id: i,
         x: Math.random() * 100 - 50,
@@ -34,12 +33,6 @@ export default function DailyStreakGrid({ estado, onClaim, claiming }) {
         delayChildren: prefersReducedMotion ? 0 : 0.1
       }
     }
-  };
-
-  const dayBoxVariants = {
-    hidden: { opacity: 0, scale: 0.9, rotateY: -10 },
-    visible: { opacity: 1, scale: 1, rotateY: 0, transition: { duration: 0.5, ease: 'easeOut' } },
-    hover: { scale: 1.08, y: -8, transition: { duration: 0.2 } }
   };
 
   const dayVariants = {

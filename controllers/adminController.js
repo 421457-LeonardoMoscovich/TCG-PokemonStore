@@ -1,5 +1,6 @@
 const { getDB } = require('../config/db');
 const { ObjectId } = require('mongodb');
+const { resolveCardPrice } = require('../utils/cardPricing');
 
 // ═══════════════════════════════════════════════════
 // DASHBOARD STATS
@@ -109,13 +110,72 @@ async function getDashboardStats(req, res) {
         { $group: { _id: null, total: { $sum: '$totalPrice' } } },
       ]).toArray(),
 
-      // Nuevo: Revenue por tipo (Financial Pulse)
+      // Revenue por tipo. Soporta compras guardadas como objeto { cardId: qty }
+      // y tambien el formato array { cartaId, cantidad } si se usa mas adelante.
       db.collection('compras').aggregate([
-        { $unwind: '$items' },
+        {
+          $project: {
+            itemsArray: {
+              $cond: [
+                { $isArray: '$items' },
+                {
+                  $map: {
+                    input: '$items',
+                    as: 'item',
+                    in: {
+                      cardId: {
+                        $convert: {
+                          input: { $ifNull: ['$$item.cartaId', '$$item.cardId'] },
+                          to: 'objectId',
+                          onError: null,
+                          onNull: null
+                        }
+                      },
+                      quantity: {
+                        $convert: {
+                          input: { $ifNull: ['$$item.cantidad', '$$item.quantity'] },
+                          to: 'int',
+                          onError: 0,
+                          onNull: 0
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  $map: {
+                    input: { $objectToArray: { $ifNull: ['$items', {}] } },
+                    as: 'item',
+                    in: {
+                      cardId: {
+                        $convert: {
+                          input: '$$item.k',
+                          to: 'objectId',
+                          onError: null,
+                          onNull: null
+                        }
+                      },
+                      quantity: {
+                        $convert: {
+                          input: '$$item.v',
+                          to: 'int',
+                          onError: 0,
+                          onNull: 0
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        },
+        { $unwind: '$itemsArray' },
+        { $match: { 'itemsArray.cardId': { $ne: null }, 'itemsArray.quantity': { $gt: 0 } } },
         {
           $lookup: {
             from: 'cartas',
-            localField: 'items.cartaId',
+            localField: 'itemsArray.cardId',
             foreignField: '_id',
             as: 'cartaInfo'
           }
@@ -124,13 +184,14 @@ async function getDashboardStats(req, res) {
         {
           $group: {
             _id: '$cartaInfo.type',
-            totalRevenue: { $sum: { $multiply: ['$items.cantidad', { $ifNull: ['$cartaInfo.price', 10] }] } }
+            totalRevenue: { $sum: { $multiply: ['$itemsArray.quantity', { $ifNull: ['$cartaInfo.price', 10] }] } }
           }
         },
         { $sort: { totalRevenue: -1 } }
       ]).toArray(),
 
-      // Nuevo: Candidatos para descuentos (Smart Deals)
+      // Candidatos para descuentos. Si no hay wishlist o fechas antiguas,
+      // igual devuelve cartas para que el panel no quede vacio.
       db.collection('cartas').aggregate([
         {
           $lookup: {
@@ -144,22 +205,30 @@ async function getDashboardStats(req, res) {
           $addFields: {
             wishlistCount: { $size: '$wishlists' },
             ageInDays: {
-              $divide: [
-                { $subtract: [new Date(), '$createdAt'] },
-                1000 * 60 * 60 * 24
+              $cond: [
+                { $eq: [{ $type: '$createdAt' }, 'date'] },
+                {
+                  $divide: [
+                    { $subtract: [new Date(), '$createdAt'] },
+                    1000 * 60 * 60 * 24
+                  ]
+                },
+                null
               ]
             }
           }
         },
         {
-          $match: {
-            $or: [
-              { wishlistCount: { $gt: 5 } },
-              { ageInDays: { $gt: 30 } }
-            ]
+          $addFields: {
+            advisoryScore: {
+              $add: [
+                { $multiply: ['$wishlistCount', 10] },
+                { $ifNull: ['$ageInDays', 0] }
+              ]
+            }
           }
         },
-        { $sort: { wishlistCount: -1, createdAt: 1 } },
+        { $sort: { advisoryScore: -1, wishlistCount: -1, createdAt: 1, _id: 1 } },
         { $limit: 6 }
       ]).toArray(),
     ]);
@@ -169,7 +238,7 @@ async function getDashboardStats(req, res) {
 
     const meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
     const ingresosFormateados = ingresosPorMesRaw.map((item) => ({
-      name: meses[item._id - 1] || 'N/A',
+      name: meses[(item._id?.month || 1) - 1] || 'N/A',
       ingresos: item.total,
     }));
 
@@ -189,9 +258,13 @@ async function getDashboardStats(req, res) {
       discountSuggestions: discountSuggestionsRaw.map(d => ({
         _id: d._id,
         name: d.name,
-        currentPrice: d.price || 10,
+        currentPrice: resolveCardPrice(d),
         suggestedDiscount: d.wishlistCount > 10 ? 0.85 : 0.90,
-        reason: d.wishlistCount > 5 ? 'Alta Demanda' : 'Stock Antiguo',
+        reason: d.wishlistCount > 0
+          ? 'Alta demanda'
+          : d.ageInDays > 30
+            ? 'Stock antiguo'
+            : 'Impulsar visibilidad',
         image: d.image
       })),
       topWishlist,
@@ -225,7 +298,7 @@ async function adminCreateCard(req, res) {
       set_name: set_name || null,
       image: image || null,
       url: url || null,
-      price: price ? parseFloat(price) : 10, // Precio por defecto
+      price: resolveCardPrice({ price, rarity }),
       createdAt: new Date(),
     };
 
@@ -251,6 +324,12 @@ async function adminUpdateCard(req, res) {
       if (req.body[field] !== undefined) {
         updates[field] = field === 'hp' || field === 'card_number' ? parseInt(req.body[field]) : req.body[field];
       }
+    }
+
+    if (updates.price !== undefined) {
+      updates.price = resolveCardPrice(updates);
+    } else if (updates.rarity !== undefined) {
+      updates.price = resolveCardPrice({ rarity: updates.rarity });
     }
 
     if (Object.keys(updates).length === 0) {

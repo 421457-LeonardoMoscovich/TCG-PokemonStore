@@ -1,92 +1,100 @@
 const { getDB } = require('../config/db');
 const { ObjectId } = require('mongodb');
 
+const TICKET_PRICE = 50;
+
+const PESO_RAREZA = {
+  '◇': 60,
+  '◇◇': 25,
+  '◇◇◇': 10,
+  '◇◇◇◇': 3,
+  '☆': 1.5,
+  '☆☆': 0.4,
+  '☆☆☆': 0.1,
+  'â—Š': 60,
+  'â—Šâ—Š': 25,
+  'â—Šâ—Šâ—Š': 10,
+  'â—Šâ—Šâ—Šâ—Š': 3,
+  'â˜†': 1.5,
+  'â˜†â˜†': 0.4,
+  'â˜†â˜†â˜†': 0.1,
+  'Crown Rare': 0.05,
+};
+
+function elegirCartaPonderada(cartas) {
+  let totalWeight = 0;
+  const cartasConPeso = cartas.map((carta) => {
+    const peso = PESO_RAREZA[carta.rarity] || 10;
+    totalWeight += peso;
+    return { carta, peso };
+  });
+
+  let randomNum = Math.random() * totalWeight;
+  for (const item of cartasConPeso) {
+    if (randomNum < item.peso) return item.carta;
+    randomNum -= item.peso;
+  }
+
+  return cartas[0];
+}
+
 async function comprarTicketScratch(req, res) {
   try {
     const db = getDB();
+    const userId = new ObjectId(req.userId);
 
-    // 1. Obtener el usuario
-    const usuario = await db.collection('usuarios').findOne({ _id: new ObjectId(req.userId) });
-
+    const usuario = await db.collection('usuarios').findOne({ _id: userId });
     if (!usuario) {
       return res.status(404).json({ error: 'Usuario no encontrado' });
     }
 
-    // 2. Verificar balance
-    if (usuario.balance < 50) {
-      return res.status(400).json({ error: 'Balance insuficiente. Necesitás 50 monedas.' });
+    if ((usuario.balance || 0) < TICKET_PRICE) {
+      return res.status(400).json({ error: `Balance insuficiente. Necesitás ${TICKET_PRICE} monedas.` });
     }
 
-    // 3. Obtener cartas que NO posee
     const coleccionUsuario = usuario.collection || [];
     const cartasDisponibles = await db.collection('cartas')
       .find({ _id: { $nin: coleccionUsuario } })
       .toArray();
 
     if (cartasDisponibles.length === 0) {
-      return res.status(400).json({ error: '¡Felicitaciones! Completaste la Pokédex 🎉' });
+      return res.status(400).json({ error: 'Felicitaciones, completaste la Pokédex.' });
     }
 
-    // 4. Selección ponderada por rareza (TCG Pocket Icons)
-    const PESO_RAREZA = {
-      '◊': 60,           // Common (~60%)
-      '◊◊': 25,          // Uncommon (~25%)
-      '◊◊◊': 10,         // Rare (~10%)
-      '◊◊◊◊': 3,          // Rare ex (~3%)
-      '☆': 1.5,          // Promo / Illustration Rare (~1.5%)
-      '☆☆': 0.4,         // Special Illustration Rare (~0.4%)
-      '☆☆☆': 0.1,        // Immersive Rare (~0.1%)
-      'Crown Rare': 0.05 // Gold Card (~0.05%)
-    };
-
-    // Calculate total weight
-    let totalWeight = 0;
-    const cartasConPeso = cartasDisponibles.map(carta => {
-      const peso = PESO_RAREZA[carta.rarity] || 10; // Default fallback for unknown rarity
-      totalWeight += peso;
-      return { carta, peso };
-    });
-
-    // Select random number based on total weight
-    let randomNum = Math.random() * totalWeight;
-    let cartaGanada = cartasDisponibles[0]; // Fallback
-
-    for (const item of cartasConPeso) {
-      if (randomNum < item.peso) {
-        cartaGanada = item.carta;
-        break;
-      }
-      randomNum -= item.peso;
-    }
-
-    // 5. Actualizar usuario y registrar compra atómicamente
-    await db.collection('usuarios').updateOne(
-      { _id: new ObjectId(req.userId) },
+    const cartaGanada = elegirCartaPonderada(cartasDisponibles);
+    const updatedUser = await db.collection('usuarios').findOneAndUpdate(
       {
-        $inc: { balance: -50 },
-        $push: { collection: cartaGanada._id }
-      }
+        _id: userId,
+        balance: { $gte: TICKET_PRICE },
+        collection: { $ne: cartaGanada._id },
+      },
+      {
+        $inc: { balance: -TICKET_PRICE },
+        $addToSet: { collection: cartaGanada._id },
+      },
+      { returnDocument: 'after' }
     );
 
-    // 5b. Registrar en historial de compras para que se vea en Admin Panel
+    if (!updatedUser) {
+      return res.status(409).json({ error: 'No se pudo completar la compra. Actualizá e intentá de nuevo.' });
+    }
+
     const compraScratch = {
-      userId: new ObjectId(req.userId),
+      userId,
       type: 'scratch',
       items: { [cartaGanada._id.toString()]: 1 },
-      totalPrice: 50,
+      totalPrice: TICKET_PRICE,
       purchasedAt: new Date(),
-      status: 'completed'
+      status: 'completed',
     };
     await db.collection('compras').insertOne(compraScratch);
 
-    // 6. Retornar respuesta
     res.json({
       success: true,
       carta: cartaGanada,
-      nuevoBalance: usuario.balance - 50,
-      mensaje: `¡Obtuviste a ${cartaGanada.name}!`
+      nuevoBalance: updatedUser.balance || 0,
+      mensaje: `Obtuviste a ${cartaGanada.name}.`,
     });
-
   } catch (err) {
     console.error('Error en comprarTicketScratch:', err);
     res.status(500).json({ error: 'Error al procesar la compra del ticket', detail: err.message });

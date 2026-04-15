@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
+import Footer from './components/Footer';
 import AdminShell from './components/AdminShell';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminRoute from './components/AdminRoute';
@@ -82,6 +83,7 @@ export default function App() {
                         <Route path="*" element={<Navigate to="/" replace />} />
                       </Routes>
                     </div>
+                    <Footer />
                   </>
                 }
               />

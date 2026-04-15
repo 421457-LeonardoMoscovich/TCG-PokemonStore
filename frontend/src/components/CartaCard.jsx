@@ -27,7 +27,7 @@ const DEFAULT_TYPE = TYPE.Colorless;
 function CartaCard({ carta, onAddedToCart, showWishlist = true }) {
   // 1. Hooks always at the top
   const navigate = useNavigate();
-  const { cart, refreshCart } = useCart();
+  const { cart } = useCart();
   const { isInWishlist, toggleWishlist } = useWishlist();
   
   const [adding, setAdding] = useState(false);
@@ -146,7 +146,7 @@ function CartaCard({ carta, onAddedToCart, showWishlist = true }) {
       {showWishlist && (
         <motion.button
           initial={{ scale: 0 }}
-          animate={{ scale: hovered || isFavorite ? 1 : 0 }}
+          animate={{ scale: 1, opacity: hovered || isFavorite ? 1 : 0.82 }}
           whileHover={{ scale: 1.2 }}
           whileTap={{ scale: 0.9 }}
           onClick={handleWishlist}

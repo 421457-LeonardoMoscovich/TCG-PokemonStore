@@ -1,20 +1,9 @@
 const { MongoClient } = require('mongodb');
 require('dotenv').config();
+const { DEFAULT_CARD_PRICE, PRICE_BY_RARITY } = require('../utils/cardPricing');
 
 const uri = process.env.MONGODB_URI;
 const client = new MongoClient(uri);
-
-const PRICE_MAP = {
-  '◊': 20,
-  '◊◊': 40,
-  '◊◊◊': 100,
-  '◊◊◊◊': 250,
-  '☆': 500,
-  '☆☆': 1200,
-  '☆☆☆': 3000,
-  'Crown Rare': 6000,
-  'default': 10
-};
 
 async function run() {
   try {
@@ -24,10 +13,7 @@ async function run() {
 
     console.log('--- Iniciando migración de precios ---');
 
-    const rarities = Object.keys(PRICE_MAP).filter(r => r !== 'default');
-
-    for (const rarity of rarities) {
-      const price = PRICE_MAP[rarity];
+    for (const [rarity, price] of Object.entries(PRICE_BY_RARITY)) {
       const result = await collection.updateMany(
         { rarity: rarity },
         { $set: { price: price } }
@@ -38,9 +24,9 @@ async function run() {
     // Default for empty or unknown rarities
     const resultDefault = await collection.updateMany(
       { $or: [{ rarity: "" }, { rarity: { $exists: false } }, { price: { $exists: false } }] },
-      { $set: { price: PRICE_MAP.default } }
+      { $set: { price: DEFAULT_CARD_PRICE } }
     );
-    console.log(`Rarezas desconocidas: Actualizadas ${resultDefault.modifiedCount} cartas con precio $${PRICE_MAP.default}`);
+    console.log(`Rarezas desconocidas: Actualizadas ${resultDefault.modifiedCount} cartas con precio $${DEFAULT_CARD_PRICE}`);
 
     console.log('--- Migración completada con éxito ---');
   } catch (err) {

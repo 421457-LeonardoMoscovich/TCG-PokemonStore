@@ -10,6 +10,23 @@ const TYPES = ['', 'Fire', 'Water', 'Grass', 'Electric', 'Psychic', 'Fighting', 
 const RARITIES = ['', '◊', '◊◊', '◊◊◊', '◊◊◊◊', '☆', '☆☆', '☆☆☆', 'Crown Rare'];
 const LIMIT = 15;
 
+const TYPE_ACCENTS = {
+  Fire: '#ff6b4a',
+  Water: '#4da3ff',
+  Grass: '#7dff87',
+  Electric: '#ffd84d',
+  Psychic: '#ff66c4',
+  Fighting: '#ff914d',
+  Darkness: '#9aa0b4',
+  Metal: '#c7d2e0',
+  Dragon: '#9b6bff',
+  Colorless: '#e5e7eb',
+};
+
+function getTypeAccent(type) {
+  return TYPE_ACCENTS[type] || '#a855f7';
+}
+
 /* ── Access Portal (Form Modal) ── */
 function CardModal({ card, onClose, onSave }) {
   const [form, setForm] = useState({
@@ -27,17 +44,20 @@ function CardModal({ card, onClose, onSave }) {
   const [error, setError] = useState('');
 
   function onChange(e) {
-    setForm(f => ({ ...f, [e.target.name]: e.target.value }));
+    setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
   }
 
   async function handleSubmit(e) {
     e.preventDefault();
+
     if (!form.name || !form.type) {
-      setError('FIELD MISSING: Name & Type required');
+      setError('Faltan campos: nombre y tipo son obligatorios');
       return;
     }
+
     setSaving(true);
     setError('');
+
     try {
       if (card?._id) {
         await api.put(`/admin/cartas/${card._id}`, form);
@@ -46,7 +66,7 @@ function CardModal({ card, onClose, onSave }) {
       }
       onSave();
     } catch (err) {
-      setError(err.response?.data?.error || 'UPLINK ERROR: Failed to sync data');
+      setError(err.response?.data?.error || 'No se pudo guardar la carta');
     } finally {
       setSaving(false);
     }
@@ -54,91 +74,314 @@ function CardModal({ card, onClose, onSave }) {
 
   return (
     <motion.div
-      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-[100] flex items-center justify-center p-3"
+      style={{
+        background: 'rgba(0,0,0,0.72)',
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
+      }}
       onClick={onClose}
     >
       <motion.div
-        initial={{ scale: 0.95, opacity: 0, y: 10 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.95, opacity: 0, y: 10 }}
+        initial={{ scale: 0.96, opacity: 0, y: 12 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        exit={{ scale: 0.96, opacity: 0, y: 12 }}
+        transition={{ duration: 0.22 }}
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-xl bg-gradient-to-b from-[#121214] to-[#0a0a0c] border border-white/[0.08] shadow-[0_10px_40px_rgba(0,0,0,0.5)] rounded-2xl relative overflow-hidden"
+        className="w-full relative overflow-hidden"
+        style={{
+          maxWidth: '720px',
+          maxHeight: 'calc(100vh - 32px)',
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          borderRadius: '18px',
+          background: 'linear-gradient(180deg, rgba(16,17,26,0.98) 0%, rgba(8,9,16,0.99) 100%)',
+          border: '1px solid rgba(168,85,247,0.16)',
+          boxShadow:
+            '0 30px 80px rgba(0,0,0,0.55), 0 0 30px rgba(168,85,247,0.10), inset 0 1px 0 rgba(255,255,255,0.04)',
+        }}
       >
-        <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-primary/30 to-transparent"></div>
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background:
+              'radial-gradient(circle at top left, rgba(168,85,247,0.10), transparent 22%), radial-gradient(circle at top right, rgba(30,136,229,0.10), transparent 26%)',
+          }}
+        />
 
-        <div className="p-8">
-          <div className="flex items-center justify-between mb-8 pb-4 border-b border-white/[0.06]">
+        <div
+          className="absolute top-0 left-0 right-0 pointer-events-none"
+          style={{
+            height: '1px',
+            background: 'linear-gradient(90deg, transparent, rgba(168,85,247,0.65), rgba(30,136,229,0.55), transparent)',
+          }}
+        />
+
+        <div
+          className="absolute top-0 left-0 pointer-events-none"
+          style={{
+            width: '120px',
+            height: '120px',
+            borderTopLeftRadius: '18px',
+            background: 'linear-gradient(135deg, rgba(168,85,247,0.12), transparent 65%)',
+          }}
+        />
+
+        <div
+          className="relative z-10"
+          style={{
+            padding: '22px',
+          }}
+        >
+          <div
+            className="flex items-center justify-between"
+            style={{
+              marginBottom: '18px',
+              paddingBottom: '12px',
+              borderBottom: '1px solid rgba(255,255,255,0.06)',
+            }}
+          >
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center relative overflow-hidden group">
-                  <div className="absolute inset-0 bg-primary/10 translate-y-[100%] group-hover:translate-y-0 transition-transform"></div>
-                  <Database className="w-4 h-4 text-primary relative z-10" />
+              <div
+                className="relative overflow-hidden flex items-center justify-center"
+                style={{
+                  width: '36px',
+                  height: '36px',
+                  borderRadius: '8px',
+                  background: 'linear-gradient(135deg, rgba(168,85,247,0.18), rgba(30,136,229,0.14))',
+                  border: '1px solid rgba(168,85,247,0.20)',
+                  boxShadow: '0 0 16px rgba(168,85,247,0.14)',
+                }}
+              >
+                <Database className="w-5 h-5 text-[#c084fc]" />
               </div>
-              <h2 className="text-sm font-semibold text-white">{card?._id ? 'Edit Entity Details' : 'Create New Entity'}</h2>
+
+              <div>
+                <p
+                  style={{
+                    fontSize: '11px',
+                    fontWeight: 800,
+                    letterSpacing: '0.14em',
+                    textTransform: 'uppercase',
+                    color: 'rgba(255,255,255,0.34)',
+                    margin: 0,
+                  }}
+                >
+                  Inventory
+                </p>
+                <h2
+                  style={{
+                    fontSize: '18px',
+                    fontWeight: 800,
+                    color: '#fff',
+                    marginTop: '4px',
+                    lineHeight: 1.1,
+                  }}
+                >
+                  {card?._id ? 'Editar carta' : 'Crear carta'}
+                </h2>
+              </div>
             </div>
-            <button onClick={onClose} className="p-2 rounded-xl text-gray-400 hover:text-white hover:bg-white/[0.04] transition-all"><X className="w-5 h-5" /></button>
+
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Cerrar modal"
+              className="flex items-center justify-center transition-all hover:scale-105 active:scale-95"
+              style={{
+                width: '36px',
+                height: '36px',
+                padding: 0,
+                borderRadius: '8px',
+                color: 'rgba(255,255,255,0.55)',
+                background: 'rgba(255,255,255,0.02)',
+                border: '1px solid rgba(255,255,255,0.06)',
+              }}
+            >
+              <X className="w-4 h-4" />
+            </button>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <div className="grid grid-cols-2 gap-5">
-              <div className="space-y-1.5">
-                <label className="text-[11px] font-semibold text-gray-400 pl-1 uppercase tracking-wider">Entity Name *</label>
-                <input name="name" value={form.name} onChange={onChange} className="w-full px-4 py-3 rounded-xl bg-black/40 border border-white/[0.06] text-white text-sm focus:border-primary/50 focus:bg-white/[0.02] outline-none transition-all placeholder:text-gray-700 font-medium" placeholder="Charizard..." />
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-[11px] font-semibold text-gray-400 pl-1 uppercase tracking-wider">Hit Points (HP)</label>
-                <input name="hp" type="number" value={form.hp} onChange={onChange} className="w-full px-4 py-3 rounded-xl bg-black/40 border border-white/[0.06] text-white text-sm focus:border-primary/50 focus:bg-white/[0.02] outline-none transition-all tabular-nums font-mono" />
-              </div>
-            </div>
+          <form onSubmit={handleSubmit}>
+            <div
+              className="grid grid-cols-1 md:grid-cols-2"
+              style={{
+                gap: '14px',
+              }}
+            >
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <Field label="Nombre *">
+                  <input
+                    name="name"
+                    value={form.name}
+                    onChange={onChange}
+                    placeholder="Charizard..."
+                    style={inputStyle()}
+                  />
+                </Field>
 
-            <div className="grid grid-cols-2 gap-5">
-              <div className="space-y-1.5">
-                <label className="text-[11px] font-semibold text-gray-400 pl-1 uppercase tracking-wider">Element Type *</label>
-                <select name="type" value={form.type} onChange={onChange} className="w-full px-4 py-3 rounded-xl bg-black/40 border border-white/[0.06] text-white text-sm focus:border-primary/50 focus:bg-white/[0.02] outline-none transition-all cursor-pointer appearance-none font-medium">
-                  {TYPES.filter(Boolean).map(t => <option key={t} value={t} className="bg-[#121214]">{t}</option>)}
-                </select>
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-[11px] font-semibold text-gray-400 pl-1 uppercase tracking-wider">Rarity Grade</label>
-                <select name="rarity" value={form.rarity} onChange={onChange} className="w-full px-4 py-3 rounded-xl bg-black/40 border border-white/[0.06] text-white text-sm focus:border-primary/50 focus:bg-white/[0.02] outline-none transition-all cursor-pointer appearance-none font-medium">
-                  {RARITIES.filter(Boolean).map(r => <option key={r} value={r} className="bg-[#121214]">{r}</option>)}
-                </select>
-              </div>
-            </div>
+                <Field label="Tipo *">
+                  <select
+                    name="type"
+                    value={form.type}
+                    onChange={onChange}
+                    style={inputStyle({ cursor: 'pointer' })}
+                  >
+                    {TYPES.filter(Boolean).map((t) => (
+                      <option key={t} value={t} className="bg-[#121214]">
+                        {t}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
 
-            <div className="grid grid-cols-2 gap-5">
-              <div className="space-y-1.5">
-                <label className="text-[11px] font-semibold text-gray-400 pl-1 uppercase tracking-wider">Dataset Origin</label>
-                <input name="set_name" value={form.set_name} onChange={onChange} className="w-full px-4 py-3 rounded-xl bg-black/40 border border-white/[0.06] text-white text-sm focus:border-primary/50 focus:bg-white/[0.02] outline-none transition-all font-medium" />
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-[11px] font-semibold text-gray-400 pl-1 uppercase tracking-wider">System ID</label>
-                <input name="card_number" type="number" value={form.card_number} onChange={onChange} className="w-full px-4 py-3 rounded-xl bg-black/40 border border-white/[0.06] text-white text-sm focus:border-primary/50 focus:bg-white/[0.02] outline-none transition-all tabular-nums font-mono" />
-              </div>
-            </div>
+                <Field label="Coleccion">
+                  <input
+                    name="set_name"
+                    value={form.set_name}
+                    onChange={onChange}
+                    style={inputStyle()}
+                  />
+                </Field>
 
-            <div className="grid grid-cols-2 gap-5">
-              <div className="space-y-1.5 flex flex-col">
-                <label className="text-[11px] font-semibold text-gray-400 pl-1 uppercase tracking-wider">Visual Asset URL</label>
-                <input name="image" value={form.image} onChange={onChange} placeholder="https://..." className="w-full px-4 py-3 rounded-xl bg-black/40 border border-white/[0.06] text-white text-sm focus:border-primary/50 focus:bg-white/[0.02] outline-none transition-all font-mono" />
+                <Field label="Imagen URL">
+                  <input
+                    name="image"
+                    value={form.image}
+                    onChange={onChange}
+                    placeholder="https://..."
+                    style={inputStyle({ fontFamily: 'monospace' })}
+                  />
+                </Field>
               </div>
-              <div className="space-y-1.5">
-                <label className="text-[11px] font-semibold text-gray-400 pl-1 uppercase tracking-wider">Market Value ($)</label>
-                <input name="price" type="number" step="0.01" value={form.price} onChange={onChange} className="w-full px-4 py-3 rounded-xl bg-black/40 border border-white/[0.06] text-white text-sm focus:border-primary/50 focus:bg-white/[0.02] outline-none transition-all tabular-nums font-mono font-bold text-emerald-400" />
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <Field label="HP">
+                  <input
+                    name="hp"
+                    type="number"
+                    value={form.hp}
+                    onChange={onChange}
+                    style={inputStyle({ fontFamily: 'monospace' })}
+                  />
+                </Field>
+
+                <Field label="Rareza">
+                  <select
+                    name="rarity"
+                    value={form.rarity}
+                    onChange={onChange}
+                    style={inputStyle({ cursor: 'pointer' })}
+                  >
+                    {RARITIES.filter(Boolean).map((r) => (
+                      <option key={r} value={r} className="bg-[#121214]">
+                        {r}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+
+                <Field label="Numero">
+                  <input
+                    name="card_number"
+                    type="number"
+                    value={form.card_number}
+                    onChange={onChange}
+                    style={inputStyle({ fontFamily: 'monospace' })}
+                  />
+                </Field>
+
+                <Field label="Precio ($)">
+                  <input
+                    name="price"
+                    type="number"
+                    step="0.01"
+                    value={form.price}
+                    onChange={onChange}
+                    style={inputStyle({
+                      fontFamily: 'monospace',
+                      color: '#34d399',
+                      fontWeight: 800,
+                    })}
+                  />
+                </Field>
               </div>
             </div>
 
             {error && (
-              <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center gap-3 mt-4">
+              <div
+                className="flex items-center gap-3"
+                style={{
+                  marginTop: '14px',
+                  padding: '10px 12px',
+                  borderRadius: '8px',
+                  background: 'rgba(239,68,68,0.10)',
+                  border: '1px solid rgba(239,68,68,0.20)',
+                }}
+              >
                 <AlertTriangle className="w-4 h-4 text-red-500 shrink-0" />
-                <p className="text-xs font-semibold text-red-400">{error}</p>
+                <p
+                  style={{
+                    fontSize: '12px',
+                    fontWeight: 700,
+                    color: '#f87171',
+                    margin: 0,
+                  }}
+                >
+                  {error}
+                </p>
               </div>
             )}
 
-            <div className="flex justify-end gap-3 pt-6 mt-4 border-t border-white/[0.06]">
-              <button type="button" onClick={onClose} className="py-2.5 px-6 rounded-xl border border-white/[0.06] text-gray-400 font-semibold text-sm hover:text-white hover:bg-white/[0.04] transition-colors">
-                Cancel
+            <div
+              className="flex justify-end"
+              style={{
+                gap: '12px',
+                marginTop: '18px',
+                paddingTop: '14px',
+                borderTop: '1px solid rgba(255,255,255,0.06)',
+              }}
+            >
+              <button
+                type="button"
+                onClick={onClose}
+                style={{
+                  padding: '10px 16px',
+                  borderRadius: '8px',
+                  border: '1px solid rgba(255,255,255,0.07)',
+                  background: 'rgba(255,255,255,0.02)',
+                  color: 'rgba(255,255,255,0.66)',
+                  fontWeight: 700,
+                  fontSize: '14px',
+                }}
+              >
+                Cancelar
               </button>
-              <button type="submit" disabled={saving} className="py-2.5 px-8 rounded-xl bg-white text-black font-bold text-sm hover:bg-primary transition-colors flex items-center justify-center gap-2 disabled:opacity-50">
-                {saving ? 'Saving...' : <><Check className="w-4 h-4" /> Save Entity</>}
+
+              <button
+                type="submit"
+                disabled={saving}
+                className="flex items-center justify-center gap-2"
+                style={{
+                  padding: '10px 18px',
+                  borderRadius: '8px',
+                  background: 'linear-gradient(135deg, #ffffff 0%, #d8b4fe 100%)',
+                  color: '#050505',
+                  fontWeight: 800,
+                  fontSize: '14px',
+                  boxShadow: '0 10px 24px rgba(216,180,254,0.18)',
+                  opacity: saving ? 0.5 : 1,
+                }}
+              >
+                {saving ? 'Guardando...' : (
+                  <>
+                    <Check className="w-4 h-4" />
+                    Guardar carta
+                  </>
+                )}
               </button>
             </div>
           </form>
@@ -148,30 +391,168 @@ function CardModal({ card, onClose, onSave }) {
   );
 }
 
+function Field({ label, children }) {
+  return (
+    <div>
+      <label
+        style={{
+          display: 'block',
+          fontSize: '10px',
+          fontWeight: 800,
+          color: 'rgba(255,255,255,0.42)',
+          paddingLeft: '4px',
+          textTransform: 'uppercase',
+          letterSpacing: '0.10em',
+          marginBottom: '6px',
+        }}
+      >
+        {label}
+      </label>
+      {children}
+    </div>
+  );
+}
+
+function inputStyle(extra = {}) {
+  return {
+    width: '100%',
+    padding: '10px 12px',
+    borderRadius: '8px',
+    background: 'rgba(0,0,0,0.34)',
+    border: '1px solid rgba(255,255,255,0.07)',
+    color: '#fff',
+    fontSize: '13px',
+    outline: 'none',
+    transition: 'all 150ms ease',
+    fontWeight: 600,
+    ...extra,
+  };
+}
+
 /* ── Confirmation HUD ── */
 function ConfirmModal({ message, onConfirm, onCancel }) {
   return (
     <motion.div
-      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+      style={{
+        background: 'rgba(0,0,0,0.72)',
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
+      }}
       onClick={onCancel}
     >
       <motion.div
-        initial={{ scale: 0.95, opacity: 0, y: 10 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.95, opacity: 0, y: 10 }}
+        initial={{ scale: 0.96, opacity: 0, y: 12 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        exit={{ scale: 0.96, opacity: 0, y: 12 }}
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-sm bg-[#121214] border border-red-500/20 p-8 rounded-2xl text-center relative overflow-hidden shadow-[0_10px_40px_rgba(239,68,68,0.15)]"
+        className="w-full text-center relative overflow-hidden"
+        style={{
+          maxWidth: '460px',
+          borderRadius: '24px',
+          padding: '28px',
+          background: 'linear-gradient(180deg, rgba(18,16,20,0.98) 0%, rgba(10,8,10,0.99) 100%)',
+          border: '1px solid rgba(239,68,68,0.18)',
+          boxShadow: '0 30px 80px rgba(0,0,0,0.50), 0 0 30px rgba(239,68,68,0.10)',
+        }}
       >
-        <div className="absolute top-0 left-0 w-full h-1 bg-red-500"></div>
-        <div className="w-16 h-16 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center mx-auto mb-6">
+        <div
+          className="absolute top-0 left-0 right-0"
+          style={{
+            height: '2px',
+            background: 'linear-gradient(90deg, transparent, rgba(239,68,68,0.85), transparent)',
+          }}
+        />
+
+        <div
+          className="mx-auto flex items-center justify-center"
+          style={{
+            width: '74px',
+            height: '74px',
+            borderRadius: '999px',
+            background: 'rgba(239,68,68,0.10)',
+            border: '1px solid rgba(239,68,68,0.20)',
+            boxShadow: '0 0 20px rgba(239,68,68,0.10)',
+            marginBottom: '18px',
+          }}
+        >
           <AlertTriangle className="w-8 h-8 text-red-500" />
         </div>
-        <h3 className="text-lg font-bold text-white mb-2">Confirm Deletion</h3>
-        <p className="text-gray-400 text-sm leading-relaxed mb-8">{message}</p>
-        <div className="flex gap-3">
-          <button onClick={onCancel} className="flex-1 py-2.5 rounded-xl border border-white/[0.06] text-gray-400 font-semibold text-sm hover:text-white hover:bg-white/[0.04] transition-colors">
+
+        <p
+          style={{
+            fontSize: '11px',
+            fontWeight: 800,
+            letterSpacing: '0.14em',
+            textTransform: 'uppercase',
+            color: 'rgba(255,255,255,0.34)',
+            marginBottom: '8px',
+          }}
+        >
+          Critical Action
+        </p>
+
+        <h3
+          style={{
+            fontSize: '22px',
+            fontWeight: 800,
+            color: '#fff',
+            marginBottom: '10px',
+          }}
+        >
+          Confirm Deletion
+        </h3>
+
+        <p
+          style={{
+            color: 'rgba(255,255,255,0.54)',
+            fontSize: '14px',
+            lineHeight: 1.6,
+            marginBottom: '24px',
+          }}
+        >
+          {message}
+        </p>
+
+        <div
+          className="flex"
+          style={{
+            gap: '12px',
+          }}
+        >
+          <button
+            onClick={onCancel}
+            style={{
+              flex: 1,
+              padding: '12px 16px',
+              borderRadius: '14px',
+              border: '1px solid rgba(255,255,255,0.07)',
+              background: 'rgba(255,255,255,0.02)',
+              color: 'rgba(255,255,255,0.66)',
+              fontWeight: 700,
+              fontSize: '14px',
+            }}
+          >
             Cancel
           </button>
-          <button onClick={onConfirm} className="flex-1 py-2.5 rounded-xl bg-red-500 text-white font-bold text-sm hover:bg-red-600 transition-colors shadow-lg shadow-red-500/20">
+
+          <button
+            onClick={onConfirm}
+            style={{
+              flex: 1,
+              padding: '12px 16px',
+              borderRadius: '14px',
+              border: '1px solid rgba(239,68,68,0.24)',
+              background: 'linear-gradient(135deg, rgba(239,68,68,0.96), rgba(185,28,28,0.96))',
+              color: '#fff',
+              fontWeight: 800,
+              fontSize: '14px',
+              boxShadow: '0 12px 24px rgba(239,68,68,0.20)',
+            }}
+          >
             Delete
           </button>
         </div>
@@ -189,7 +570,7 @@ export default function AdminCards() {
   const [pagination, setPagination] = useState({});
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({ q: '', type: '', page: 1 });
-  const [modalCard, setModalCard] = useState(null); 
+  const [modalCard, setModalCard] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(null);
   const [selected, setSelected] = useState(new Set());
   const [bulkConfirm, setBulkConfirm] = useState(false);
@@ -210,10 +591,12 @@ export default function AdminCards() {
     }
   }, [filters]);
 
-  useEffect(() => { fetchCartas(); }, [fetchCartas]);
+  useEffect(() => {
+    fetchCartas();
+  }, [fetchCartas]);
 
   function setFilter(key, value) {
-    setFilters(f => ({ ...f, [key]: value, page: 1 }));
+    setFilters((f) => ({ ...f, [key]: value, page: 1 }));
     setSelected(new Set());
   }
 
@@ -239,7 +622,7 @@ export default function AdminCards() {
   }
 
   function toggleSelect(id) {
-    setSelected(prev => {
+    setSelected((prev) => {
       const next = new Set(prev);
       next.has(id) ? next.delete(id) : next.add(id);
       return next;
@@ -250,81 +633,324 @@ export default function AdminCards() {
     if (selected.size === cartas.length) {
       setSelected(new Set());
     } else {
-      setSelected(new Set(cartas.map(c => c._id)));
+      setSelected(new Set(cartas.map((c) => c._id)));
     }
   }
 
   const totalPages = pagination.pages || 1;
 
   return (
-    <div className="space-y-10 pb-16 w-full">
-      {/* HUD Controller Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-2">
-        <div className="space-y-1">
-          <h2 className="text-3xl font-bold tracking-tight text-white">Inventory Management</h2>
-          <div className="flex items-center gap-3 text-sm text-gray-500 font-medium">
-             <div className="flex items-center gap-1.5">
-                <Database className="w-4 h-4 text-primary" />
-                <span className="text-gray-300 font-mono">{pagination.total?.toLocaleString() || 0} Entities</span>
-             </div>
-             <span>•</span>
-             <span>Review and modify registry records.</span>
-          </div>
-        </div>
-        
-        <div className="flex items-center">
-            <button 
-              onClick={() => setModalCard({})}
-              className="flex items-center gap-2 px-5 py-2.5 bg-white text-black text-sm font-bold rounded-xl hover:bg-primary transition-colors font-sans"
+    <div
+      className="w-full"
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '24px',
+        paddingBottom: '56px',
+      }}
+    >
+      {/* Header */}
+      <div
+        className="relative overflow-hidden transition-transform duration-300 hover:-translate-y-1"
+        style={{
+          borderRadius: '28px',
+          padding: '28px 28px 24px 28px',
+          background: 'linear-gradient(180deg, rgba(12,14,22,0.96) 0%, rgba(8,10,16,0.98) 100%)',
+          border: '1px solid rgba(255,255,255,0.06)',
+          boxShadow: '0 18px 40px rgba(0,0,0,0.30), inset 0 1px 0 rgba(255,255,255,0.03)',
+        }}
+      >
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background:
+              'radial-gradient(circle at top left, rgba(168,85,247,0.08), transparent 24%), radial-gradient(circle at top right, rgba(30,136,229,0.07), transparent 28%)',
+          }}
+        />
+
+        <div
+          className="absolute top-0 left-0 right-0"
+          style={{
+            height: '1px',
+            background: 'linear-gradient(90deg, transparent, rgba(168,85,247,0.45), rgba(30,136,229,0.35), transparent)',
+          }}
+        />
+
+        <div className="relative z-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
+          <div>
+            <p
+              style={{
+                fontSize: '11px',
+                fontWeight: 800,
+                letterSpacing: '0.16em',
+                textTransform: 'uppercase',
+                color: 'rgba(255,255,255,0.30)',
+                marginBottom: '8px',
+              }}
             >
-              <Plus className="w-4 h-4" /> New Entity
+              Tactical Inventory Grid
+            </p>
+
+            <h2
+              style={{
+                fontSize: 'clamp(2rem, 4vw, 3.4rem)',
+                fontWeight: 900,
+                lineHeight: 1,
+                color: '#fff',
+                letterSpacing: '-0.04em',
+                marginBottom: '12px',
+              }}
+            >
+              Inventory Management
+            </h2>
+
+            <div
+              className="flex flex-wrap items-center"
+              style={{
+                gap: '12px',
+                color: 'rgba(255,255,255,0.52)',
+                fontSize: '14px',
+                fontWeight: 600,
+              }}
+            >
+              <div className="flex items-center gap-2">
+                <Database className="w-4 h-4 text-[#c084fc]" />
+                <span style={{ color: '#fff', fontFamily: 'monospace', fontWeight: 800 }}>
+                  {pagination.total?.toLocaleString() || 0}
+                </span>
+                <span>Entities</span>
+              </div>
+              <span style={{ opacity: 0.35 }}>•</span>
+              <span>Review, modify and deploy registry records.</span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <button
+              onClick={toggleAll}
+              className="flex items-center gap-2 transition-transform duration-200 hover:-translate-y-0.5 active:scale-[0.98]"
+              style={{
+                padding: '12px 14px',
+                borderRadius: '16px',
+                border: '1px solid rgba(255,255,255,0.07)',
+                background: 'rgba(255,255,255,0.02)',
+                color: 'rgba(255,255,255,0.72)',
+                fontWeight: 700,
+                fontSize: '13px',
+              }}
+            >
+              {selected.size === cartas.length && cartas.length > 0 ? (
+                <CheckSquare className="w-4 h-4 text-[#c084fc]" />
+              ) : (
+                <Square className="w-4 h-4" />
+              )}
+              Select Page
             </button>
+
+            <button
+              onClick={() => setModalCard({})}
+              className="flex items-center gap-2 transition-transform duration-200 hover:-translate-y-0.5 hover:scale-[1.02] active:scale-[0.98]"
+              style={{
+                padding: '13px 18px',
+                borderRadius: '16px',
+                background: 'linear-gradient(135deg, #ffffff 0%, #d8b4fe 100%)',
+                color: '#050505',
+                fontSize: '14px',
+                fontWeight: 800,
+                boxShadow: '0 12px 24px rgba(216,180,254,0.18)',
+              }}
+            >
+              <Plus className="w-4 h-4" />
+              New Entity
+            </button>
+          </div>
         </div>
       </div>
 
       {/* Controller Area */}
-      <div className="admin-glass p-4 flex flex-col md:flex-row gap-4 items-center relative overflow-hidden z-10">
-        <div className="relative flex-1 w-full flex items-center group">
-          <Search className="absolute left-4 w-5 h-5 text-gray-500 group-focus-within:text-white transition-colors" />
-          <input
-            value={filters.q}
-            onChange={(e) => setFilter('q', e.target.value)}
-            placeholder="Search by name or ID..."
-            className="w-full pl-12 pr-4 py-3 rounded-xl bg-transparent border border-transparent text-sm text-white focus:bg-white/[0.02] focus:border-white/[0.06] outline-none transition-all placeholder:text-gray-600 font-medium"
-          />
-        </div>
-        <div className="h-8 w-px bg-white/[0.06] hidden md:block"></div>
-        <div className="flex items-center gap-2 w-full md:w-auto relative group">
-          <Filter className="absolute left-4 w-4 h-4 text-gray-500 group-focus-within:text-white" />
-          <select
-            value={filters.type}
-            onChange={(e) => setFilter('type', e.target.value)}
-            className="flex-1 md:flex-initial pl-10 pr-8 py-3 rounded-xl bg-transparent border border-transparent text-sm font-semibold text-gray-400 focus:text-white outline-none cursor-pointer hover:bg-white/[0.02] focus:bg-white/[0.02] focus:border-white/[0.06] transition-all appearance-none"
+      <div
+        className="relative overflow-hidden transition-transform duration-300 hover:-translate-y-1"
+        style={{
+          borderRadius: '24px',
+          padding: '16px',
+          background: 'linear-gradient(180deg, rgba(11,12,19,0.96) 0%, rgba(8,9,14,0.98) 100%)',
+          border: '1px solid rgba(255,255,255,0.06)',
+          boxShadow: '0 14px 30px rgba(0,0,0,0.24)',
+        }}
+      >
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background:
+              'radial-gradient(circle at top left, rgba(168,85,247,0.05), transparent 22%), radial-gradient(circle at right, rgba(30,136,229,0.04), transparent 24%)',
+          }}
+        />
+
+        <div
+          className="relative z-10 flex flex-col md:flex-row gap-4 items-center"
+        >
+          <div
+            className="relative flex-1 w-full"
+            style={{
+              minHeight: '58px',
+            }}
           >
-            <option value="">All Types</option>
-            {TYPES.filter(Boolean).map(t => <option key={t} value={t} className="bg-[#121214]">{t}</option>)}
-          </select>
+            <Search
+              className="absolute"
+              style={{
+                left: '16px',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                width: '18px',
+                height: '18px',
+                color: 'rgba(255,255,255,0.34)',
+              }}
+            />
+
+            <input
+              className="transition-transform duration-200 hover:scale-[1.01] focus:scale-[1.01]"
+              value={filters.q}
+              onChange={(e) => setFilter('q', e.target.value)}
+              placeholder="Search by codename, name or ID..."
+              style={{
+                width: '100%',
+                height: '58px',
+                paddingLeft: '46px',
+                paddingRight: '16px',
+                borderRadius: '18px',
+                background: 'rgba(255,255,255,0.03)',
+                border: '1px solid rgba(255,255,255,0.06)',
+                color: '#fff',
+                fontSize: '14px',
+                fontWeight: 600,
+                outline: 'none',
+              }}
+            />
+          </div>
+
+          <div
+            className="w-full md:w-auto flex items-center"
+            style={{
+              gap: '12px',
+            }}
+          >
+            <div className="relative w-full md:w-auto">
+              <Filter
+                className="absolute"
+                style={{
+                  left: '14px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  width: '16px',
+                  height: '16px',
+                  color: 'rgba(255,255,255,0.34)',
+                }}
+              />
+
+              <select
+                className="transition-transform duration-200 hover:scale-[1.01] focus:scale-[1.01]"
+                value={filters.type}
+                onChange={(e) => setFilter('type', e.target.value)}
+                style={{
+                  minWidth: '190px',
+                  width: '100%',
+                  height: '58px',
+                  paddingLeft: '40px',
+                  paddingRight: '16px',
+                  borderRadius: '18px',
+                  background: 'rgba(255,255,255,0.03)',
+                  border: '1px solid rgba(255,255,255,0.06)',
+                  color: '#fff',
+                  fontSize: '14px',
+                  fontWeight: 700,
+                  outline: 'none',
+                  cursor: 'pointer',
+                  appearance: 'none',
+                }}
+              >
+                <option value="">All Types</option>
+                {TYPES.filter(Boolean).map((t) => (
+                  <option key={t} value={t} className="bg-[#121214]">
+                    {t}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Bulk Operations Port */}
+      {/* Bulk Operations */}
       <AnimatePresence>
         {selected.size > 0 && (
           <motion.div
-            initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
             className="overflow-hidden"
           >
-            <div className="px-5 py-3 admin-glass flex items-center justify-between gap-4 mb-4 border-primary/30">
-                <div className="flex items-center gap-3">
-                   <div className="w-2 h-2 rounded-full bg-primary animate-pulse"></div>
-                   <span className="text-sm font-semibold text-primary">{selected.size} entities selected</span>
-                </div>
-                <div className="flex items-center gap-3 text-sm">
-                   <button onClick={() => setSelected(new Set())} className="font-semibold text-gray-400 hover:text-white transition-colors">Deselect All</button>
-                   <button onClick={() => setBulkConfirm(true)} className="px-4 py-2 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white font-bold rounded-lg transition-colors border border-red-500/20 group flex items-center gap-2">
-                     <Trash2 className="w-4 h-4 group-hover:scale-110 transition-transform" /> Delete Selected
-                   </button>
-                </div>
+            <div
+              className="flex items-center justify-between flex-wrap"
+              style={{
+                gap: '14px',
+                padding: '14px 18px',
+                borderRadius: '20px',
+                background: 'linear-gradient(135deg, rgba(168,85,247,0.10), rgba(30,136,229,0.07))',
+                border: '1px solid rgba(168,85,247,0.18)',
+                boxShadow: '0 12px 24px rgba(168,85,247,0.08)',
+              }}
+            >
+              <div className="flex items-center gap-3">
+                <div
+                  style={{
+                    width: '8px',
+                    height: '8px',
+                    borderRadius: '999px',
+                    background: '#c084fc',
+                    boxShadow: '0 0 12px rgba(192,132,252,0.9)',
+                  }}
+                />
+                <span
+                  style={{
+                    fontSize: '14px',
+                    fontWeight: 800,
+                    color: '#d8b4fe',
+                  }}
+                >
+                  {selected.size} entities selected
+                </span>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setSelected(new Set())}
+                  className="transition-colors duration-200 hover:text-white"
+                  style={{
+                    color: 'rgba(255,255,255,0.62)',
+                    fontWeight: 700,
+                    fontSize: '13px',
+                  }}
+                >
+                  Deselect All
+                </button>
+
+                <button
+                  onClick={() => setBulkConfirm(true)}
+                  className="flex items-center gap-2 transition-transform duration-200 hover:-translate-y-0.5 hover:scale-[1.02] active:scale-[0.98]"
+                  style={{
+                    padding: '11px 14px',
+                    borderRadius: '14px',
+                    background: 'rgba(239,68,68,0.10)',
+                    color: '#f87171',
+                    border: '1px solid rgba(239,68,68,0.18)',
+                    fontWeight: 800,
+                    fontSize: '13px',
+                  }}
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Delete Selected
+                </button>
+              </div>
             </div>
           </motion.div>
         )}
@@ -332,119 +958,464 @@ export default function AdminCards() {
 
       {/* Grid View */}
       {loading ? (
-        <div className="py-24 text-center">
-          <div className="inline-block w-8 h-8 border-[3px] border-white/5 border-t-purple-600 rounded-full animate-spin mb-4"></div>
-          <p className="text-xs text-gray-500 font-semibold uppercase tracking-wider">Fetching Cards...</p>
+        <div
+          className="text-center"
+          style={{
+            padding: '90px 0',
+          }}
+        >
+          <div
+            className="inline-block rounded-full animate-spin"
+            style={{
+              width: '34px',
+              height: '34px',
+              border: '3px solid rgba(255,255,255,0.08)',
+              borderTopColor: '#a855f7',
+              marginBottom: '16px',
+            }}
+          />
+          <p
+            style={{
+              fontSize: '12px',
+              color: 'rgba(255,255,255,0.40)',
+              fontWeight: 800,
+              textTransform: 'uppercase',
+              letterSpacing: '0.12em',
+            }}
+          >
+            Fetching Cards...
+          </p>
         </div>
       ) : cartas.length === 0 ? (
-        <div className="py-24 text-center">
-          <Database className="w-8 h-8 text-white/10 mx-auto mb-3" />
-          <p className="text-gray-500 font-medium">No cards found matching your criteria.</p>
+        <div
+          className="text-center"
+          style={{
+            padding: '90px 0',
+          }}
+        >
+          <Database className="w-10 h-10 text-white/10 mx-auto mb-4" />
+          <p
+            style={{
+              color: 'rgba(255,255,255,0.48)',
+              fontWeight: 600,
+              fontSize: '15px',
+            }}
+          >
+            No cards found matching your criteria.
+          </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-          {cartas.map((carta, i) => (
-            <motion.div
-              key={carta._id}
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: i * 0.05, duration: 0.3 }}
-              className="group"
-            >
-              <div className="admin-card">
-                {/* Card Image */}
-                <div className="admin-card-image">
-                  {carta.image ? (
-                    <img src={carta.image} alt={carta.name} className="w-32 h-40 object-contain group-hover:scale-110 transition-transform duration-300" loading="lazy" />
-                  ) : (
-                    <div className="w-32 h-40 bg-white/5 rounded flex items-center justify-center">
-                      <Database className="w-8 h-8 text-white/20" />
-                    </div>
-                  )}
-                </div>
+        <div
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+          style={{
+            gap: '20px',
+          }}
+        >
+          {cartas.map((carta, i) => {
+            const accent = getTypeAccent(carta.type);
 
-                {/* Card Info */}
-                <div className="p-5">
-                  <h3 className="font-black text-white mb-1">{carta.name}</h3>
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="inline-block px-2 py-0.5 bg-gradient-to-r from-purple-600/20 to-blue-600/20 border border-purple-500/30 text-purple-300 rounded text-xs font-bold">
-                      {carta.type || 'Unknown'}
-                    </span>
-                    <span className="text-xs text-gray-400 font-semibold">{carta.rarity || '—'}</span>
+            return (
+              <motion.div
+                key={carta._id}
+                initial={{ opacity: 0, scale: 0.96, y: 10 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                transition={{ delay: i * 0.04, duration: 0.28 }}
+                className="group"
+              >
+                <div
+                  className="relative overflow-hidden transition-transform duration-300 group-hover:-translate-y-2 group-hover:scale-[1.015]"
+                  style={{
+                    borderRadius: '24px',
+                    background: 'linear-gradient(180deg, rgba(12,13,20,0.98) 0%, rgba(8,9,14,0.98) 100%)',
+                    border: `1px solid ${accent}22`,
+                    boxShadow: `0 14px 34px rgba(0,0,0,0.28), 0 0 18px ${accent}14`,
+                  }}
+                >
+                  <div
+                    className="absolute inset-0 pointer-events-none"
+                    style={{
+                      background: `radial-gradient(circle at top left, ${accent}18, transparent 26%), linear-gradient(180deg, rgba(255,255,255,0.02), transparent 28%)`,
+                    }}
+                  />
+
+                  <div
+                    className="absolute inset-0 pointer-events-none opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+                    style={{
+                      background: `radial-gradient(circle at 50% 18%, ${accent}22, transparent 34%)`,
+                    }}
+                  />
+
+                  <div
+                    className="absolute top-0 left-0 right-0 pointer-events-none"
+                    style={{
+                      height: '1px',
+                      background: `linear-gradient(90deg, transparent, ${accent}66, transparent)`,
+                    }}
+                  />
+
+                  {/* Top selector */}
+                  <div
+                    className="relative z-10 flex items-center justify-between"
+                    style={{
+                      padding: '14px 14px 0 14px',
+                    }}
+                  >
+                    <button
+                      onClick={() => toggleSelect(carta._id)}
+                      style={{
+                        width: '30px',
+                        height: '30px',
+                        borderRadius: '10px',
+                        background: selected.has(carta._id)
+                          ? 'rgba(168,85,247,0.16)'
+                          : 'rgba(255,255,255,0.03)',
+                        border: selected.has(carta._id)
+                          ? '1px solid rgba(168,85,247,0.30)'
+                          : '1px solid rgba(255,255,255,0.05)',
+                        color: selected.has(carta._id) ? '#c084fc' : 'rgba(255,255,255,0.42)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      {selected.has(carta._id) ? (
+                        <CheckSquare className="w-4 h-4" />
+                      ) : (
+                        <Square className="w-4 h-4" />
+                      )}
+                    </button>
+
+                    <div
+                      style={{
+                        fontSize: '10px',
+                        fontWeight: 800,
+                        letterSpacing: '0.12em',
+                        textTransform: 'uppercase',
+                        color: 'rgba(255,255,255,0.28)',
+                      }}
+                    >
+                      #{String(carta.card_number || 'N/A')}
+                    </div>
                   </div>
 
-                  {/* Price & Stock */}
-                  <div className="flex justify-between items-center pt-3 border-t border-white/10">
-                    <div>
-                      <p className="text-xs text-gray-400">Stock</p>
-                      <p className="font-black text-white">∞</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-xs text-gray-400">Price</p>
-                      <p className="font-black text-white">${carta.price?.toFixed(2) || '0.00'}</p>
-                    </div>
-                    <button
-                      onClick={() => setModalCard(carta)}
-                      className="p-2 hover:bg-white/10 rounded-lg transition text-gray-400 hover:text-white"
+                  {/* Card image */}
+                  <div
+                    className="relative z-10 flex items-center justify-center"
+                    style={{
+                      minHeight: '230px',
+                      padding: '12px 18px 8px 18px',
+                    }}
+                  >
+                    <div
+                      className="absolute inset-x-0 bottom-0 pointer-events-none"
+                      style={{
+                        height: '80px',
+                        background: `linear-gradient(180deg, transparent, ${accent}10)`,
+                      }}
+                    />
+
+                    {carta.image ? (
+                      <img
+                        src={carta.image}
+                        alt={carta.name}
+                        loading="lazy"
+                        className="transition-transform duration-300 group-hover:scale-110"
+                        style={{
+                          width: '152px',
+                          height: '200px',
+                          objectFit: 'contain',
+                          filter: `drop-shadow(0 12px 22px ${accent}18)`,
+                        }}
+                      />
+                    ) : (
+                      <div
+                        className="flex items-center justify-center transition-transform duration-300 group-hover:scale-105"
+                        style={{
+                          width: '152px',
+                          height: '200px',
+                          borderRadius: '18px',
+                          background: 'rgba(255,255,255,0.04)',
+                          border: '1px solid rgba(255,255,255,0.06)',
+                        }}
+                      >
+                        <Database className="w-10 h-10 text-white/20" />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Info */}
+                  <div
+                    className="relative z-10"
+                    style={{
+                      padding: '18px 18px 16px 18px',
+                      borderTop: '1px solid rgba(255,255,255,0.05)',
+                      background: 'linear-gradient(180deg, rgba(255,255,255,0.015), rgba(255,255,255,0.01))',
+                    }}
+                  >
+                    <div
+                      className="flex items-start justify-between"
+                      style={{
+                        gap: '12px',
+                        marginBottom: '10px',
+                      }}
                     >
-                      <Pencil className="w-4 h-4" />
+                      <div style={{ minWidth: 0 }}>
+                        <h3
+                          style={{
+                            fontWeight: 900,
+                            color: '#fff',
+                            fontSize: '18px',
+                            lineHeight: 1.1,
+                            marginBottom: '8px',
+                          }}
+                        >
+                          {carta.name}
+                        </h3>
+
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '6px',
+                              padding: '5px 10px',
+                              borderRadius: '999px',
+                              background: `${accent}16`,
+                              border: `1px solid ${accent}30`,
+                              color: accent,
+                              fontSize: '11px',
+                              fontWeight: 800,
+                            }}
+                          >
+                            <span
+                              style={{
+                                width: '7px',
+                                height: '7px',
+                                borderRadius: '999px',
+                                background: accent,
+                                boxShadow: `0 0 8px ${accent}`,
+                              }}
+                            />
+                            {carta.type || 'Unknown'}
+                          </span>
+
+                          <span
+                            style={{
+                              fontSize: '12px',
+                              color: 'rgba(255,255,255,0.48)',
+                              fontWeight: 700,
+                            }}
+                          >
+                            {carta.rarity || '—'}
+                          </span>
+                        </div>
+                      </div>
+
+                      <button
+                        onClick={() => setModalCard(carta)}
+                        className="transition-transform duration-200 hover:scale-110 active:scale-95"
+                        style={{
+                          width: '38px',
+                          height: '38px',
+                          borderRadius: '12px',
+                          background: 'rgba(255,255,255,0.03)',
+                          border: '1px solid rgba(255,255,255,0.06)',
+                          color: 'rgba(255,255,255,0.50)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          flexShrink: 0,
+                        }}
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </button>
+                    </div>
+
+                    <div
+                      className="grid grid-cols-2"
+                      style={{
+                        gap: '12px',
+                        marginTop: '14px',
+                        paddingTop: '14px',
+                        borderTop: '1px solid rgba(255,255,255,0.06)',
+                      }}
+                    >
+                      <StatBlock label="Stock" value="∞" valueColor="#fff" />
+                      <StatBlock
+                        label="Market Value"
+                        value={`$${carta.price?.toFixed(2) || '0.00'}`}
+                        valueColor="#fff"
+                        align="right"
+                      />
+                    </div>
+
+                    <button
+                      onClick={() => setConfirmDelete(carta)}
+                      className="flex items-center justify-center gap-2 transition-transform duration-200 hover:-translate-y-0.5 hover:scale-[1.01] active:scale-[0.98]"
+                      style={{
+                        width: '100%',
+                        marginTop: '16px',
+                        padding: '12px 14px',
+                        borderRadius: '14px',
+                        background: 'linear-gradient(135deg, rgba(239,68,68,0.12), rgba(127,29,29,0.16))',
+                        color: '#f87171',
+                        border: '1px solid rgba(239,68,68,0.18)',
+                        fontWeight: 800,
+                        fontSize: '14px',
+                      }}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      Delete Entity
                     </button>
                   </div>
-
-                  {/* Delete Button */}
-                  <button
-                    onClick={() => setConfirmDelete(carta)}
-                    className="w-full mt-3 py-2 px-3 bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white font-bold text-sm rounded-lg transition-colors flex items-center justify-center gap-2"
-                  >
-                    <Trash2 className="w-4 h-4" /> Delete
-                  </button>
                 </div>
-              </div>
-            </motion.div>
-          ))}
+              </motion.div>
+            );
+          })}
         </div>
       )}
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-between mt-8">
-          <p className="text-sm text-gray-400">
-            Showing {((filters.page - 1) * LIMIT) + 1}-{Math.min(filters.page * LIMIT, pagination.total || 0)} of {pagination.total || 0} cards
+        <div
+          className="flex items-center justify-between flex-wrap"
+          style={{
+            gap: '14px',
+            marginTop: '6px',
+            padding: '18px 20px',
+            borderRadius: '22px',
+            background: 'linear-gradient(180deg, rgba(10,11,17,0.96) 0%, rgba(8,9,14,0.98) 100%)',
+            border: '1px solid rgba(255,255,255,0.06)',
+          }}
+        >
+          <p
+            style={{
+              fontSize: '14px',
+              color: 'rgba(255,255,255,0.48)',
+              fontWeight: 600,
+            }}
+          >
+            Showing {((filters.page - 1) * LIMIT) + 1}-
+            {Math.min(filters.page * LIMIT, pagination.total || 0)} of {pagination.total || 0} cards
           </p>
-          <div className="flex gap-2">
+
+          <div className="flex items-center gap-8">
             <button
-              onClick={() => setFilters(f => ({ ...f, page: Math.max(1, f.page - 1) }))}
+              onClick={() => setFilters((f) => ({ ...f, page: Math.max(1, f.page - 1) }))}
               disabled={filters.page <= 1}
-              className="px-3 py-1.5 hover:bg-white/10 rounded-lg transition text-gray-400 hover:text-white text-sm font-semibold disabled:opacity-30"
+              className="flex items-center gap-2 transition-transform duration-200 hover:-translate-y-0.5 active:scale-[0.98] disabled:hover:translate-y-0 disabled:active:scale-100"
+              style={{
+                padding: '10px 12px',
+                borderRadius: '14px',
+                background: 'rgba(255,255,255,0.03)',
+                border: '1px solid rgba(255,255,255,0.06)',
+                color: filters.page <= 1 ? 'rgba(255,255,255,0.24)' : 'rgba(255,255,255,0.72)',
+                fontSize: '13px',
+                fontWeight: 700,
+              }}
             >
-              ← Previous
+              <ChevronLeft className="w-4 h-4" />
+              Previous
             </button>
-            <button className="px-3 py-1.5 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg text-sm font-semibold">
+
+            <div
+              style={{
+                minWidth: '58px',
+                textAlign: 'center',
+                padding: '10px 14px',
+                borderRadius: '14px',
+                background: 'linear-gradient(135deg, rgba(168,85,247,0.16), rgba(30,136,229,0.10))',
+                border: '1px solid rgba(168,85,247,0.18)',
+                color: '#fff',
+                fontWeight: 800,
+                fontSize: '14px',
+                boxShadow: '0 0 16px rgba(168,85,247,0.08)',
+              }}
+            >
               {filters.page}
-            </button>
+            </div>
+
             <button
-              onClick={() => setFilters(f => ({ ...f, page: Math.min(totalPages, f.page + 1) }))}
+              onClick={() => setFilters((f) => ({ ...f, page: Math.min(totalPages, f.page + 1) }))}
               disabled={filters.page >= totalPages}
-              className="px-3 py-1.5 hover:bg-white/10 rounded-lg transition text-gray-400 hover:text-white text-sm font-semibold disabled:opacity-30"
+              className="flex items-center gap-2 transition-transform duration-200 hover:-translate-y-0.5 active:scale-[0.98] disabled:hover:translate-y-0 disabled:active:scale-100"
+              style={{
+                padding: '10px 12px',
+                borderRadius: '14px',
+                background: 'rgba(255,255,255,0.03)',
+                border: '1px solid rgba(255,255,255,0.06)',
+                color: filters.page >= totalPages ? 'rgba(255,255,255,0.24)' : 'rgba(255,255,255,0.72)',
+                fontSize: '13px',
+                fontWeight: 700,
+              }}
             >
-              Next →
+              Next
+              <ChevronRight className="w-4 h-4" />
             </button>
           </div>
         </div>
       )}
 
-      {/* UI Portals (Modals) */}
+      {/* Modals */}
       <AnimatePresence>
         {modalCard !== null && (
-          <CardModal card={modalCard} onClose={() => setModalCard(null)} onSave={() => { setModalCard(null); fetchCartas(); }} />
+          <CardModal
+            card={modalCard}
+            onClose={() => setModalCard(null)}
+            onSave={() => {
+              setModalCard(null);
+              fetchCartas();
+            }}
+          />
         )}
+
         {confirmDelete && (
-          <ConfirmModal message={`Are you sure you want to delete "${confirmDelete.name}"? This action cannot be undone.`} onConfirm={() => handleDelete(confirmDelete._id)} onCancel={() => setConfirmDelete(null)} />
+          <ConfirmModal
+            message={`Are you sure you want to delete "${confirmDelete.name}"? This action cannot be undone.`}
+            onConfirm={() => handleDelete(confirmDelete._id)}
+            onCancel={() => setConfirmDelete(null)}
+          />
         )}
+
         {bulkConfirm && (
-          <ConfirmModal message={`Are you sure you want to delete the ${selected.size} selected entities? This action cannot be undone.`} onConfirm={handleBulkDelete} onCancel={() => setBulkConfirm(false)} />
+          <ConfirmModal
+            message={`Are you sure you want to delete the ${selected.size} selected entities? This action cannot be undone.`}
+            onConfirm={handleBulkDelete}
+            onCancel={() => setBulkConfirm(false)}
+          />
         )}
       </AnimatePresence>
+    </div>
+  );
+}
+
+function StatBlock({ label, value, valueColor = '#fff', align = 'left' }) {
+  return (
+    <div style={{ textAlign: align }}>
+      <p
+        style={{
+          fontSize: '11px',
+          color: 'rgba(255,255,255,0.38)',
+          fontWeight: 700,
+          textTransform: 'uppercase',
+          letterSpacing: '0.08em',
+          marginBottom: '6px',
+        }}
+      >
+        {label}
+      </p>
+      <p
+        style={{
+          fontSize: '24px',
+          fontWeight: 900,
+          color: valueColor,
+          lineHeight: 1,
+          letterSpacing: '-0.03em',
+          fontFamily: 'monospace',
+        }}
+      >
+        {value}
+      </p>
     </div>
   );
 }

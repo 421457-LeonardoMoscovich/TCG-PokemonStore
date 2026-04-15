@@ -25,6 +25,7 @@ async function registro(req, res) {
       role: 'user',
       balance: 1000,
       collection: [],
+      wishlist: [],
       createdAt: new Date(),
     };
 
@@ -42,6 +43,7 @@ async function registro(req, res) {
         role: 'user',
         balance: 1000,
         collection: [],
+        wishlist: [],
         createdAt: nuevoUsuario.createdAt,
       },
     });

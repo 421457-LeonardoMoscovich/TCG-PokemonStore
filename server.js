@@ -40,6 +40,7 @@ app.use('/api/compras', require('./routes/compras'));
 app.use('/api/scratch', require('./routes/scratch'));
 app.use('/api/admin', require('./routes/admin'));
 app.use('/api/recompensas', require('./routes/recompensas'));
+app.use('/api/tcg', require('./routes/tcg'));
 
 // Servir frontend estático (SPA)
 app.use(express.static(path.join(__dirname, 'frontend/dist')));

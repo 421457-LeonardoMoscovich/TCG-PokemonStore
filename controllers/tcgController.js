@@ -1,0 +1,126 @@
+const { getDB } = require('../config/db');
+const { ObjectId } = require('mongodb');
+const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
+
+const PUNTOS_VICTORIA = 50;
+const PUNTOS_DERROTA = 10;
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+/**
+ * Recibe el resultado de una partida del TPI Pokémon TCG (Spring Boot) y suma puntos
+ * a las cuentas vinculadas por externalUserId (= _id de Mongo de este sitio).
+ * Ver docs del TPI: docs/INTEGRACION_SITIO_EXTERNO_CONTRATO.md, Canal A.
+ */
+async function matchResult(req, res) {
+  try {
+    const secret = req.header('X-TCG-Webhook-Secret');
+    if (!secret || secret !== process.env.TCG_WEBHOOK_SECRET) {
+      return res.status(401).json({ error: 'Secreto de webhook inválido' });
+    }
+
+    const { eventId, gameId, winner, loser } = req.body;
+    if (!eventId || !gameId || !winner || !loser) {
+      return res.status(400).json({ error: 'Payload incompleto' });
+    }
+
+    const db = getDB();
+
+    // Idempotencia: un eventId ya procesado no vuelve a sumar puntos.
+    try {
+      await db.collection('tcg_webhook_events').insertOne({ eventId, gameId, receivedAt: new Date() });
+    } catch (err) {
+      if (err.code === 11000) {
+        return res.status(200).json({ ok: true, duplicate: true });
+      }
+      throw err;
+    }
+
+    const pointsAwarded = {};
+    pointsAwarded.winner = await awardPoints(winner.externalUserId, PUNTOS_VICTORIA);
+    pointsAwarded.loser = await awardPoints(loser.externalUserId, PUNTOS_DERROTA);
+
+    res.status(200).json({ ok: true, pointsAwarded });
+  } catch (err) {
+    console.error('Error procesando match-result del TCG:', err);
+    res.status(500).json({ error: 'Error interno al procesar el resultado de la partida' });
+  }
+}
+
+/** Suma puntos al usuario vinculado; si no hay externalUserId válido, no hace nada (no rompe el 200 del webhook). */
+async function awardPoints(externalUserId, points) {
+  if (!externalUserId || !ObjectId.isValid(externalUserId)) {
+    console.warn(`TCG match-result: externalUserId inválido o ausente (${externalUserId}) — no se suman puntos`);
+    return 0;
+  }
+  const db = getDB();
+  const result = await db.collection('usuarios').updateOne(
+    { _id: new ObjectId(externalUserId) },
+    { $inc: { tcgPoints: points } }
+  );
+  if (result.matchedCount === 0) {
+    console.warn(`TCG match-result: no existe usuario con _id ${externalUserId} — no se suman puntos`);
+    return 0;
+  }
+  return points;
+}
+
+/**
+ * Crea o vincula una cuenta de este sitio cuando alguien se registra en el TPI Pokémon TCG
+ * sin haber llegado desde acá (sin `?uid=`). Ver docs/INTEGRACION_SITIO_EXTERNO_CONTRATO.md,
+ * Canal C ("TPI -> sitio"). La cuenta creada queda con password aleatoria e inutilizable:
+ * sirve para sumar tcgPoints vía Canal A, pero todavía no se puede loguear con ella en el sitio
+ * (no hay flujo de "recuperar/asignar contraseña" implementado).
+ */
+async function syncUser(req, res) {
+  try {
+    const secret = req.header('X-TCG-Webhook-Secret');
+    if (!secret || secret !== process.env.TCG_WEBHOOK_SECRET) {
+      return res.status(401).json({ error: 'Secreto de webhook inválido' });
+    }
+
+    const { playerId, username, email } = req.body;
+    if (!playerId || !username || !email) {
+      return res.status(400).json({ error: 'Payload incompleto' });
+    }
+    const normalizedEmail = String(email).trim().toLowerCase();
+    if (!EMAIL_REGEX.test(normalizedEmail)) {
+      return res.status(400).json({ error: 'El email no tiene un formato válido' });
+    }
+
+    const db = getDB();
+
+    const existente = await db.collection('usuarios').findOne({ email: normalizedEmail });
+    if (existente) {
+      return res.status(200).json({ externalUserId: existente._id.toString() });
+    }
+
+    let finalUsername = String(username).trim();
+    if (await db.collection('usuarios').findOne({ username: finalUsername })) {
+      finalUsername = `${finalUsername}-tcg${Math.floor(1000 + Math.random() * 9000)}`;
+    }
+
+    // Password aleatoria e inutilizable: esta cuenta nace del lado del TPI, no del sitio.
+    const passwordHash = await bcrypt.hash(crypto.randomBytes(32).toString('hex'), 10);
+    const nuevoUsuario = {
+      email: normalizedEmail,
+      username: finalUsername,
+      password: passwordHash,
+      role: 'user',
+      balance: 1000,
+      tcgPoints: 0,
+      tcgPlayerId: playerId,
+      collection: [],
+      wishlist: [],
+      createdAt: new Date(),
+    };
+
+    const result = await db.collection('usuarios').insertOne(nuevoUsuario);
+    res.status(201).json({ externalUserId: result.insertedId.toString() });
+  } catch (err) {
+    console.error('Error procesando sync de usuario del TCG:', err);
+    res.status(500).json({ error: 'Error interno al sincronizar el usuario' });
+  }
+}
+
+module.exports = { matchResult, syncUser };

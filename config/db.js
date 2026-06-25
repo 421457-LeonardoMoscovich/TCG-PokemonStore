@@ -11,6 +11,10 @@ async function connectDB() {
   await client.connect();
   db = client.db();
   console.log(`✅ MongoDB conectado: ${uri}`);
+
+  // Idempotencia del webhook del TCG (TPI): un eventId no puede procesarse dos veces.
+  await db.collection('tcg_webhook_events').createIndex({ eventId: 1 }, { unique: true });
+
   return db;
 }
 

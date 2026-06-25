@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { matchResult, syncUser } = require('../controllers/tcgController');
+const { matchResult, syncUser, gameEnded, coinsSpent } = require('../controllers/tcgController');
 
 // Webhook server-a-server desde el TPI (Spring Boot) — autenticado por X-TCG-Webhook-Secret,
 // no por JWT de usuario.
@@ -8,5 +8,11 @@ router.post('/match-result', matchResult);
 
 // Crea/vincula una cuenta cuando alguien se registra en el TPI sin venir desde el sitio.
 router.post('/users', syncUser);
+
+// Suma coinsEarned (monedas in-game del TPI) al balance de la cuenta vinculada.
+router.post('/game-ended', gameEnded);
+
+// Descuenta del balance un gasto de coins hecho en el TPI (mascotas, cosméticos, etc.).
+router.post('/coins-spent', coinsSpent);
 
 module.exports = router;

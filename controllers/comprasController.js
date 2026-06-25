@@ -151,6 +151,41 @@ async function insertarCompra(db, compra, session) {
   await db.collection('compras').insertOne(compra);
 }
 
+/**
+ * Avisa al TPI que se completó una compra para que mirror-descuente coins y otorgue las
+ * cartas también jugables en el juego (`tcgCardId`). Fire-and-forget: si el TPI no está
+ * configurado o está caído, la compra ya se concretó del lado del sitio igual — solo se
+ * loguea el error (no silent failures). Ver docs/INTEGRACION_SITIO_EXTERNO_CONTRATO.md, Canal E.
+ */
+function notifyTcgPurchase(userId, transactionId, totalPrice, cartas) {
+  const baseUrl = process.env.VITE_TCG_BASE_URL;
+  if (!baseUrl) return;
+
+  const cardIds = [...new Set(cartas.filter((c) => c.tcgCardId).map((c) => c.tcgCardId))];
+
+  fetch(`${baseUrl}/integration/purchases`, {
+    method: 'POST',
+    headers: {
+      'X-Webhook-Secret': process.env.TCG_WEBHOOK_SECRET || '',
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      externalUserId: userId,
+      transactionId: transactionId.toString(),
+      totalPrice,
+      cardIds,
+    }),
+  })
+    .then((response) => {
+      if (!response.ok) {
+        console.error(`notifyTcgPurchase: el TPI respondió ${response.status} para la compra ${transactionId}`);
+      }
+    })
+    .catch((err) => {
+      console.error('notifyTcgPurchase: no se pudo avisar al TPI de la compra', err.message);
+    });
+}
+
 async function completarCompra(req, res) {
   const client = getClient();
   const session = client.startSession();
@@ -239,7 +274,9 @@ async function completarCompra(req, res) {
         return res.status(400).json({ error: 'Saldo insuficiente. Ganá más monedas.' });
       }
 
-      if (!err.message.includes('Transaction') && !err.message.includes('session')) {
+      const isTransactionError = err.code === 20 ||
+        (err.message && /transaction|session|replica/i.test(err.message));
+      if (!isTransactionError) {
         throw err;
       }
 
@@ -262,6 +299,7 @@ async function completarCompra(req, res) {
     }
 
     await redis.del(key);
+    notifyTcgPurchase(req.userId, compra._id, totalPrice, cartas);
 
     return res.status(200).json({
       mensaje: 'Compra completada',

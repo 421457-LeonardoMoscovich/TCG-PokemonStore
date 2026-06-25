@@ -112,6 +112,7 @@ async function syncUser(req, res) {
       tcgPlayerId: playerId,
       collection: [],
       wishlist: [],
+      achievements: [],
       createdAt: new Date(),
     };
 
@@ -123,4 +124,90 @@ async function syncUser(req, res) {
   }
 }
 
-module.exports = { matchResult, syncUser };
+/**
+ * Recibe coinsEarned/achievements de una partida del TPI y suma las monedas al balance
+ * de la cuenta vinculada por externalUserId. No hace nada si el jugador no está vinculado
+ * (el TPI no manda el webhook en ese caso, pero se valida igual por las dudas).
+ */
+async function gameEnded(req, res) {
+  try {
+    const secret = req.header('X-TCG-Webhook-Secret');
+    if (!secret || secret !== process.env.TCG_WEBHOOK_SECRET) {
+      return res.status(401).json({ error: 'Secreto de webhook inválido' });
+    }
+
+    const { externalUserId, coinsEarned, achievements } = req.body;
+    if (!externalUserId || !ObjectId.isValid(externalUserId) || typeof coinsEarned !== 'number') {
+      return res.status(400).json({ error: 'Payload incompleto' });
+    }
+    const achievementCodes = Array.isArray(achievements)
+      ? achievements.filter((code) => typeof code === 'string' && code.trim())
+      : [];
+
+    const db = getDB();
+    const update = { $inc: { balance: coinsEarned } };
+    if (achievementCodes.length > 0) {
+      update.$addToSet = { achievements: { $each: achievementCodes } };
+    }
+    const result = await db.collection('usuarios').updateOne(
+      { _id: new ObjectId(externalUserId) },
+      update
+    );
+    if (result.matchedCount === 0) {
+      return res.status(404).json({ error: 'Usuario vinculado no encontrado' });
+    }
+
+    res.status(200).json({ ok: true, coinsAwarded: coinsEarned, achievementsAdded: achievementCodes });
+  } catch (err) {
+    console.error('Error procesando game-ended del TCG:', err);
+    res.status(500).json({ error: 'Error interno al procesar el fin de partida' });
+  }
+}
+
+/**
+ * Recibe un gasto de coins del TPI (mascotas, cosméticos, etc.) y descuenta la misma
+ * cantidad del balance de la cuenta vinculada — espejo del Canal D, ver
+ * docs/INTEGRACION_SITIO_EXTERNO_CONTRATO.md. El balance puede quedar negativo si el
+ * sitio ya estaba gastado por otro lado; es el riesgo aceptado de mantener dos balances
+ * en espejo en vez de una única fuente de verdad.
+ */
+async function coinsSpent(req, res) {
+  try {
+    const secret = req.header('X-TCG-Webhook-Secret');
+    if (!secret || secret !== process.env.TCG_WEBHOOK_SECRET) {
+      return res.status(401).json({ error: 'Secreto de webhook inválido' });
+    }
+
+    const { externalUserId, amount, transactionId } = req.body;
+    if (!externalUserId || !ObjectId.isValid(externalUserId)
+        || typeof amount !== 'number' || amount < 0 || !transactionId) {
+      return res.status(400).json({ error: 'Payload incompleto' });
+    }
+
+    const db = getDB();
+
+    try {
+      await db.collection('tcg_webhook_events').insertOne({ eventId: transactionId, receivedAt: new Date() });
+    } catch (err) {
+      if (err.code === 11000) {
+        return res.status(200).json({ ok: true, duplicate: true });
+      }
+      throw err;
+    }
+
+    const result = await db.collection('usuarios').updateOne(
+      { _id: new ObjectId(externalUserId) },
+      { $inc: { balance: -amount } }
+    );
+    if (result.matchedCount === 0) {
+      return res.status(404).json({ error: 'Usuario vinculado no encontrado' });
+    }
+
+    res.status(200).json({ ok: true, coinsDeducted: amount });
+  } catch (err) {
+    console.error('Error procesando coins-spent del TCG:', err);
+    res.status(500).json({ error: 'Error interno al procesar el gasto de monedas' });
+  }
+}
+
+module.exports = { matchResult, syncUser, gameEnded, coinsSpent };

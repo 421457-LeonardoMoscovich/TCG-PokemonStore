@@ -158,7 +158,7 @@ async function insertarCompra(db, compra, session) {
  * loguea el error (no silent failures). Ver docs/INTEGRACION_SITIO_EXTERNO_CONTRATO.md, Canal E.
  */
 function notifyTcgPurchase(userId, transactionId, totalPrice, cartas) {
-  const baseUrl = process.env.VITE_TCG_BASE_URL;
+  const baseUrl = process.env.TCG_BASE_URL || process.env.VITE_TCG_BASE_URL;
   if (!baseUrl) return;
 
   const cardIds = [...new Set(cartas.filter((c) => c.tcgCardId).map((c) => c.tcgCardId))];

@@ -4,17 +4,37 @@ const bcrypt = require('bcryptjs');
 const { ObjectId } = require('mongodb');
 const { generateToken, authMiddleware } = require('../middleware/auth');
 
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 async function registro(req, res) {
   try {
-    const { email, username, password } = req.body;
+    const email = req.body.email?.trim().toLowerCase();
+    const username = req.body.username?.trim();
+    const { password } = req.body;
+
     if (!email || !username || !password) {
       return res.status(400).json({ error: 'Los campos email, username y password son requeridos' });
     }
+    if (!EMAIL_REGEX.test(email)) {
+      return res.status(400).json({ error: 'El email no tiene un formato válido' });
+    }
+    if (password.length < 8 || password.length > 72) {
+      return res.status(400).json({ error: 'La contraseña debe tener entre 8 y 72 caracteres' });
+    }
+    if (username.length < 3 || username.length > 30) {
+      return res.status(400).json({ error: 'El username debe tener entre 3 y 30 caracteres' });
+    }
 
     const db = getDB();
-    const existente = await db.collection('usuarios').findOne({ email });
-    if (existente) {
+    const [existenteEmail, existenteUsername] = await Promise.all([
+      db.collection('usuarios').findOne({ email }),
+      db.collection('usuarios').findOne({ username }),
+    ]);
+    if (existenteEmail) {
       return res.status(409).json({ error: 'El email ya está registrado' });
+    }
+    if (existenteUsername) {
+      return res.status(409).json({ error: 'El username ya está en uso' });
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
@@ -24,6 +44,7 @@ async function registro(req, res) {
       password: passwordHash,
       role: 'user',
       balance: 1000,
+      tcgPoints: 0,
       collection: [],
       wishlist: [],
       createdAt: new Date(),
@@ -32,6 +53,9 @@ async function registro(req, res) {
     const result = await db.collection('usuarios').insertOne(nuevoUsuario);
     const userId = result.insertedId.toString();
     const token = generateToken(userId, email, 'user');
+
+    const redis = getRedis();
+    await redis.set(`session:${token}`, userId, { EX: 86400 });
 
     res.status(201).json({
       mensaje: 'Usuario registrado exitosamente',
@@ -48,7 +72,7 @@ async function registro(req, res) {
       },
     });
   } catch (err) {
-    res.status(500).json({ error: 'Error al registrar usuario', detail: err.message });
+    res.status(500).json({ error: 'Error al registrar usuario' });
   }
 }
 
@@ -83,7 +107,17 @@ async function login(req, res) {
       usuario: { ...usuarioSinPassword, id: userId },
     });
   } catch (err) {
-    res.status(500).json({ error: 'Error al iniciar sesión', detail: err.message });
+    res.status(500).json({ error: 'Error al iniciar sesión' });
+  }
+}
+
+async function logout(req, res) {
+  try {
+    const token = req.headers.authorization.split(' ')[1];
+    await getRedis().del(`session:${token}`);
+    res.json({ mensaje: 'Sesión cerrada exitosamente' });
+  } catch (err) {
+    res.status(500).json({ error: 'Error al cerrar sesión' });
   }
 }
 
@@ -261,4 +295,24 @@ async function quitarDeWishlist(req, res) {
   }
 }
 
-module.exports = { registro, login, obtenerPerfil, actualizarPerfil, obtenerColeccion, obtenerWishlist, agregarAWishlist, quitarDeWishlist };
+async function obtenerSobres(req, res) {
+  try {
+    const db = getDB();
+    if (!ObjectId.isValid(req.userId)) {
+      return res.status(400).json({ error: 'ID de usuario inválido' });
+    }
+
+    const sobres = await db
+      .collection('tcg_pack_openings')
+      .find({ userId: new ObjectId(req.userId) })
+      .sort({ openedAt: -1 })
+      .limit(5)
+      .toArray();
+
+    res.json({ sobres });
+  } catch (err) {
+    res.status(500).json({ error: 'Error al obtener sobres', detail: err.message });
+  }
+}
+
+module.exports = { registro, login, logout, obtenerPerfil, actualizarPerfil, obtenerColeccion, obtenerWishlist, agregarAWishlist, quitarDeWishlist, obtenerSobres };

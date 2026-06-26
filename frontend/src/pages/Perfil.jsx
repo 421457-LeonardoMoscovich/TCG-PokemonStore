@@ -28,6 +28,10 @@ import {
   Fingerprint,
   Cpu,
   Crown,
+  Swords,
+  Star,
+  ExternalLink,
+  Link as LinkIcon,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import api from '../services/api';
@@ -185,6 +189,7 @@ export default function Perfil() {
   const [perfil, setPerfil] = useState(null);
   const [historial, setHistorial] = useState([]);
   const [coleccionCards, setColeccionCards] = useState([]);
+  const [sobres, setSobres] = useState([]);
   const [username, setUsername] = useState('');
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState('');
@@ -196,12 +201,14 @@ export default function Perfil() {
       api.get('/usuarios/perfil'),
       api.get('/compras/historial'),
       api.get('/usuarios/coleccion'),
+      api.get('/usuarios/perfil/sobres'),
     ])
-      .then(([p, h, c]) => {
+      .then(([p, h, c, s]) => {
         setPerfil(p.data);
         setUsername(p.data.username || '');
         setHistorial(h.data.compras || []);
         setColeccionCards(c.data.coleccion || []);
+        setSobres(s.data.sobres || []);
       })
       .catch(console.error);
   }, []);
@@ -776,6 +783,8 @@ export default function Perfil() {
                 </>
               )}
             </motion.div>
+
+            <TcgArenaCard perfil={perfil} sobres={sobres} />
           </div>
 
           {/* Right column */}
@@ -1685,6 +1694,210 @@ function TrainerCard({ perfil, username, setUsername, onSave, saving, msg }) {
         </div>
       </motion.div>
     </div>
+  );
+}
+
+/* ─────────────────────────────────────────────
+   TCG Arena Card
+───────────────────────────────────────────── */
+function cardImageUrl(cardId) {
+  if (!cardId) return null;
+  const [setCode, number] = cardId.split('-');
+  return `https://images.pokemontcg.io/${setCode}/${number}.png`;
+}
+
+function TcgArenaCard({ perfil, sobres }) {
+  const linked = !!perfil?.tcgPlayerId;
+  const points = perfil?.tcgPoints || 0;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 18 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.5 }}
+      className="relative overflow-hidden"
+      style={{
+        padding: '18px',
+        border: '2px solid rgba(239,68,68,0.28)',
+        background: 'rgba(10,12,18,0.82)',
+        backdropFilter: 'blur(10px)',
+        boxShadow: '6px 6px 0 rgba(239,68,68,0.12)',
+      }}
+    >
+      <div className="absolute top-0 left-0 w-3 h-3 border-r-2 border-b-2 border-red-500/50" />
+      <div className="absolute top-0 right-0 w-3 h-3 border-l-2 border-b-2 border-red-500/50" />
+      <div className="absolute bottom-0 left-0 w-3 h-3 border-r-2 border-t-2 border-red-500/50" />
+      <div className="absolute bottom-0 right-0 w-3 h-3 border-l-2 border-t-2 border-red-500/50" />
+
+      <div
+        className="absolute -top-16 -right-16 blur-[60px] pointer-events-none"
+        style={{ width: '160px', height: '160px', background: 'rgba(239,68,68,0.10)' }}
+      />
+
+      {/* Header */}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          marginBottom: '14px',
+          borderBottom: '1px solid rgba(255,255,255,0.10)',
+          paddingBottom: '12px',
+        }}
+      >
+        <div
+          style={{
+            padding: '8px',
+            background: 'rgba(239,68,68,0.15)',
+            border: '2px solid rgba(239,68,68,0.35)',
+          }}
+        >
+          <Swords className="w-5 h-5 text-red-400" />
+        </div>
+        <div style={{ flex: 1 }}>
+          <h3 style={{ fontSize: '20px', fontWeight: 900, color: '#fff', letterSpacing: '0.08em', textTransform: 'uppercase', margin: 0 }}>
+            TCG Arena
+          </h3>
+          <p style={{ fontSize: '10px', fontFamily: 'monospace', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.18em', color: 'rgba(255,255,255,0.42)', marginTop: '4px', marginBottom: 0 }}>
+            pokemon.lmstores.com ↔ TCG
+          </p>
+        </div>
+
+        {/* Link status badge */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            padding: '5px 10px',
+            border: linked ? '1px solid rgba(34,197,94,0.35)' : '1px solid rgba(255,255,255,0.15)',
+            background: linked ? 'rgba(34,197,94,0.08)' : 'rgba(255,255,255,0.03)',
+            color: linked ? '#4ade80' : 'rgba(255,255,255,0.38)',
+            fontSize: '9px',
+            fontFamily: 'monospace',
+            fontWeight: 900,
+            textTransform: 'uppercase',
+            letterSpacing: '0.12em',
+          }}
+        >
+          <LinkIcon className="w-3 h-3" />
+          {linked ? 'VINCULADO' : 'SIN VINCULAR'}
+        </div>
+      </div>
+
+      {/* TCG Points stat */}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '12px 14px',
+          border: '1px solid rgba(255,235,59,0.20)',
+          background: 'rgba(255,235,59,0.05)',
+          marginBottom: '14px',
+        }}
+      >
+        <div className="flex items-center" style={{ gap: '10px' }}>
+          <Star className="w-4 h-4 text-yellow-400" />
+          <span style={{ fontFamily: 'monospace', fontWeight: 900, textTransform: 'uppercase', fontSize: '11px', letterSpacing: '0.14em', color: 'rgba(255,255,255,0.55)' }}>
+            TCG POINTS
+          </span>
+        </div>
+        <span style={{ fontFamily: 'monospace', fontWeight: 900, fontSize: '22px', color: '#FFEB3B', letterSpacing: '-0.03em' }}>
+          <AnimatedCounter to={points} />
+        </span>
+      </div>
+
+      {/* Recent pack openings */}
+      {sobres.length > 0 ? (
+        <div>
+          <p style={{ fontSize: '10px', fontFamily: 'monospace', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.18em', color: 'rgba(255,255,255,0.34)', marginBottom: '10px' }}>
+            {'> ÚLTIMOS SOBRES ABIERTOS'}
+          </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {sobres.map((sobre, i) => (
+              <motion.div
+                key={sobre._id || i}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.55 + i * 0.06 }}
+                style={{
+                  padding: '10px 12px',
+                  border: '1px solid rgba(255,255,255,0.08)',
+                  background: 'rgba(255,255,255,0.02)',
+                }}
+              >
+                <div className="flex items-center justify-between" style={{ marginBottom: '8px' }}>
+                  <span style={{ fontFamily: 'monospace', fontSize: '9px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.12em', color: 'rgba(255,255,255,0.38)' }}>
+                    {new Date(sobre.openedAt).toLocaleDateString('es-AR', { day: '2-digit', month: 'short', year: '2-digit' })}
+                  </span>
+                  <span style={{ fontFamily: 'monospace', fontSize: '9px', fontWeight: 900, color: 'rgba(239,68,68,0.7)', textTransform: 'uppercase', letterSpacing: '0.10em' }}>
+                    {sobre.cards?.length || 0} cartas
+                  </span>
+                </div>
+                <div style={{ display: 'flex', gap: '4px', flexWrap: 'nowrap', overflow: 'hidden' }}>
+                  {(sobre.cards || []).slice(0, 6).map((card, j) => (
+                    <div
+                      key={j}
+                      title={card.cardName}
+                      style={{
+                        width: '36px',
+                        height: '50px',
+                        flexShrink: 0,
+                        borderRadius: '3px',
+                        overflow: 'hidden',
+                        border: '1px solid rgba(255,255,255,0.15)',
+                        background: 'rgba(0,0,0,0.4)',
+                      }}
+                    >
+                      <img
+                        src={cardImageUrl(card.cardId)}
+                        alt={card.cardName}
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        loading="lazy"
+                        onError={e => { e.target.style.display = 'none'; }}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <div style={{ textAlign: 'center', padding: '16px 0 8px 0' }}>
+          <p style={{ color: 'rgba(255,255,255,0.38)', fontFamily: 'monospace', fontSize: '11px', letterSpacing: '0.10em', margin: 0 }}>
+            Aún no abriste sobres en el TCG
+          </p>
+        </div>
+      )}
+
+      {/* Play TCG button */}
+      <a
+        href="https://tcg.lmstores.com"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="w-full flex items-center justify-center gap-2"
+        style={{
+          marginTop: '14px',
+          padding: '11px 14px',
+          background: 'rgba(239,68,68,0.15)',
+          border: '1px solid rgba(239,68,68,0.40)',
+          color: '#f87171',
+          fontFamily: 'monospace',
+          fontWeight: 900,
+          fontSize: '11px',
+          textTransform: 'uppercase',
+          letterSpacing: '0.12em',
+          boxShadow: '2px 2px 0 rgba(239,68,68,0.18)',
+          textDecoration: 'none',
+        }}
+      >
+        <Swords className="w-3.5 h-3.5" />
+        Jugar TCG
+        <ExternalLink className="w-3 h-3 opacity-60" />
+      </a>
+    </motion.div>
   );
 }
 

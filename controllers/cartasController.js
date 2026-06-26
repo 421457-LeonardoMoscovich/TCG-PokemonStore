@@ -50,7 +50,8 @@ async function obtenerCartas(req, res) {
           if (filter._id.$in) {
             filter._id.$in = existing.filter(id => idArray.some(aid => aid.equals(id)));
           } else {
-            filter._id.$nin = [...new Set([...existing, ...idArray])];
+            // collected=false: queremos cartas que estén EN idArray Y que NO estén en la colección
+            filter._id = { $in: idArray, $nin: existing };
           }
         } else {
           filter._id = { $in: idArray };
@@ -58,13 +59,30 @@ async function obtenerCartas(req, res) {
       }
     }
 
+    // Only show cards that have a TPI equivalent, deduplicated by tcgCardId (→ 462 unique cards)
+    filter.tcgCardId = { $exists: true, $ne: null };
+
     const safePage = normalizePositiveInt(page, 1);
     const safeLimit = normalizePositiveInt(limit, 20, MAX_LIMIT);
     const skip = (safePage - 1) * safeLimit;
-    const [cartas, total] = await Promise.all([
-      db.collection('cartas').find(filter).skip(skip).limit(safeLimit).toArray(),
-      db.collection('cartas').countDocuments(filter),
+
+    const [countResult, cartas] = await Promise.all([
+      db.collection('cartas').aggregate([
+        { $match: filter },
+        { $group: { _id: '$tcgCardId' } },
+        { $count: 'total' },
+      ]).toArray(),
+      db.collection('cartas').aggregate([
+        { $match: filter },
+        { $sort: { name: 1, _id: 1 } },
+        { $group: { _id: '$tcgCardId', doc: { $first: '$$ROOT' } } },
+        { $replaceRoot: { newRoot: '$doc' } },
+        { $sort: { name: 1 } },
+        { $skip: skip },
+        { $limit: safeLimit },
+      ]).toArray(),
     ]);
+    const total = countResult[0]?.total ?? 0;
 
     // Enriquecer con precio y con información de si el usuario ya la posee
     let cartasEnriquecidas = cartas.map((carta) => ({

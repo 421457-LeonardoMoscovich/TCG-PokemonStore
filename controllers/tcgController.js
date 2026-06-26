@@ -85,7 +85,7 @@ async function syncUser(req, res) {
   try {
     if (!checkSecret(req, res)) return;
 
-    const { playerId, username, email } = req.body;
+    const { playerId, username, email, currentCoins } = req.body;
     if (!playerId || !username || !email) {
       return res.status(400).json({ error: 'Payload incompleto' });
     }
@@ -113,7 +113,7 @@ async function syncUser(req, res) {
       username: finalUsername,
       password: passwordHash,
       role: 'user',
-      balance: 1000,
+      balance: typeof currentCoins === 'number' && currentCoins >= 0 ? currentCoins : 1000,
       tcgPoints: 0,
       tcgPlayerId: playerId,
       collection: [],
@@ -248,4 +248,34 @@ async function packOpened(req, res) {
   }
 }
 
-module.exports = { matchResult, syncUser, gameEnded, coinsSpent, packOpened };
+/**
+ * Sincroniza el balance del sitio con los coins actuales del TPI para una cuenta vinculada.
+ * Usado al vincular cuentas existentes o para corregir desvíos.
+ * POST /api/tcg/balance-sync { externalUserId, coins }
+ */
+async function balanceSync(req, res) {
+  try {
+    if (!checkSecret(req, res)) return;
+
+    const { externalUserId, coins } = req.body;
+    if (!externalUserId || !ObjectId.isValid(externalUserId) || typeof coins !== 'number' || coins < 0) {
+      return res.status(400).json({ error: 'Payload incompleto' });
+    }
+
+    const db = getDB();
+    const result = await db.collection('usuarios').updateOne(
+      { _id: new ObjectId(externalUserId) },
+      { $set: { balance: coins } }
+    );
+    if (result.matchedCount === 0) {
+      return res.status(404).json({ error: 'Usuario vinculado no encontrado' });
+    }
+
+    res.status(200).json({ ok: true, balanceSet: coins });
+  } catch (err) {
+    console.error('Error en balance-sync:', err);
+    res.status(500).json({ error: 'Error interno al sincronizar balance' });
+  }
+}
+
+module.exports = { matchResult, syncUser, gameEnded, coinsSpent, packOpened, balanceSync };

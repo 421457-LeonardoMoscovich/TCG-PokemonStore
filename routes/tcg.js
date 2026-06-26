@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { matchResult, syncUser, gameEnded, coinsSpent } = require('../controllers/tcgController');
+const { matchResult, syncUser, gameEnded, coinsSpent, packOpened } = require('../controllers/tcgController');
 
 // Webhook server-a-server desde el TPI (Spring Boot) — autenticado por X-TCG-Webhook-Secret,
 // no por JWT de usuario.
@@ -14,5 +14,8 @@ router.post('/game-ended', gameEnded);
 
 // Descuenta del balance un gasto de coins hecho en el TPI (mascotas, cosméticos, etc.).
 router.post('/coins-spent', coinsSpent);
+
+// Persiste las cartas obtenidas al abrir un sobre en el TPI (Canal B).
+router.post('/pack-opened', packOpened);
 
 module.exports = router;

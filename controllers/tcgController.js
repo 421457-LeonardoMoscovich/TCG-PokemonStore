@@ -7,6 +7,18 @@ const PUNTOS_VICTORIA = 50;
 const PUNTOS_DERROTA = 10;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+// Mirrors the TPI's behaviour: if no secret is configured, allow all requests.
+function checkSecret(req, res) {
+  const configured = process.env.TCG_WEBHOOK_SECRET;
+  if (!configured) return true;
+  const secret = req.header('X-TCG-Webhook-Secret');
+  if (!secret || secret !== configured) {
+    res.status(401).json({ error: 'Secreto de webhook inválido' });
+    return false;
+  }
+  return true;
+}
+
 /**
  * Recibe el resultado de una partida del TPI Pokémon TCG (Spring Boot) y suma puntos
  * a las cuentas vinculadas por externalUserId (= _id de Mongo de este sitio).
@@ -14,10 +26,7 @@ const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
  */
 async function matchResult(req, res) {
   try {
-    const secret = req.header('X-TCG-Webhook-Secret');
-    if (!secret || secret !== process.env.TCG_WEBHOOK_SECRET) {
-      return res.status(401).json({ error: 'Secreto de webhook inválido' });
-    }
+    if (!checkSecret(req, res)) return;
 
     const { eventId, gameId, winner, loser } = req.body;
     if (!eventId || !gameId || !winner || !loser) {
@@ -74,10 +83,7 @@ async function awardPoints(externalUserId, points) {
  */
 async function syncUser(req, res) {
   try {
-    const secret = req.header('X-TCG-Webhook-Secret');
-    if (!secret || secret !== process.env.TCG_WEBHOOK_SECRET) {
-      return res.status(401).json({ error: 'Secreto de webhook inválido' });
-    }
+    if (!checkSecret(req, res)) return;
 
     const { playerId, username, email } = req.body;
     if (!playerId || !username || !email) {
@@ -131,10 +137,7 @@ async function syncUser(req, res) {
  */
 async function gameEnded(req, res) {
   try {
-    const secret = req.header('X-TCG-Webhook-Secret');
-    if (!secret || secret !== process.env.TCG_WEBHOOK_SECRET) {
-      return res.status(401).json({ error: 'Secreto de webhook inválido' });
-    }
+    if (!checkSecret(req, res)) return;
 
     const { externalUserId, coinsEarned, achievements } = req.body;
     if (!externalUserId || !ObjectId.isValid(externalUserId) || typeof coinsEarned !== 'number') {
@@ -173,10 +176,7 @@ async function gameEnded(req, res) {
  */
 async function coinsSpent(req, res) {
   try {
-    const secret = req.header('X-TCG-Webhook-Secret');
-    if (!secret || secret !== process.env.TCG_WEBHOOK_SECRET) {
-      return res.status(401).json({ error: 'Secreto de webhook inválido' });
-    }
+    if (!checkSecret(req, res)) return;
 
     const { externalUserId, amount, transactionId } = req.body;
     if (!externalUserId || !ObjectId.isValid(externalUserId)
@@ -210,4 +210,42 @@ async function coinsSpent(req, res) {
   }
 }
 
-module.exports = { matchResult, syncUser, gameEnded, coinsSpent };
+/**
+ * Recibe las cartas obtenidas al abrir un sobre en el TPI y las persiste en el historial
+ * del usuario vinculado para mostrarlas en su perfil del sitio (Canal B).
+ */
+async function packOpened(req, res) {
+  try {
+    if (!checkSecret(req, res)) return;
+
+    const { externalUserId, eventId, cards } = req.body;
+    if (!externalUserId || !ObjectId.isValid(externalUserId) || !eventId || !Array.isArray(cards)) {
+      return res.status(400).json({ error: 'Payload incompleto' });
+    }
+
+    const db = getDB();
+
+    try {
+      await db.collection('tcg_webhook_events').insertOne({ eventId, receivedAt: new Date() });
+    } catch (err) {
+      if (err.code === 11000) {
+        return res.status(200).json({ ok: true, duplicate: true });
+      }
+      throw err;
+    }
+
+    await db.collection('tcg_pack_openings').insertOne({
+      userId: new ObjectId(externalUserId),
+      eventId,
+      cards,
+      openedAt: new Date(),
+    });
+
+    res.status(200).json({ ok: true, cardsReceived: cards.length });
+  } catch (err) {
+    console.error('Error procesando pack-opened del TCG:', err);
+    res.status(500).json({ error: 'Error interno al procesar la apertura del sobre' });
+  }
+}
+
+module.exports = { matchResult, syncUser, gameEnded, coinsSpent, packOpened };
